@@ -11,6 +11,8 @@ version = "0.0.0"
 legacy-puyo-tools = "legacy_puyo_tools.cli:main"
 
 [tool.ruff.lint]
+# mccabe: C
+# pydocstyle: D
 # pycodestyle: E, W
 # (Py)flakes: F
 # isort: I
@@ -18,7 +20,8 @@ legacy-puyo-tools = "legacy_puyo_tools.cli:main"
 # Pylint: PL
 # flake8-quotes: Q
 # pyupgrade: UP
-select = ["E", "F", "I", "N", "PL", "Q", "UP", "W"]
+select = ["C", "D", "E", "F", "I", "N", "PL", "Q", "UP", "W"]
+typing-modules = ["types-lxml"]
 
 [tool.pyright]
 typeCheckingMode = "strict"

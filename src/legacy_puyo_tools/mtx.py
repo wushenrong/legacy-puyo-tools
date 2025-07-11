@@ -1,86 +1,86 @@
-import typing
 from itertools import pairwise
 
 from lxml import etree
 
-from legacy_puyo_tools.fpd import FpdEntries
+from legacy_puyo_tools.fpd import Fpd
 
-MTX_VER_1 = 8
-
-SIZE_WIDTH = 2
 CHARACTER_WIDTH = 2
-INT_WIDTH = 4
 ENDIAN = "little"
 
-type MtxEntries = list[list[int]]
+INT32_OFFSET = 8
+INT32_SIZE = 4
+INT64_OFFSET = 16
+INT64_SIZE = 8
 
 
-def bytes_to_int_le(data: bytes) -> int:
-    return int.from_bytes(data, ENDIAN)
+def read_character_(data: bytes, i: int) -> int:
+    return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
 
 
-def read_int16_le(fp: typing.BinaryIO) -> int:
-    return bytes_to_int_le(fp.read(2))
+def create_offset_reader_(width: int):
+    def offset_reader(data: bytes, i: int):
+        return int.from_bytes(data[i : i + width], ENDIAN)
+
+    return offset_reader
 
 
-def read_int32_le(fp: typing.BinaryIO) -> int:
-    return bytes_to_int_le(fp.read(INT_WIDTH))
+def calculate_integer_width_(data: bytes):
+    if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
+        return (INT32_OFFSET, 4)
+
+    if int.from_bytes(data[8:16], ENDIAN) == INT64_OFFSET:
+        return (INT64_OFFSET, 8)
+
+    raise NotImplementedError("")
 
 
-def decode_mtx(fp: typing.BinaryIO) -> MtxEntries:
-    mtx_length = read_int32_le(fp)
+type Mtx = list[list[int]]
 
-    if read_int32_le(fp) != MTX_VER_1:
-        raise NotImplementedError(
-            "Remind the creator to create an exception to check the version of mtx."
-        )
 
-    section_table_offset = read_int32_le(fp)
-    text_table_offset = read_int32_le(fp)
+def read_mtx(path: str) -> Mtx:
+    with open(path, "rb") as fp:
+        return from_mtx(fp.read())
 
-    sections = [text_table_offset]
 
-    while fp.tell() < text_table_offset:
-        sections.append(read_int32_le(fp))
-
-    if len(sections) != (text_table_offset - section_table_offset) / INT_WIDTH:
-        raise NotImplementedError(
-            "Remind the creator to create an exception for checking sections in mtx."
-        )
-
-    string_lengths: list[int] = []
-
-    for current_string_offset, next_string_offset in pairwise(sections):
-        string_lengths.append(next_string_offset - current_string_offset)
-
-    strings: MtxEntries = []
-
-    for string_offset, string_length in zip(sections, string_lengths):
-        string: list[int] = []
-
-        while fp.tell() < string_offset + string_length:
-            string.append(read_int16_le(fp))
-
-        strings.append(string)
-
-    leftover_data = fp.read()
-
-    if fp.tell() != mtx_length:
+def from_mtx(data: bytes) -> Mtx:
+    if int.from_bytes(data[:4], ENDIAN) != len(data):
         raise NotImplementedError(
             "Remind the creator to create an exception for checking mtx length."
         )
 
-    strings.append(
-        [
-            bytes_to_int_le(leftover_data[i : i + CHARACTER_WIDTH])
-            for i in range(0, len(leftover_data), CHARACTER_WIDTH)
-        ]
-    )
+    section_table_index_offset, int_width = calculate_integer_width_(data[4:16])
+    read_offset = create_offset_reader_(int_width)
+
+    section_table_offset = read_offset(data, section_table_index_offset)
+    string_table_offset = read_offset(data, section_table_offset)
+
+    sections = [
+        read_offset(data, section_table_offset + (i * int_width))
+        for i in range((string_table_offset - section_table_offset) // int_width)
+    ]
+
+    strings: list[list[int]] = []
+
+    for current_string_offset, next_string_offset in pairwise(sections):
+        string: list[int] = []
+
+        for i in range(next_string_offset - current_string_offset):
+            string.append(
+                read_character_(data, current_string_offset + (i * CHARACTER_WIDTH))
+            )
+
+        strings.append(string)
 
     return strings
 
 
-def encode_xml(mtx: MtxEntries, fpd: FpdEntries) -> bytes:
+def write_xml(path: str, mtx: Mtx, fpd: Fpd):
+    with open(path, "wb") as fp:
+        fp.write(to_xml(mtx, fpd))
+
+
+# TODO: Do something about the manual string formatting in tag
+def to_xml(mtx: Mtx, fpd: Fpd) -> bytes:
     root = etree.Element("mtx")
     sheet = etree.SubElement(root, "sheet")
 
@@ -102,10 +102,5 @@ def encode_xml(mtx: MtxEntries, fpd: FpdEntries) -> bytes:
     etree.indent(root)
 
     return etree.tostring(
-        root, encoding="utf-8", pretty_print=True, xml_declaration=True
+        root, encoding="utf-8", xml_declaration=True, pretty_print=True
     )
-
-
-def read_mtx_file(path: str) -> MtxEntries:
-    with open(path, "rb") as fp:
-        return decode_mtx(fp)
