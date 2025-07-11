@@ -1,0 +1,36 @@
+[project]
+authors = [{ name = "Samuel Wu", email = "twopizza9621536@gmail.com" }]
+dependencies = ["lxml>=6.0.0"]
+description = "A tool to edit text for older Puyo Puyo games."
+name = "legacy-puyo-tools"
+readme = "README.md"
+requires-python = ">=3.13"
+version = "0.0.0"
+
+[project.scripts]
+legacy-puyo-tools = "legacy_puyo_tools.cli:main"
+
+[tool.ruff.lint]
+# pycodestyle: E, W
+# (Py)flakes: F
+# isort: I
+# pep8-naming: N
+# Pylint: PL
+# flake8-quotes: Q
+# pyupgrade: UP
+select = ["E", "F", "I", "N", "PL", "Q", "UP", "W"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.403",
+    "reuse>=5.0.2",
+    "ruff>=0.12.2",
+    "types-lxml>=2025.3.30",
+]
