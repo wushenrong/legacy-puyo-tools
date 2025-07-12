@@ -13,18 +13,18 @@ INT64_OFFSET = 16
 INT64_SIZE = 8
 
 
-def read_character_(data: bytes, i: int) -> int:
+def _read_character(data: bytes, i: int) -> int:
     return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
 
 
-def create_offset_reader_(width: int):
+def _create_offset_reader(width: int):
     def offset_reader(data: bytes, i: int):
         return int.from_bytes(data[i : i + width], ENDIAN)
 
     return offset_reader
 
 
-def calculate_integer_width_(data: bytes):
+def _calculate_integer_width(data: bytes):
     if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
         return (INT32_OFFSET, 4)
 
@@ -48,8 +48,8 @@ def from_mtx(data: bytes) -> Mtx:
             "Remind the creator to create an exception for checking mtx length."
         )
 
-    section_table_index_offset, int_width = calculate_integer_width_(data[4:16])
-    read_offset = create_offset_reader_(int_width)
+    section_table_index_offset, int_width = _calculate_integer_width(data[4:16])
+    read_offset = _create_offset_reader(int_width)
 
     section_table_offset = read_offset(data, section_table_index_offset)
     string_table_offset = read_offset(data, section_table_offset)
@@ -66,7 +66,7 @@ def from_mtx(data: bytes) -> Mtx:
 
         for i in range(next_string_offset - current_string_offset):
             string.append(
-                read_character_(data, current_string_offset + (i * CHARACTER_WIDTH))
+                _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
             )
 
         strings.append(string)
