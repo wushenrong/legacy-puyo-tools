@@ -1,3 +1,5 @@
+import pathlib
+import typing
 from itertools import pairwise
 
 from lxml import etree
@@ -44,12 +46,16 @@ class Mtx:
         self.strings = text
 
     @classmethod
-    def read_mtx(cls, path: str):
+    def read_mtx_from_file(cls, path: pathlib.Path):
         with open(path, "rb") as fp:
-            return cls.from_mtx(fp.read())
+            return cls.read_mtx(fp)
 
     @classmethod
-    def from_mtx(cls, data: bytes):
+    def read_mtx(cls, fp: typing.BinaryIO):
+        return cls.decode_mtx(fp.read())
+
+    @classmethod
+    def decode_mtx(cls, data: bytes):
         if int.from_bytes(data[:4], ENDIAN) != len(data):
             raise NotImplementedError(
                 "Remind the creator to create an exception for checking mtx length."
@@ -78,12 +84,15 @@ class Mtx:
 
         return cls(strings)
 
-    def write_xml(self, path: str, fpd: Fpd):
+    def write_xml_to_file(self, path: pathlib.Path, fpd: Fpd):
         with open(path, "wb") as fp:
-            fp.write(self.to_xml(fpd))
+            self.write_xml(fp, fpd)
+
+    def write_xml(self, fp: typing.BinaryIO, fpd: Fpd):
+        fp.write(self.encode_xml(fpd))
 
     # TODO: Do something about the manual string formatting in tag
-    def to_xml(self, fpd: Fpd):
+    def encode_xml(self, fpd: Fpd):
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 
