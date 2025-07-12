@@ -4,6 +4,7 @@ from codecs import BOM_UTF16_LE
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
 UTF16_LENGTH = 2
+# TODO: Better naming of this variable
 WIDTH_ENTRY = 2
 
 
@@ -52,7 +53,7 @@ class Fpd:
             for character in self.characters:
                 bytes_buffer.write(character.encode())
 
-        return bytes_buffer.getvalue()
+            return bytes_buffer.getvalue()
 
     @classmethod
     def read_unicode_file(cls, path: str):
