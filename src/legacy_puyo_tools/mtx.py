@@ -13,7 +13,7 @@ INT64_OFFSET = 16
 INT64_SIZE = 8
 
 
-def _read_character(data: bytes, i: int) -> int:
+def _read_character(data: bytes, i: int):
     return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
 
 
@@ -24,83 +24,89 @@ def _create_offset_reader(width: int):
     return offset_reader
 
 
-def _calculate_integer_width(data: bytes):
+def _identify_mtx(data: bytes):
     if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
         return (INT32_OFFSET, 4)
 
     if int.from_bytes(data[8:16], ENDIAN) == INT64_OFFSET:
         return (INT64_OFFSET, 8)
 
-    raise NotImplementedError("")
+    raise NotImplementedError(
+        "Tell the creator to create an exception for not being an mtx file"
+    )
 
 
-type Mtx = list[list[int]]
+type MtxString = list[int]
 
 
-def read_mtx(path: str) -> Mtx:
-    with open(path, "rb") as fp:
-        return from_mtx(fp.read())
+class Mtx:
+    def __init__(self, text: list[MtxString]):
+        self.strings = text
 
+    @classmethod
+    def read_mtx(cls, path: str):
+        with open(path, "rb") as fp:
+            return cls.from_mtx(fp.read())
 
-def from_mtx(data: bytes) -> Mtx:
-    if int.from_bytes(data[:4], ENDIAN) != len(data):
-        raise NotImplementedError(
-            "Remind the creator to create an exception for checking mtx length."
-        )
-
-    section_table_index_offset, int_width = _calculate_integer_width(data[4:16])
-    read_offset = _create_offset_reader(int_width)
-
-    section_table_offset = read_offset(data, section_table_index_offset)
-    string_table_offset = read_offset(data, section_table_offset)
-
-    sections = [
-        read_offset(data, section_table_offset + (i * int_width))
-        for i in range((string_table_offset - section_table_offset) // int_width)
-    ]
-
-    strings: list[list[int]] = []
-
-    for current_string_offset, next_string_offset in pairwise(sections):
-        string: list[int] = []
-
-        for i in range(next_string_offset - current_string_offset):
-            string.append(
-                _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
+    @classmethod
+    def from_mtx(cls, data: bytes):
+        if int.from_bytes(data[:4], ENDIAN) != len(data):
+            raise NotImplementedError(
+                "Remind the creator to create an exception for checking mtx length."
             )
 
-        strings.append(string)
+        section_table_index_offset, int_width = _identify_mtx(data[4:16])
+        read_offset = _create_offset_reader(int_width)
 
-    return strings
+        section_table_offset = read_offset(data, section_table_index_offset)
+        string_table_offset = read_offset(data, section_table_offset)
 
+        sections = [
+            read_offset(data, section_table_offset + (i * int_width))
+            for i in range((string_table_offset - section_table_offset) // int_width)
+        ]
 
-def write_xml(path: str, mtx: Mtx, fpd: Fpd):
-    with open(path, "wb") as fp:
-        fp.write(to_xml(mtx, fpd))
+        strings: list[MtxString] = []
 
+        for current_string_offset, next_string_offset in pairwise(sections):
+            strings.append(
+                [
+                    _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
+                    for i in range(next_string_offset - current_string_offset)
+                ]
+            )
 
-# TODO: Do something about the manual string formatting in tag
-def to_xml(mtx: Mtx, fpd: Fpd) -> bytes:
-    root = etree.Element("mtx")
-    sheet = etree.SubElement(root, "sheet")
+        return cls(strings)
 
-    for string in mtx:
-        dialog = etree.SubElement(sheet, "text")
-        dialog.text = "\n"
+    def write_xml(self, path: str, fpd: Fpd):
+        with open(path, "wb") as fp:
+            fp.write(self.to_xml(fpd))
 
-        for character in string:
-            match character:
-                case 0xF813:
-                    dialog.append(etree.Element("arrow"))
-                case 0xFFFD:
-                    dialog.text += "\n"
-                case 0xFFFF:
-                    break
-                case _:
-                    dialog.text += fpd[character].code_point
+    # TODO: Do something about the manual string formatting in tag
+    def to_xml(self, fpd: Fpd):
+        root = etree.Element("mtx")
+        sheet = etree.SubElement(root, "sheet")
 
-    etree.indent(root)
+        for string in self.strings:
+            dialog = etree.SubElement(sheet, "text")
+            dialog.text = "\n"
 
-    return etree.tostring(
-        root, encoding="utf-8", xml_declaration=True, pretty_print=True
-    )
+            for character in string:
+                match character:
+                    case 0xF813:
+                        dialog.append(etree.Element("arrow"))
+                    # TODO: Figure out what this is character is for win quotes
+                    case 0xF883:
+                        dialog.append(etree.Element("unknownf883"))
+                    case 0xFFFD:
+                        dialog.text += "\n"
+                    case 0xFFFF:
+                        continue
+                    case _:
+                        dialog.text += fpd.get_code_point(character)
+
+        etree.indent(root)
+
+        return etree.tostring(
+            root, encoding="utf-8", xml_declaration=True, pretty_print=True
+        )

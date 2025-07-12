@@ -25,62 +25,67 @@ class FpdCharacter:
         return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY])
 
 
-type Fpd = list[FpdCharacter]
+class Fpd:
+    def __init__(self, characters: list[FpdCharacter]):
+        self.characters = characters
 
+    @classmethod
+    def read_fpd(cls, path: str):
+        with open(path, "rb") as fp:
+            return cls.decode_fpd(fp.read())
 
-def read_fpd(path: str) -> Fpd:
-    with open(path, "rb") as fp:
-        return decode_fpd(fp.read())
+    @classmethod
+    def decode_fpd(cls, data: bytes):
+        return cls(
+            [
+                FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
+                for i in range(0, len(data), FPD_ENTRY_LENGTH)
+            ]
+        )
 
+    def write_fpd(self, path: str):
+        with open(path, "wb") as fp:
+            fp.write(self.encode_fpd())
 
-def decode_fpd(data: bytes) -> Fpd:
-    return [
-        FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
-        for i in range(0, len(data), FPD_ENTRY_LENGTH)
-    ]
-
-
-def write_fpd(path: str, fpd: Fpd):
-    with open(path, "wb") as fp:
-        fp.write(encode_fpd(fpd))
-
-
-def encode_fpd(fpd: Fpd):
-    with io.BytesIO() as bytes_buffer:
-        for character in fpd:
-            bytes_buffer.write(character.encode())
-
-        return bytes_buffer.getvalue()
-
-
-def read_unicode_file(path: str):
-    with open(path, "rb") as fp:
-        # Check the Byte Order Mark (BOM) to see if it is really a UTF-16-LE file
-        if fp.read(2) != BOM_UTF16_LE:
-            raise NotImplementedError(
-                "Remind the creator to create an exception for reading a file."
-            )
-
-        return from_unicode(fp.read())
-
-
-# TODO: Somehow allow people to specify the width of the character
-def from_unicode(unicode: bytes):
-    return [
-        FpdCharacter(unicode[i : i + UTF16_LENGTH])
-        for i in range(0, len(unicode), UTF16_LENGTH)
-    ]
-
-
-def write_unicode_file(path: str, fpd: Fpd) -> None:
-    with open(path, "wb") as fp:
-        # Write the Byte Order Mark (BOM) for plain text editors
-        fp.write(BOM_UTF16_LE + to_unicode(fpd))
-
-
-def to_unicode(fpd: Fpd):
-    with io.BytesIO() as bytes_buffer:
-        for character in fpd:
-            bytes_buffer.write(character.code_point.encode(ENCODING))
+    def encode_fpd(self):
+        with io.BytesIO() as bytes_buffer:
+            for character in self.characters:
+                bytes_buffer.write(character.encode())
 
         return bytes_buffer.getvalue()
+
+    @classmethod
+    def read_unicode_file(cls, path: str):
+        with open(path, "rb") as fp:
+            # Check the Byte Order Mark (BOM) to see if it is really a UTF-16-LE file
+            if fp.read(2) != BOM_UTF16_LE:
+                raise NotImplementedError(
+                    "Remind the creator to create an exception for reading a file."
+                )
+
+            return cls.from_unicode(fp.read())
+
+    # TODO: Somehow allow people to specify the width of the character
+    @classmethod
+    def from_unicode(cls, unicode: bytes):
+        return cls(
+            [
+                FpdCharacter(unicode[i : i + UTF16_LENGTH])
+                for i in range(0, len(unicode), UTF16_LENGTH)
+            ]
+        )
+
+    def write_unicode_file(self, path: str):
+        with open(path, "wb") as fp:
+            # Write the Byte Order Mark (BOM) for plain text editors
+            fp.write(BOM_UTF16_LE + self.to_unicode())
+
+    def to_unicode(self):
+        with io.BytesIO() as bytes_buffer:
+            for character in self.characters:
+                bytes_buffer.write(character.code_point.encode(ENCODING))
+
+            return bytes_buffer.getvalue()
+
+    def get_code_point(self, index: int):
+        return self.characters[index].code_point
