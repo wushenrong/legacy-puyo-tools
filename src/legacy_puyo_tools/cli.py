@@ -1,4 +1,4 @@
-"""Commandline script that interfaces with conversion tools.
+"""A commandline application that interfaces with conversion tools.
 
 SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
@@ -34,7 +34,8 @@ class _CliNamespace(argparse.Namespace):
 def _create_fpd(args: _CliNamespace) -> None:
     if args.input.read(2) != BOM_UTF16_LE:
         raise FileFormatError(
-            f"{args.input.name} is not a UTF-16 little-endian encoded text file.",
+            f"{args.input.name} is not a UTF-16 little-endian encoded text"
+            "file.",
         )
 
     if args.output:
@@ -73,7 +74,8 @@ def _convert_mtx(args: _CliNamespace) -> None:
     else:
         if args.unicode.read(2) != BOM_UTF16_LE:
             raise FileFormatError(
-                f"{args.input.name} is not a UTF-16 little-endian encoded text input.",
+                f"{args.input.name} is not a UTF-16 little-endian encoded text"
+                "file.",
             )
 
         fpd_data = Fpd.read_unicode(args.unicode)
@@ -104,7 +106,10 @@ def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
         help="output file",
     )
 
-    mtx_options = argparse.ArgumentParser(add_help=False, parents=[shared_options])
+    mtx_options = argparse.ArgumentParser(
+        add_help=False,
+        parents=[shared_options],
+    )
     mtx_options_group = mtx_options.add_mutually_exclusive_group(required=True)
     mtx_options_group.add_argument(
         "--fpd",
@@ -157,7 +162,7 @@ def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
 def main() -> None:
     """Entry point for the commandline application."""
     main_parser = argparse.ArgumentParser(
-        description="A conversion tool for files used by the older Puyo games.",
+        description="A conversion tool for files used by older Puyo games.",
     )
     main_parser.add_argument(
         "-v",

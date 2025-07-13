@@ -1,7 +1,7 @@
 """Manzai text conversion tool for older Puyo Puyo games.
 
-This module converts `mtx` files to and from XML for modding Puyo games. This
-module currently support Puyo Puyo 7 and might support Puyo Puyo! 15th
+This module converts `mtx` files to and from XML for modding Puyo games.
+Currently supports Puyo Puyo 7 and might support Puyo Puyo! 15th
 Anniversary.
 
 SPDX-FileCopyrightText: 2025 Samuel Wu
@@ -62,7 +62,9 @@ class Mtx:
             try:
                 return cls.read_mtx(fp)
             except FormatError as e:
-                raise FileFormatError(f"{path} is not a valid `mtx` file") from e
+                raise FileFormatError(
+                    f"{path} is not a valid `mtx` file",
+                ) from e
 
     @classmethod
     def read_mtx(cls, fp: BinaryIO) -> Self:
@@ -83,7 +85,9 @@ class Mtx:
 
         sections = [
             read_offset(data, section_table_offset + (i * int_width))
-            for i in range((string_table_offset - section_table_offset) // int_width)
+            for i in range(
+                (string_table_offset - section_table_offset) // int_width,
+            )
         ]
 
         # Add the length to the sections so we can read to end of stream
@@ -94,7 +98,10 @@ class Mtx:
         for current_string_offset, next_string_offset in pairwise(sections):
             strings.append(
                 [
-                    _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
+                    _read_character(
+                        data,
+                        current_string_offset + (i * CHARACTER_WIDTH),
+                    )
                     for i in range(next_string_offset - current_string_offset)
                 ],
             )
@@ -120,9 +127,9 @@ class Mtx:
                 match character:
                     case 0xF813:
                         dialog.append(etree.Element("arrow"))
-                    # TODO: Figure out what this is character is for win quotes
+                    # TODO: Figure out what this control character does
                     case 0xF883:
-                        dialog.append(etree.Element("unknownf883"))
+                        dialog.text += "0xF883"
                     case 0xFFFD:
                         dialog.text += "\n"
                     case 0xFFFF:

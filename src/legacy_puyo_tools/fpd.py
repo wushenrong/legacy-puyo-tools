@@ -1,4 +1,7 @@
-"""`fpd` conversion tool for Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
+"""fpd conversion tool for older puyo games.
+
+This module supports the encoding and decoding of the fpd format used by
+Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
 
 SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
@@ -21,41 +24,99 @@ WIDTH_ENTRY_OFFSET = 2
 
 @define
 class FpdCharacter:
+    """A fpd character entry.
+
+    A fpd character is a binary entry that is 3 bytes long and formatted
+    as follows: `XX XX YY`. Where `XX XX` is the character encoded in
+    UTF-16 little-endian and `YY` is the width of the character.
+
+    Attributes:
+        code_point:
+            A string that stores a single character.
+        width:
+            How wide should the character be, only used in DS version
+            of the games.
+    """
+
     code_point: str
     width: int
 
     def __init__(self, code_point: bytes, width: int = 0x00) -> None:
+        """Initializes a fpd character.
+
+        Args:
+            code_point:
+                A Unicode character in the UTF-16 little-endian format.
+            width:
+                The width of the character. Defaults to 0x00.
+        """
         self.code_point = code_point.decode(ENCODING)
         self.width = width
 
     def encode(self) -> bytes:
+        """Encodes the character back to a fpd character entry.
+
+        Returns:
+            The character in UTF-16 little-endian format and its width.
+        """
         return self.code_point.encode(ENCODING) + self.width.to_bytes()
 
     @classmethod
     def decode(cls, fpd_entry: bytes) -> Self:
+        """Decodes a fpd character into its code point and width.
+
+        Args:
+            fpd_entry:
+                A fpd character entry that is 3 bytes long.
+
+        Raises:
+            FormatError:
+                The entry given does not conform to the fpd character
+                format.
+
+        Returns:
+            A fpd character entry containing its code point and width.
+        """
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
-            raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
+            raise FormatError(
+                f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}",
+            )
 
         return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
 
 
 @define
 class Fpd:
-    entry: list[FpdCharacter]
+    entries: list[FpdCharacter]
 
     def __getitem__(self, index: int) -> str:
         """Gets the actual character inside a fpd at a given index.
 
         Args:
-            index (int): The index of the character in the fpd
+            index:
+                A valid index of the character in the fpd.
 
         Returns:
-            str: _description_
+            A string that contains the requested character.
         """
-        return self.entry[index].code_point
+        return self.entries[index].code_point
 
     @classmethod
     def read_fpd_from_path(cls, path: Path) -> Self:
+        """Reads and extract characters from a fpd file.
+
+        Args:
+            path:
+                A path to a fpd file.
+
+        Raises:
+            FileFormatError:
+                The fpd file contain a entry that does not conform
+                to the fpd character format.
+
+        Returns:
+            _description_
+        """
         with Path(path).open("rb") as fp:
             try:
                 return cls.read_fpd(fp)
@@ -84,7 +145,7 @@ class Fpd:
 
     def encode_fpd(self) -> bytes:
         with BytesIO() as bytes_buffer:
-            for character in self.entry:
+            for character in self.entries:
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
@@ -127,7 +188,7 @@ class Fpd:
 
     def encode_unicode(self) -> bytes:
         with BytesIO() as bytes_buffer:
-            for character in self.entry:
+            for character in self.entries:
                 bytes_buffer.write(character.code_point.encode(ENCODING))
 
             return bytes_buffer.getvalue()

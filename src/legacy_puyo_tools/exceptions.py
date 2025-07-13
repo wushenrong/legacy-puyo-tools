@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT
 
 
 class FormatError(Exception):
-    """The current input data or stream does not conform to an expected format."""
+    """The current input data does not conform to an expected format."""
 
 
 class FileFormatError(FormatError):
