@@ -70,7 +70,9 @@ class Mtx:
 
     @classmethod
     def decode_mtx(cls, data: bytes) -> Self:
-        if int.from_bytes(data[:4], ENDIAN) != len(data):
+        length = int.from_bytes(data[:4], ENDIAN)
+
+        if length != len(data):
             raise FormatError("The size of the given data does not match")
 
         section_table_index_offset, int_width = _identify_mtx(data[4:16])
@@ -83,6 +85,9 @@ class Mtx:
             read_offset(data, section_table_offset + (i * int_width))
             for i in range((string_table_offset - section_table_offset) // int_width)
         ]
+
+        # Add the length to the sections so we can read to end of stream
+        sections.append(length)
 
         strings: list[MtxString] = []
 
@@ -121,7 +126,7 @@ class Mtx:
                     case 0xFFFD:
                         dialog.text += "\n"
                     case 0xFFFF:
-                        continue
+                        break
                     case _:
                         dialog.text += fpd[character]
 
