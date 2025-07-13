@@ -1,4 +1,4 @@
-"""Fpd conversion tool for Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
+"""`fpd` conversion tool for Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
 
 SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
@@ -11,11 +11,12 @@ from typing import BinaryIO, Self
 
 from attrs import define
 
+from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
 UTF16_LENGTH = 2
-# TODO: Better naming of this variable
-WIDTH_ENTRY = 2
+WIDTH_ENTRY_OFFSET = 2
 
 
 @define
@@ -30,21 +31,33 @@ class FpdCharacter:
     @classmethod
     def decode(cls, fpd_entry: bytes) -> Self:
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
-            raise NotImplementedError(
-                "Remind the creator to create an exception for decoding character.",
-            )
+            raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
 
-        return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY])
+        return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
 
 
+@define
 class Fpd:
-    def __init__(self, characters: list[FpdCharacter]) -> None:
-        self.characters = characters
+    entry: list[FpdCharacter]
+
+    def __getitem__(self, index: int) -> str:
+        """Gets the actual character inside a fpd at a given index.
+
+        Args:
+            index (int): The index of the character in the fpd
+
+        Returns:
+            str: _description_
+        """
+        return self.entry[index].code_point
 
     @classmethod
     def read_fpd_from_path(cls, path: Path) -> Self:
         with Path(path).open("rb") as fp:
-            return cls.read_fpd(fp)
+            try:
+                return cls.read_fpd(fp)
+            except FormatError as e:
+                raise FileFormatError(f"{path} is not a valid fpd file") from e
 
     @classmethod
     def read_fpd(cls, fp: BinaryIO) -> Self:
@@ -68,7 +81,7 @@ class Fpd:
 
     def encode_fpd(self) -> bytes:
         with BytesIO() as bytes_buffer:
-            for character in self.characters:
+            for character in self.entry:
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
@@ -79,8 +92,8 @@ class Fpd:
             # Check the Byte Order Mark (BOM) to see if it is really a UTF-16 LE encoded
             # text file
             if fp.read(2) != BOM_UTF16_LE:
-                raise NotImplementedError(
-                    "Remind the creator to create an exception for reading a file.",
+                raise FileFormatError(
+                    f"{path} is not a UTF-16 little-endian encoded text file.",
                 )
 
             return cls.read_unicode(fp)
@@ -111,11 +124,7 @@ class Fpd:
 
     def encode_unicode(self) -> bytes:
         with BytesIO() as bytes_buffer:
-            for character in self.characters:
+            for character in self.entry:
                 bytes_buffer.write(character.code_point.encode(ENCODING))
 
             return bytes_buffer.getvalue()
-
-    def get_code_point(self, index: int) -> str:
-        """Gets the actual character inside a fpd at a given index."""
-        return self.characters[index].code_point

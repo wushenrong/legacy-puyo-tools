@@ -4,7 +4,10 @@
 
 [project]
 authors = [{ name = "Samuel Wu", email = "twopizza9621536@gmail.com" }]
-dependencies = ["attrs>=25.3.0", "lxml>=6.0.0"]
+dependencies = [
+    "attrs>=25.3.0",
+    "lxml>=6.0.0",
+]
 description = "A tool to edit text for older Puyo Puyo games."
 license = "MIT"
 license-files = ["LICENSE"]
@@ -15,6 +18,11 @@ version = "0.0.0"
 
 [project.scripts]
 legacy-puyo-tools = "legacy_puyo_tools.cli:main"
+
+[tool.ruff]
+output-format = "concise"
+# Required for some rules
+preview = true
 
 [tool.ruff.lint]
 select = [
@@ -29,6 +37,7 @@ select = [
     "ERA",  # eradicate commented out code
     "F",    # pyflakes
     "FIX",  # flake8 fixme
+    "FURB", # refurb
     "I",    # isort
     "ISC",  # flake8-implicit-str-concat
     "N",    # pep8-naming
@@ -50,6 +59,7 @@ typing-modules = ["types-lxml"]
 convention = "google"
 
 [tool.pylint]
+output-format = "colorized"
 extension-pkg-allow-list = ["lxml"]
 
 [tool.pyright]

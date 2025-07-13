@@ -1,6 +1,6 @@
 """Manzai text conversion tool for older Puyo Puyo games.
 
-This module converts Mtx files to and from XML for modding Puyo games. This
+This module converts `mtx` files to and from XML for modding Puyo games. This
 module currently support Puyo Puyo 7 and might support Puyo Puyo! 15th
 Anniversary.
 
@@ -32,7 +32,7 @@ def _read_character(data: bytes, i: int) -> int:
     return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
 
 
-def _create_offset_reader(width: int) -> Callable[..., int]:
+def _create_offset_reader(width: int) -> Callable[[bytes, int], int]:
     def offset_reader(data: bytes, i: int) -> int:
         return int.from_bytes(data[i : i + width], ENDIAN)
 
@@ -41,14 +41,12 @@ def _create_offset_reader(width: int) -> Callable[..., int]:
 
 def _identify_mtx(data: bytes) -> tuple[Literal[8, 16], Literal[4, 8]]:
     if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
-        return (INT32_OFFSET, 4)
+        return (INT32_OFFSET, INT32_SIZE)
 
     if int.from_bytes(data[8:16], ENDIAN) == INT64_OFFSET:
-        return (INT64_OFFSET, 8)
+        return (INT64_OFFSET, INT64_SIZE)
 
-    raise NotImplementedError(
-        "Tell the creator to create an exception for not being an mtx file",
-    )
+    raise FormatError("The given data is not in a valid `mtx` format")
 
 
 type MtxString = list[int]
@@ -61,7 +59,10 @@ class Mtx:
     @classmethod
     def read_mtx_from_file(cls, path: Path) -> Self:
         with Path(path).open("rb") as fp:
-            return cls.read_mtx(fp)
+            try:
+                return cls.read_mtx(fp)
+            except FormatError as e:
+                raise FileFormatError(f"{path} is not a valid `mtx` file") from e
 
     @classmethod
     def read_mtx(cls, fp: BinaryIO) -> Self:
@@ -70,9 +71,7 @@ class Mtx:
     @classmethod
     def decode_mtx(cls, data: bytes) -> Self:
         if int.from_bytes(data[:4], ENDIAN) != len(data):
-            raise NotImplementedError(
-                "Remind the creator to create an exception for checking mtx length.",
-            )
+            raise FormatError("The size of the given data does not match")
 
         section_table_index_offset, int_width = _identify_mtx(data[4:16])
         read_offset = _create_offset_reader(int_width)
@@ -99,15 +98,11 @@ class Mtx:
 
     def write_xml_to_file(self, path: Path, fpd: Fpd) -> None:
         with Path(path).open("wb") as fp:
-            try:
-                self.write_xml(fp, fpd)
-            except FormatError as e:
-                raise FileFormatError(f"{path} is not a valid Mtx file") from e
+            self.write_xml(fp, fpd)
 
     def write_xml(self, fp: BinaryIO, fpd: Fpd) -> None:
         fp.write(self.encode_xml(fpd))
 
-    # TODO: Do something about the manual string formatting in tag
     def encode_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
@@ -128,7 +123,7 @@ class Mtx:
                     case 0xFFFF:
                         continue
                     case _:
-                        dialog.text += fpd.get_code_point(character)
+                        dialog.text += fpd[character]
 
         etree.indent(root)
 
