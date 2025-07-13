@@ -1,10 +1,9 @@
 # Legacy Puyo Tools
 
-A tool to convert `fpd` and `mtx` files used by the Puyo games. Tested with Puyo
-Puyo 7, possibly works with Puyo Puyo! 15th Anniversary, but *not* Puyo Puyo!!
-20th Anniversary (Create an issue or pull request to support `fnt` and
-additional `mtx` controls). Also, legacy as in older Puyo Puyo games, not that
-this tool is decapitated.
+Supports Puyo Puyo 7 and possibly Puyo Puyo! 15th Anniversary `mtx` and `fpd`
+files. Puyo Puyo!! 20th Anniversary is still not supported yet. (Create an issue
+or pull request to support `fnt` and additional `mtx` controls). Also, legacy as
+in older Puyo Puyo games, not that this tool is decapitated.
 
 ## Why
 

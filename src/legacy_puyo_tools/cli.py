@@ -1,3 +1,9 @@
+"""Commandline script that interfaces with conversion tools.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -73,6 +79,7 @@ def _convert_mtx(args: _CliNamespace) -> None:
 
 
 def main() -> None:
+    """Entry point for the commandline application."""
     shared_options = argparse.ArgumentParser(add_help=False)
     shared_options.add_argument("file", type=argparse.FileType("rb"))
     shared_options.add_argument("-o", "--output", type=argparse.FileType("wb"))

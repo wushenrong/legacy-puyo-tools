@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT-0
+
+version = 1
+
+[[annotations]]
+SPDX-FileCopyrightText = "2025 Samuel Wu"
+SPDX-License-Identifier = "MIT-0"
+path = ["README.md", "uv.lock"]

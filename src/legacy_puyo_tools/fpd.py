@@ -1,3 +1,9 @@
+"""Fpd conversion tool for Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
+
 from codecs import BOM_UTF16_LE
 from io import BytesIO
 from pathlib import Path
@@ -70,7 +76,8 @@ class Fpd:
     @classmethod
     def read_unicode_from_path(cls, path: Path) -> Self:
         with Path(path).open("rb") as fp:
-            # Check the Byte Order Mark (BOM) to see if it is really a UTF-16-LE file
+            # Check the Byte Order Mark (BOM) to see if it is really a UTF-16 LE encoded
+            # text file
             if fp.read(2) != BOM_UTF16_LE:
                 raise NotImplementedError(
                     "Remind the creator to create an exception for reading a file.",
@@ -92,7 +99,7 @@ class Fpd:
     def write_unicode(self, fp: BinaryIO) -> None:
         fp.write(self.encode_unicode())
 
-    # TODO: Somehow allow people to specify the width of the character
+    # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
     def decode_unicode(cls, unicode: bytes) -> Self:
         return cls(
@@ -110,4 +117,5 @@ class Fpd:
             return bytes_buffer.getvalue()
 
     def get_code_point(self, index: int) -> str:
+        """Gets the actual character inside a fpd at a given index."""
         return self.characters[index].code_point

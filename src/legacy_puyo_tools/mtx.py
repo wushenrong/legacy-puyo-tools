@@ -1,3 +1,13 @@
+"""Manzai text conversion tool for older Puyo Puyo games.
+
+This module converts Mtx files to and from XML for modding Puyo games. This
+module currently support Puyo Puyo 7 and might support Puyo Puyo! 15th
+Anniversary.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
+
 from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
