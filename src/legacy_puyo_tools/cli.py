@@ -24,7 +24,7 @@ from legacy_puyo_tools.mtx import Mtx
 @define
 class _CliNamespace(argparse.Namespace):
     func: Callable[[type[_CliNamespace]], None]
-    file: BinaryIO
+    input: BinaryIO
     output: BinaryIO
     unicode: BinaryIO
     fpd: BinaryIO
@@ -32,21 +32,21 @@ class _CliNamespace(argparse.Namespace):
 
 
 def _create_fpd(args: _CliNamespace) -> None:
-    if args.file.read(2) != BOM_UTF16_LE:
+    if args.input.read(2) != BOM_UTF16_LE:
         raise FileFormatError(
-            f"{args.file.name} is not a UTF-16 little-endian encoded text file.",
+            f"{args.input.name} is not a UTF-16 little-endian encoded text file.",
         )
 
     if args.output:
-        Fpd.read_unicode(args.file).write_fpd(args.output)
+        Fpd.read_unicode(args.input).write_fpd(args.output)
         return
 
-    path = Path(args.file.name).with_suffix("")
+    path = Path(args.input.name).with_suffix("")
 
     if path.suffix != ".fpd":
         path = path.with_suffix(".fpd")
 
-    Fpd.read_unicode(args.file).write_fpd_to_path(path)
+    Fpd.read_unicode(args.input).write_fpd_to_path(path)
 
 
 def _create_mtx(args: _CliNamespace) -> None:
@@ -56,15 +56,15 @@ def _create_mtx(args: _CliNamespace) -> None:
 def _convert_fpd(args: _CliNamespace) -> None:
     if args.output:
         args.output.write(BOM_UTF16_LE)
-        Fpd.read_fpd(args.file).write_fpd(args.output)
+        Fpd.read_fpd(args.input).write_fpd(args.output)
         return
 
-    path = Path(args.file.name).with_suffix("")
+    path = Path(args.input.name).with_suffix("")
 
     if path.suffix != ".fpd":
         path = path.with_suffix(".fpd")
 
-    Fpd.read_fpd(args.file).write_unicode_to_path(path)
+    Fpd.read_fpd(args.input).write_unicode_to_path(path)
 
 
 def _convert_mtx(args: _CliNamespace) -> None:
@@ -73,21 +73,21 @@ def _convert_mtx(args: _CliNamespace) -> None:
     else:
         if args.unicode.read(2) != BOM_UTF16_LE:
             raise FileFormatError(
-                f"{args.file.name} is not a UTF-16 little-endian encoded text file.",
+                f"{args.input.name} is not a UTF-16 little-endian encoded text input.",
             )
 
-        fpd_data = Fpd.read_fpd(args.unicode)
+        fpd_data = Fpd.read_unicode(args.unicode)
 
     if args.output:
-        Mtx.read_mtx(args.file).write_xml(args.output, fpd_data)
+        Mtx.read_mtx(args.input).write_xml(args.output, fpd_data)
         return
 
-    path = Path(args.file.name).with_suffix("")
+    path = Path(args.input.name).with_suffix("")
 
     if path.suffix != ".xml":
         path = path.with_suffix(".xml")
 
-    Mtx.read_mtx(args.file).write_xml_to_file(path, fpd_data)
+    Mtx.read_mtx(args.input).write_xml_to_file(path, fpd_data)
 
 
 def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
@@ -170,7 +170,7 @@ def main() -> None:
 
     args = main_parser.parse_args(namespace=_CliNamespace)
 
-    if args.version:
+    if args.version is True:
         package_name = "legacy-puyo-tools"
         version = metadata.version(package_name)
 

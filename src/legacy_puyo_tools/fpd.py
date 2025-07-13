@@ -21,9 +21,12 @@ WIDTH_ENTRY_OFFSET = 2
 
 @define
 class FpdCharacter:
+    code_point: str
+    width: int
+
     def __init__(self, code_point: bytes, width: int = 0x00) -> None:
-        self.code_point: str = code_point.decode(ENCODING)
-        self.width: int = width
+        self.code_point = code_point.decode(ENCODING)
+        self.width = width
 
     def encode(self) -> bytes:
         return self.code_point.encode(ENCODING) + self.width.to_bytes()
