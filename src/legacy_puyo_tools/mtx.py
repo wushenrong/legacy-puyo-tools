@@ -1,9 +1,12 @@
-import pathlib
-import typing
+from collections.abc import Callable
 from itertools import pairwise
+from pathlib import Path
+from typing import BinaryIO, Literal, Self
 
+from attrs import define
 from lxml import etree
 
+from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 from legacy_puyo_tools.fpd import Fpd
 
 CHARACTER_WIDTH = 2
@@ -15,18 +18,18 @@ INT64_OFFSET = 16
 INT64_SIZE = 8
 
 
-def _read_character(data: bytes, i: int):
+def _read_character(data: bytes, i: int) -> int:
     return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
 
 
-def _create_offset_reader(width: int):
-    def offset_reader(data: bytes, i: int):
+def _create_offset_reader(width: int) -> Callable[..., int]:
+    def offset_reader(data: bytes, i: int) -> int:
         return int.from_bytes(data[i : i + width], ENDIAN)
 
     return offset_reader
 
 
-def _identify_mtx(data: bytes):
+def _identify_mtx(data: bytes) -> tuple[Literal[8, 16], Literal[4, 8]]:
     if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
         return (INT32_OFFSET, 4)
 
@@ -34,31 +37,31 @@ def _identify_mtx(data: bytes):
         return (INT64_OFFSET, 8)
 
     raise NotImplementedError(
-        "Tell the creator to create an exception for not being an mtx file"
+        "Tell the creator to create an exception for not being an mtx file",
     )
 
 
 type MtxString = list[int]
 
 
+@define
 class Mtx:
-    def __init__(self, text: list[MtxString]):
-        self.strings = text
+    strings: list[MtxString]
 
     @classmethod
-    def read_mtx_from_file(cls, path: pathlib.Path):
-        with open(path, "rb") as fp:
+    def read_mtx_from_file(cls, path: Path) -> Self:
+        with Path(path).open("rb") as fp:
             return cls.read_mtx(fp)
 
     @classmethod
-    def read_mtx(cls, fp: typing.BinaryIO):
+    def read_mtx(cls, fp: BinaryIO) -> Self:
         return cls.decode_mtx(fp.read())
 
     @classmethod
-    def decode_mtx(cls, data: bytes):
+    def decode_mtx(cls, data: bytes) -> Self:
         if int.from_bytes(data[:4], ENDIAN) != len(data):
             raise NotImplementedError(
-                "Remind the creator to create an exception for checking mtx length."
+                "Remind the creator to create an exception for checking mtx length.",
             )
 
         section_table_index_offset, int_width = _identify_mtx(data[4:16])
@@ -79,20 +82,23 @@ class Mtx:
                 [
                     _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
                     for i in range(next_string_offset - current_string_offset)
-                ]
+                ],
             )
 
         return cls(strings)
 
-    def write_xml_to_file(self, path: pathlib.Path, fpd: Fpd):
-        with open(path, "wb") as fp:
-            self.write_xml(fp, fpd)
+    def write_xml_to_file(self, path: Path, fpd: Fpd) -> None:
+        with Path(path).open("wb") as fp:
+            try:
+                self.write_xml(fp, fpd)
+            except FormatError as e:
+                raise FileFormatError(f"{path} is not a valid Mtx file") from e
 
-    def write_xml(self, fp: typing.BinaryIO, fpd: Fpd):
+    def write_xml(self, fp: BinaryIO, fpd: Fpd) -> None:
         fp.write(self.encode_xml(fpd))
 
     # TODO: Do something about the manual string formatting in tag
-    def encode_xml(self, fpd: Fpd):
+    def encode_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 
@@ -117,5 +123,8 @@ class Mtx:
         etree.indent(root)
 
         return etree.tostring(
-            root, encoding="utf-8", xml_declaration=True, pretty_print=True
+            root,
+            encoding="utf-8",
+            xml_declaration=True,
+            pretty_print=True,
         )
