@@ -79,7 +79,7 @@ class FpdCharacter:
         """
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(
-                f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}",
+                f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}"
             )
 
         return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
@@ -161,12 +161,10 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return cls(
-            [
-                FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
-                for i in range(0, len(data), FPD_ENTRY_LENGTH)
-            ],
-        )
+        return cls([
+            FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
+            for i in range(0, len(data), FPD_ENTRY_LENGTH)
+        ])
 
     def write_fpd_to_path(self, path: Path) -> None:
         """Writes the fpd character table to a fpd encoded file.
@@ -249,12 +247,10 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return cls(
-            [
-                FpdCharacter(unicode[i : i + UTF16_LENGTH])
-                for i in range(0, len(unicode), UTF16_LENGTH)
-            ],
-        )
+        return cls([
+            FpdCharacter(unicode[i : i + UTF16_LENGTH])
+            for i in range(0, len(unicode), UTF16_LENGTH)
+        ])
 
     def write_unicode_to_path(self, path: Path) -> None:
         """Writes the fpd character table to a UTF-16 LE text file.

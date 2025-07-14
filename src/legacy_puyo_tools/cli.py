@@ -35,7 +35,7 @@ def _create_fpd(args: _CliNamespace) -> None:
     if args.input.read(2) != BOM_UTF16_LE:
         raise FileFormatError(
             f"{args.input.name} is not a UTF-16 little-endian encoded text"
-            "file.",
+            "file."
         )
 
     if args.output:
@@ -75,7 +75,7 @@ def _convert_mtx(args: _CliNamespace) -> None:
         if args.unicode.read(2) != BOM_UTF16_LE:
             raise FileFormatError(
                 f"{args.input.name} is not a UTF-16 little-endian encoded text"
-                "file.",
+                "file."
             )
 
         fpd_data = Fpd.read_unicode(args.unicode)
@@ -95,31 +95,21 @@ def _convert_mtx(args: _CliNamespace) -> None:
 def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
     shared_options = argparse.ArgumentParser(add_help=False)
     shared_options.add_argument(
-        "input",
-        type=argparse.FileType("rb"),
-        help="input file",
+        "input", type=argparse.FileType("rb"), help="input file"
     )
     shared_options.add_argument(
-        "-o",
-        "--output",
-        type=argparse.FileType("wb"),
-        help="output file",
+        "-o", "--output", type=argparse.FileType("wb"), help="output file"
     )
 
     mtx_options = argparse.ArgumentParser(
-        add_help=False,
-        parents=[shared_options],
+        add_help=False, parents=[shared_options]
     )
     mtx_options_group = mtx_options.add_mutually_exclusive_group(required=True)
     mtx_options_group.add_argument(
-        "--fpd",
-        type=argparse.FileType("rb"),
-        help="fpd file",
+        "--fpd", type=argparse.FileType("rb"), help="fpd file"
     )
     mtx_options_group.add_argument(
-        "--unicode",
-        type=argparse.FileType("rb"),
-        help="unicode text file",
+        "--unicode", type=argparse.FileType("rb"), help="unicode text file"
     )
 
     sub_parser = main_parser.add_subparsers()
@@ -135,9 +125,7 @@ def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
     create_fpd_parser.set_defaults(func=_create_fpd)
 
     create_mtx_parser = create_sub_parser.add_parser(
-        "mtx",
-        help="create a mtx file from a XML file",
-        parents=[mtx_options],
+        "mtx", help="create a mtx file from a XML file", parents=[mtx_options]
     )
     create_mtx_parser.set_defaults(func=_create_mtx)
 
@@ -152,9 +140,7 @@ def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
     convert_fpd_parser.set_defaults(func=_convert_fpd)
 
     convert_mtx_parser = convert_sub_parser.add_parser(
-        "mtx",
-        help="convert a mtx file to XML file",
-        parents=[mtx_options],
+        "mtx", help="convert a mtx file to XML file", parents=[mtx_options]
     )
     convert_mtx_parser.set_defaults(func=_convert_mtx)
 
@@ -162,13 +148,10 @@ def _create_parsers(main_parser: argparse.ArgumentParser) -> None:
 def main() -> None:
     """Entry point for the commandline application."""
     main_parser = argparse.ArgumentParser(
-        description="A conversion tool for files used by older Puyo games.",
+        description="A conversion tool for files used by older Puyo games."
     )
     main_parser.add_argument(
-        "-v",
-        "--version",
-        help="show version",
-        action="store_true",
+        "-v", "--version", help="show version", action="store_true"
     )
 
     _create_parsers(main_parser)

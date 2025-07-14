@@ -63,7 +63,7 @@ class Mtx:
                 return cls.read_mtx(fp)
             except FormatError as e:
                 raise FileFormatError(
-                    f"{path} is not a valid `mtx` file",
+                    f"{path} is not a valid `mtx` file"
                 ) from e
 
     @classmethod
@@ -86,7 +86,7 @@ class Mtx:
         sections = [
             read_offset(data, section_table_offset + (i * int_width))
             for i in range(
-                (string_table_offset - section_table_offset) // int_width,
+                (string_table_offset - section_table_offset) // int_width
             )
         ]
 
@@ -96,15 +96,12 @@ class Mtx:
         strings: list[MtxString] = []
 
         for current_string_offset, next_string_offset in pairwise(sections):
-            strings.append(
-                [
-                    _read_character(
-                        data,
-                        current_string_offset + (i * CHARACTER_WIDTH),
-                    )
-                    for i in range(next_string_offset - current_string_offset)
-                ],
-            )
+            strings.append([
+                _read_character(
+                    data, current_string_offset + (i * CHARACTER_WIDTH)
+                )
+                for i in range(next_string_offset - current_string_offset)
+            ])
 
         return cls(strings)
 
@@ -140,8 +137,5 @@ class Mtx:
         etree.indent(root)
 
         return etree.tostring(
-            root,
-            encoding="utf-8",
-            xml_declaration=True,
-            pretty_print=True,
+            root, encoding="utf-8", xml_declaration=True, pretty_print=True
         )

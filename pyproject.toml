@@ -53,6 +53,9 @@ select = [
 ]
 typing-modules = ["types-lxml"]
 
+# Disable rules that conflict with the formatter
+ignore = ["COM812"]
+
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 72
 
