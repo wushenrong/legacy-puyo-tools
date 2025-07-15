@@ -35,7 +35,7 @@ class FpdCharacter:
             A string that stores a single character.
         width:
             How wide should the character be, only used in the Nintendo
-            DS version of the Puyo Puyo 7.
+            DS versions of the games.
     """
 
     code_point: str
