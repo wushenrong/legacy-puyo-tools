@@ -4,14 +4,36 @@
 
 [project]
 authors = [{ name = "Samuel Wu", email = "twopizza9621536@gmail.com" }]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+
+    # Intended Audience
+    "Intended Audience :: Other Audience",
+    "Topic :: File Formats",
+    "Topic :: Games/Entertainment :: Puzzle Games",
+    "Topic :: Utilities",
+
+    # Python Versions
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = ["attrs>=25.3.0", "lxml>=6.0.0"]
 description = "A tool to edit text for older Puyo Puyo games."
+keywords = ["puyopuyo"]
 license = "MIT"
 license-files = ["LICENSE"]
 name = "legacy-puyo-tools"
 readme = "README.md"
 requires-python = ">=3.13"
 version = "0.0.1"
+
+[project.urls]
+changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
+homepage = "https://github.com/wushenrong/legacy-puyo-tools"
+issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
+source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
 [project.scripts]
 legacy-puyo-tools = "legacy_puyo_tools.cli:main"
@@ -66,7 +88,6 @@ convention = "google"
 extension-pkg-allow-list = ["lxml"]
 max-line-length = 79
 output-format = "colorized"
-source-roots = ["src"]
 
 [tool.pyright]
 include = ["src"]
