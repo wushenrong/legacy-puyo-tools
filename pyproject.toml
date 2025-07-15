@@ -11,7 +11,7 @@ license-files = ["LICENSE"]
 name = "legacy-puyo-tools"
 readme = "README.md"
 requires-python = ">=3.13"
-version = "0.0.0"
+version = "0.0.1"
 
 [project.scripts]
 legacy-puyo-tools = "legacy_puyo_tools.cli:main"
