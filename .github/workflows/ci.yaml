@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT-0
+
+name: Lint, format, and test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Setup environment
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-python@v5
+
+      # Disable rules about documentation and TODOs in CI
+      # Let the developer decide when to fix them
+      - name: Ruff lint
+        run: uv run ruff check --fix --ignore=D101,D102,FIX002
+      - name: Lint using pylint
+        run: uv run pylint src --disable=C0115,C0116,W0511
+
+      - name: Lint using pyright
+        run: uv run pyright
+
+      - name: Ruff format
+        run: uv run ruff format

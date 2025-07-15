@@ -64,9 +64,12 @@ convention = "google"
 
 [tool.pylint]
 extension-pkg-allow-list = ["lxml"]
+max-line-length = 79
 output-format = "colorized"
+source-roots = ["src"]
 
 [tool.pyright]
+include = ["src"]
 typeCheckingMode = "strict"
 
 [build-system]
@@ -75,6 +78,7 @@ requires = ["hatchling"]
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.2.0",
     "pylint>=3.3.7",
     "pyright>=1.1.403",
     "reuse>=5.0.2",
