@@ -18,9 +18,25 @@ at index `0x06`, etc.
 The `fpd` is not used by the games internally except for the Nintendo DS version
 of Puyo Puyo 7.
 
+## The `fmp` format
+
+The `fmp` format is a bitmap format used by the Nintendo DS versions of Puyo
+Puyo! 15th Anniversary and Puyo Puyo 7 to store the pixel data of the font
+corresponding to the `fpd` file. Characters are stored in the same order as the
+`fpd` file. Each character is either 14x14 pixels (in `puyo14.fmp` and
+`test.fmp`) or 8x8 pixels (in`puyo8.fmp`).The image data is stored in a packed
+format where each byte encodes two horizontal pixels, where the lower 4 bits
+represent the left pixel and the higher 4 bits represent the right one:
+- 0x1 represents a visible pixel (on pixel)
+- 0x0 represents an empty pixel (off pixel)
+
+Pixels are stored row by row, in top-to-bottom and left-to-right order. There
+are no headers or padding bytes in the file.
+
 ## The `mtx` format
 
 <!-- TODO: Finish the mtx format for PP15 and PP7 -->
 <!-- TODO: Look at the mtx format for PP20 -->
 The `mtx` format is a binary-encoded format used by older Puyo games for
 storing character dialog and text.
+
