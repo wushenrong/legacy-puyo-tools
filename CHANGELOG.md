@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Installation, usage, and supported games sections in README.md.
+- Information about the `fmp` format (#2).
 
 ### Changed
 
