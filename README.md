@@ -1,7 +1,7 @@
 # Legacy Puyo Tools
 
-A command line tool for modding older Puyo Puyo games. (Yes, the name is using a
-[reversed naming scheme](https://github.com/microsoft/WSL).)
+A command line tool for modding older Puyo Puyo games (Yes, the name is using a
+[reversed naming scheme](https://github.com/microsoft/WSL)).
 
 ## Installation
 
@@ -70,8 +70,10 @@ This tool will try to support formats from the following Puyo games:
 - Puyo Puyo 7
 - Puyo Puyo!! 20th Annversivery (If there is demand)
 
-See [Formats](formats.md) for detailed information about those formats, and the
-current progress on creating and converting them.
+See
+[Formats](https://github.com/wushenrong/legacy-puyo-tools/blob/main/formats.md)
+for detailed information about these formats, and the current progress on
+creating and converting them.
 
 ## Why
 
