@@ -1,215 +1,156 @@
-"""A commandline application that interfaces with conversion tools.
+"""A commandline interface for the conversion tools.
 
 SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
-from __future__ import annotations
-
-import argparse
-import sys
-from argparse import ArgumentParser
 from codecs import BOM_UTF16_LE
-from collections.abc import Callable
-from importlib import metadata
 from pathlib import Path
 from typing import BinaryIO
 
-from attrs import define
+import cloup
+from cloup import option, option_group
+from cloup.constraints import require_one
 
-from legacy_puyo_tools.exceptions import FileFormatError
+from legacy_puyo_tools.exceptions import ArgumentError, FileFormatError
 from legacy_puyo_tools.fpd import Fpd
 from legacy_puyo_tools.mtx import Mtx
 
+output_option = option(
+    "--output",
+    "-o",
+    help="Output file. Defaults to an appropriate filename and extension.",
+    type=cloup.File("wb"),
+)
 
-# We disable slots because the func attribute is not callable when it is
-# enabled.
-@define(slots=False)
-class _CliNamespace(argparse.Namespace):
-    func: Callable[[type[_CliNamespace]], None]
-    input: BinaryIO
-    output: BinaryIO
-    unicode: BinaryIO
-    fpd: BinaryIO
-    subcommand: str
-    version: bool
+mtx_options = option_group(
+    "Character table options",
+    option(
+        "--fpd",
+        help="Use a fpd file as the character table.",
+        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
+    ),
+    option(
+        "--unicode",
+        help="Use a unicode text file as the character table.",
+        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
+    ),
+    constraint=require_one.rephrased(
+        "exactly 1 character table required for mtx files",
+        "exactly 1 character table must be specified",
+    ),
+)
 
 
-def _create_fpd(args: _CliNamespace) -> None:
-    if args.input.read(2) != BOM_UTF16_LE:
+@cloup.group()
+@cloup.version_option()
+def main() -> None:
+    """A conversion tool for files used by older Puyo games."""
+
+
+@main.group()
+def create() -> None:
+    """Create files to used by older Puyo games."""
+
+
+@create.command(name="fpd")
+@cloup.argument(
+    "input_file",
+    help="Unicode text file encoded in UTF-16 little-endian.",
+    type=cloup.File("rb"),
+)
+@output_option
+def create_fpd(input_file: BinaryIO, output: BinaryIO | None) -> None:
+    """Create a fpd file from a unicode text file."""
+    if input_file.read(2) != BOM_UTF16_LE:
         raise FileFormatError(
-            f"{args.input.name} is not a UTF-16 little-endian encoded text"
-            "file."
+            f"{input_file.name} is not a UTF-16 little-endian encoded text file."
         )
 
-    if args.output:
-        Fpd.read_unicode(args.input).write_fpd(args.output)
+    if output:
+        Fpd.read_unicode(input_file).write_fpd(output)
         return
 
-    path = Path(args.input.name).with_suffix("")
+    path = Path(input_file.name).with_suffix("")
 
     if path.suffix != ".fpd":
         path = path.with_suffix(".fpd")
 
-    Fpd.read_unicode(args.input).write_fpd_to_path(path)
+    Fpd.read_unicode(input_file).write_fpd_to_path(path)
 
 
-def _create_mtx(args: _CliNamespace) -> None:
-    raise NotImplementedError()
+@create.command(name="mtx", show_constraints=True)
+@cloup.argument(
+    "input_file",
+    help="XML file that contains markup text or dialog.",
+    type=cloup.File("rb"),
+)
+@output_option
+@mtx_options
+def create_mtx(
+    input_file: BinaryIO, output: BinaryIO, fpd: Path | None, unicode: Path | None
+) -> None:
+    """Create a mtx file from a XML file."""
+    raise NotImplementedError("Creating MTX files is currently not implemented yet.")
 
 
-def _convert_fpd(args: _CliNamespace) -> None:
-    if args.output:
-        args.output.write(BOM_UTF16_LE)
-        Fpd.read_fpd(args.input).write_fpd(args.output)
+@main.group()
+def convert() -> None:
+    """Convert files used by older Puyo games to an editable format."""
+
+
+@convert.command(name="fpd")
+@cloup.argument(
+    "input_file", help="Fpd file containing character data.", type=cloup.File("rb")
+)
+@output_option
+def convert_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
+    """Convert a fpd file to a UTF-16 little-endian unicode text file."""
+    if output_file:
+        output_file.write(BOM_UTF16_LE)
+        Fpd.read_fpd(input_file).write_fpd(output_file)
         return
 
-    path = Path(args.input.name).with_suffix("")
+    path = Path(input_file.name).with_suffix("")
 
     if path.suffix != ".fpd":
         path = path.with_suffix(".fpd")
 
-    Fpd.read_fpd(args.input).write_unicode_to_path(path)
+    Fpd.read_fpd(input_file).write_unicode_to_path(path)
 
 
-def _convert_mtx(args: _CliNamespace) -> None:
-    if args.fpd:
-        fpd_data = Fpd.read_fpd(args.fpd)
+@convert.command(name="mtx", show_constraints=True)
+@cloup.argument(
+    "input_file", help="Mtx file containing Manzai text.", type=cloup.File("rb")
+)
+@output_option
+@mtx_options
+def convert_mtx(
+    input_file: BinaryIO,
+    output: BinaryIO | None,
+    fpd: Path | None,
+    unicode: Path | None,
+) -> None:
+    """Convert a mtx file to a XML file."""
+    if fpd:
+        fpd_data = Fpd.read_fpd_from_path(fpd)
+    elif unicode:
+        fpd_data = Fpd.read_unicode_from_path(unicode)
     else:
-        if args.unicode.read(2) != BOM_UTF16_LE:
-            raise FileFormatError(
-                f"{args.input.name} is not a UTF-16 little-endian encoded text"
-                "file."
-            )
+        raise ArgumentError(
+            "You must specify a character table using --fpd or --unicode."
+        )
 
-        fpd_data = Fpd.read_unicode(args.unicode)
-
-    if args.output:
-        Mtx.read_mtx(args.input).write_xml(args.output, fpd_data)
+    if output:
+        Mtx.read_mtx(input_file).write_xml(output, fpd_data)
         return
 
-    path = Path(args.input.name).with_suffix("")
+    path = Path(input_file.name).with_suffix("")
 
     if path.suffix != ".xml":
         path = path.with_suffix(".xml")
 
-    Mtx.read_mtx(args.input).write_xml_to_file(path, fpd_data)
-
-
-def _add_create_parsers(
-    create_parser: ArgumentParser,
-    shared_options: ArgumentParser,
-    mtx_options: ArgumentParser,
-) -> None:
-    create_sub_parsers = create_parser.add_subparsers()
-
-    create_fpd_parser = create_sub_parsers.add_parser(
-        "fpd",
-        help="create a fpd file from a unicode text file",
-        parents=[shared_options],
-    )
-    create_fpd_parser.set_defaults(func=_create_fpd)
-
-    create_mtx_parser = create_sub_parsers.add_parser(
-        "mtx", help="create a mtx file from a XML file", parents=[mtx_options]
-    )
-    create_mtx_parser.set_defaults(func=_create_mtx)
-
-
-def _add_convert_parsers(
-    convert_parser: ArgumentParser,
-    shared_options: ArgumentParser,
-    mtx_options: ArgumentParser,
-) -> None:
-    convert_sub_parsers = convert_parser.add_subparsers()
-
-    convert_fpd_parser = convert_sub_parsers.add_parser(
-        "fpd",
-        help="convert a fpd file to a unicode file",
-        parents=[shared_options],
-    )
-    convert_fpd_parser.set_defaults(func=_convert_fpd)
-
-    convert_mtx_parser = convert_sub_parsers.add_parser(
-        "mtx", help="convert a mtx file to XML file", parents=[mtx_options]
-    )
-    convert_mtx_parser.set_defaults(func=_convert_mtx)
-
-
-def _add_sub_parsers(main_parser: ArgumentParser) -> dict[str, ArgumentParser]:
-    shared_options = ArgumentParser(add_help=False)
-    shared_options.add_argument(
-        "input", type=argparse.FileType("rb"), help="input file"
-    )
-    shared_options.add_argument(
-        "-o", "--output", type=argparse.FileType("wb"), help="output file"
-    )
-
-    mtx_options = ArgumentParser(add_help=False, parents=[shared_options])
-    mtx_options_group = mtx_options.add_mutually_exclusive_group(required=True)
-    mtx_options_group.add_argument(
-        "--fpd", type=argparse.FileType("rb"), help="fpd file"
-    )
-    mtx_options_group.add_argument(
-        "--unicode", type=argparse.FileType("rb"), help="unicode text file"
-    )
-
-    sub_parsers = main_parser.add_subparsers(
-        title="subcommands", dest="subcommand"
-    )
-
-    subcommand_parsers = {
-        "create_parser": sub_parsers.add_parser(
-            "create", help="Create files that are used by older Puyo games"
-        ),
-        "convert_parser": sub_parsers.add_parser(
-            "convert",
-            help="Convert files used by older Puyo games to a readable format",
-        ),
-    }
-
-    _add_create_parsers(
-        subcommand_parsers["create_parser"], shared_options, mtx_options
-    )
-    _add_convert_parsers(
-        subcommand_parsers["convert_parser"], shared_options, mtx_options
-    )
-
-    return subcommand_parsers
-
-
-def main() -> None:
-    """Entry point for the commandline application."""
-    main_parser = ArgumentParser(
-        description="A conversion tool for files used by older Puyo games."
-    )
-    main_parser.add_argument(
-        "-v", "--version", help="show version", action="store_true"
-    )
-
-    subcommand_parsers = _add_sub_parsers(main_parser)
-
-    args = main_parser.parse_args(namespace=_CliNamespace)
-
-    if args.version is True:
-        package_name = "legacy-puyo-tools"
-        version = metadata.version(package_name)
-
-        print(f"{package_name} {version}")
-
-        sys.exit(0)
-
-    if not hasattr(args, "func"):
-        if args.subcommand == "create":
-            subcommand_parsers["create_parser"].print_help(sys.stderr)
-        elif args.subcommand == "convert":
-            subcommand_parsers["convert_parser"].print_help(sys.stderr)
-        else:
-            main_parser.print_help(sys.stderr)
-
-        sys.exit(1)
-
-    args.func(args)
+    Mtx.read_mtx(input_file).write_xml_to_file(path, fpd_data)
 
 
 if __name__ == "__main__":

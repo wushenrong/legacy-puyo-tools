@@ -107,6 +107,18 @@ wheels = [
 ]
 
 [[package]]
+name = "cloup"
+version = "3.0.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/c9/3c621e0b7898403556e807244104095df1132a6094384f80c272bba4e4e4/cloup-3.0.7.tar.gz", hash = "sha256:c852e0a0541aa433c6ab31a9b8b503f63d9881e91ddaf0384d6927965f2b421c", size = 229613, upload-time = "2025-03-15T00:34:10.224Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/2e/ccd754e473b972155f7e8ca60af373a8bc13ae951a5cb76363c43363e69d/cloup-3.0.7-py2.py3-none-any.whl", hash = "sha256:d3a431cf1e14d8835fe85608e02cc6ff7216f0a39e30d5e28618aa938003ddb4", size = 54602, upload-time = "2025-03-15T00:34:09.165Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -187,6 +199,8 @@ version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
+    { name = "click" },
+    { name = "cloup" },
     { name = "lxml" },
 ]
 
@@ -203,6 +217,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "attrs", specifier = ">=25.3.0" },
+    { name = "click", specifier = ">=8.2.1" },
+    { name = "cloup", specifier = ">=3.0.7" },
     { name = "lxml", specifier = ">=6.0.0" },
 ]
 

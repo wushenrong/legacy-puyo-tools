@@ -11,3 +11,7 @@ class FormatError(Exception):
 
 class FileFormatError(FormatError):
     """The file does not conform to a file format or is malformed."""
+
+
+class ArgumentError(Exception):
+    """One of the argument is invalid or missing."""
