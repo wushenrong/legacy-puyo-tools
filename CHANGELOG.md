@@ -8,10 +8,15 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- A way to run the project using `runpy` or `python -m legacy_puyo_tools`.
+
 ### Changed
 
 - Downgrade Python version to 3.9 and dependencies to follow Debian LTS.
 - Take strings and Path-Like objects for path arguments.
+- `main` to `app` for the command line interface.
 
 ## 0.1.0 - 2025-07-16
 

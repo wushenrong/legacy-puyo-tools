@@ -40,7 +40,7 @@ issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
 [project.scripts]
-legacy-puyo-tools = "legacy_puyo_tools.cli:main"
+legacy-puyo-tools = "legacy_puyo_tools.cli:app"
 
 [tool.ruff]
 output-format = "concise"

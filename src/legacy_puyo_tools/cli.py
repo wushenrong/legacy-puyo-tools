@@ -46,11 +46,11 @@ mtx_options = option_group(
 
 @cloup.group()
 @cloup.version_option()
-def main() -> None:
+def app() -> None:
     """A conversion tool for files used by older Puyo games."""
 
 
-@main.group()
+@app.group()
 def create() -> None:
     """Create files to used by older Puyo games."""
 
@@ -96,7 +96,7 @@ def create_mtx(
     raise NotImplementedError("Creating MTX files is currently not implemented yet.")
 
 
-@main.group()
+@app.group()
 def convert() -> None:
     """Convert files used by older Puyo games to an editable format."""
 
@@ -156,4 +156,4 @@ def convert_mtx(
 
 
 if __name__ == "__main__":
-    main()
+    app()
