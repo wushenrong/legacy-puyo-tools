@@ -5,11 +5,16 @@
 version = 1
 
 [[annotations]]
-SPDX-FileCopyrightText = "2025 Samuel Wu"
+SPDX-FileCopyrightText = "2025 Samuel Wu and contributors"
 SPDX-License-Identifier = "MIT"
-path = ["docs/formats.md"]
+path = ["formats.md"]
 
 [[annotations]]
 SPDX-FileCopyrightText = "2025 Samuel Wu"
 SPDX-License-Identifier = "MIT-0"
-path = ["README.md", "uv.lock"]
+path = ["CHANGELOG.md", "CONTRIBUTING.md", "README.md", "uv.lock"]
+
+[[annotations]]
+SPDX-FileCopyrightText = "2014 Coraline Ada Ehmke"
+SPDX-License-Identifier = "CC-BY-4.0"
+path = ["CODE_OF_CONDUCT.md"]
