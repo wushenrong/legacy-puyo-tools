@@ -4,6 +4,8 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
+from __future__ import annotations
+
 from codecs import BOM_UTF16_LE
 from pathlib import Path
 from typing import BinaryIO
@@ -61,7 +63,7 @@ def create() -> None:
 )
 @output_option
 def create_fpd(input_file: BinaryIO, output: BinaryIO | None) -> None:
-    """Create a fpd file from a unicode text file."""
+    """Create a fpd file from a unicode text file."""  # noqa: DOC501
     if input_file.read(2) != BOM_UTF16_LE:
         raise FileFormatError(
             f"{input_file.name} is not a UTF-16 little-endian encoded text file."
@@ -131,7 +133,7 @@ def convert_mtx(
     fpd: Path | None,
     unicode: Path | None,
 ) -> None:
-    """Convert a mtx file to a XML file."""
+    """Convert a mtx file to a XML file."""  # noqa: DOC501
     if fpd:
         fpd_data = Fpd.read_fpd_from_path(fpd)
     elif unicode:

@@ -17,16 +17,20 @@ classifiers = [
 
     # Python Versions
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.9",
 ]
-dependencies = ["attrs>=25.3.0", "click>=8.2.1", "cloup>=3.0.7", "lxml>=6.0.0"]
+dependencies = ["attrs>=25.3.0", "click>=8.1.8", "cloup>=3.0.7", "lxml>=6.0.0"]
 description = "A tool to edit text for older Puyo Puyo games."
 keywords = ["puyopuyo"]
 license = "MIT"
 license-files = ["LICENSE"]
 name = "legacy-puyo-tools"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 version = "0.1.0"
 
 [project.urls]
@@ -45,40 +49,34 @@ preview = true
 
 [tool.ruff.lint]
 select = [
-    "ANN",  # type annotations
-    "ARG",  # falke8 unused arguments
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "COM",  # flake8-commas (specifically trailing commas)
-    "D",    # pydocstyle
-    "DOC",  # pydoclint
-    "E",    # Error
-    "ERA",  # eradicate commented out code
-    "F",    # pyflakes
-    "FIX",  # flake8 fixme
-    "FURB", # refurb
-    "I",    # isort
-    "ISC",  # flake8-implicit-str-concat
-    "N",    # pep8-naming
-    "PERF", # Perflint: performance
-    "PGH",  # pygrep-hooks
-    "PIE",  # flake8-pie
-    "PTH",  # flake8-use-pathlib
-    "Q",    # flake8-quotes
-    "RUF",  # Ruff specific rules
-    "S",    # bandit security checks
-    "SIM",  # flake8-simplify
-    "UP",   # pyupgrade
-    "W",    # Warning
-    "YTT",  # flake8-2020
+    "ANN",    # type annotations
+    "ARG",    # falke8 unused arguments
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "COM818", # flake8-commas (let the formatter handle commas)
+    "D",      # pydocstyle
+    "DOC",    # pydoclint
+    "E",      # Error
+    "ERA",    # eradicate commented out code
+    "F",      # pyflakes
+    "FIX",    # flake8 fixme
+    "FURB",   # refurb
+    "I",      # isort
+    "ISC",    # flake8-implicit-str-concat
+    "N",      # pep8-naming
+    "PERF",   # Perflint: performance
+    "PGH",    # pygrep-hooks
+    "PIE",    # flake8-pie
+    "PTH",    # flake8-use-pathlib
+    "Q",      # flake8-quotes
+    "RUF",    # Ruff specific rules
+    "S",      # bandit security checks
+    "SIM",    # flake8-simplify
+    "UP",     # pyupgrade
+    "W",      # Warning
+    "YTT",    # flake8-2020
 ]
 typing-modules = ["types-lxml"]
-
-# Disable rules that conflict with the formatter
-ignore = ["COM812"]
-
-[tool.ruff.lint.per-file-ignores]
-"src/legacy_puyo_tools/cli.py" = ["DOC501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

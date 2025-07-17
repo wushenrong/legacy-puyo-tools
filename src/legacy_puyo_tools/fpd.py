@@ -7,12 +7,14 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
+from __future__ import annotations
+
 from codecs import BOM_UTF16_LE
 from io import BytesIO
 from pathlib import Path
-from typing import BinaryIO, Self
+from typing import BinaryIO
 
-from attrs import define
+import attrs
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 
@@ -22,7 +24,7 @@ UTF16_LENGTH = 2
 WIDTH_ENTRY_OFFSET = 2
 
 
-@define
+@attrs.define
 class FpdCharacter:
     """A fpd character entry.
 
@@ -59,10 +61,11 @@ class FpdCharacter:
         Returns:
             The character in UTF-16 LE format and its width.
         """
-        return self.code_point.encode(ENCODING) + self.width.to_bytes()
+        # TODO: When updating Python to 3.11, remove arguments from width.to_bytes
+        return self.code_point.encode(ENCODING) + self.width.to_bytes(1, "little")
 
     @classmethod
-    def decode(cls, fpd_entry: bytes) -> Self:
+    def decode(cls, fpd_entry: bytes) -> FpdCharacter:
         """Decodes a fpd character into its code point and width.
 
         Args:
@@ -82,7 +85,7 @@ class FpdCharacter:
         return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
 
 
-@define
+@attrs.define
 class Fpd:
     """A fpd character table.
 
@@ -111,7 +114,7 @@ class Fpd:
         return self.entries[index].code_point
 
     @classmethod
-    def read_fpd_from_path(cls, path: Path) -> Self:
+    def read_fpd_from_path(cls, path: Path) -> Fpd:
         """Reads and extract characters from a fpd file.
 
         Args:
@@ -133,7 +136,7 @@ class Fpd:
                 raise FileFormatError(f"{path} is not a valid fpd file") from e
 
     @classmethod
-    def read_fpd(cls, fp: BinaryIO) -> Self:
+    def read_fpd(cls, fp: BinaryIO) -> Fpd:
         """Reads and extract characters from a file object.
 
         Args:
@@ -146,7 +149,7 @@ class Fpd:
         return cls.decode_fpd(fp.read())
 
     @classmethod
-    def decode_fpd(cls, data: bytes) -> Self:
+    def decode_fpd(cls, data: bytes) -> Fpd:
         """Extracts the fpd character table from a fpd encoded stream.
 
         Args:
@@ -193,7 +196,7 @@ class Fpd:
             return bytes_buffer.getvalue()
 
     @classmethod
-    def read_unicode_from_path(cls, path: Path) -> Self:
+    def read_unicode_from_path(cls, path: Path) -> Fpd:
         """Reads and convert characters from a UTF-16 little-endian text file.
 
         Arguments:
@@ -218,7 +221,7 @@ class Fpd:
             return cls.read_unicode(fp)
 
     @classmethod
-    def read_unicode(cls, fp: BinaryIO) -> Self:
+    def read_unicode(cls, fp: BinaryIO) -> Fpd:
         """Reads and convert UTF-16 LE characters from a file object.
 
         Args:
@@ -232,7 +235,7 @@ class Fpd:
 
     # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
-    def decode_unicode(cls, unicode: bytes) -> Self:
+    def decode_unicode(cls, unicode: bytes) -> Fpd:
         """Converts a UTF-16 LE stream into a fpd character table.
 
         Args:

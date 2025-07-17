@@ -7,16 +7,37 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
-from collections.abc import Callable
-from itertools import pairwise
-from pathlib import Path
-from typing import BinaryIO, Literal, Self
+from __future__ import annotations
 
-from attrs import define
+import sys
+from collections.abc import Callable
+from pathlib import Path
+from typing import BinaryIO, Literal
+
+import attrs
 from lxml import etree
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 from legacy_puyo_tools.fpd import Fpd
+
+# TODO: When updating to Python 3.10, remove the stub implementation of pairwise
+# from the python documentation:
+# https://docs.python.org/3/library/itertools.html#itertools.pairwise
+if sys.version_info >= (3, 10):
+    from itertools import pairwise
+else:
+    from collections.abc import Iterable
+    from itertools import tee
+    from typing import TypeVar
+
+    T = TypeVar("T")
+
+    def pairwise(iterable: Iterable[T]) -> Iterable[tuple[T, T]]:
+        """Simple pairwise implementation for Python < 3.10."""  # noqa: DOC201
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)
+
 
 CHARACTER_WIDTH = 2
 ENDIAN = "little"
@@ -48,15 +69,16 @@ def _identify_mtx(data: bytes) -> tuple[Literal[8, 16], Literal[4, 8]]:
     raise FormatError("The given data is not in a valid `mtx` format")
 
 
-type MtxString = list[int]
+# TODO: When upgrading to Python 3.12, add type to the beginning of the alias
+MtxString = list[int]
 
 
-@define
+@attrs.define
 class Mtx:
     strings: list[MtxString]
 
     @classmethod
-    def read_mtx_from_file(cls, path: Path) -> Self:
+    def read_mtx_from_file(cls, path: Path) -> Mtx:
         with Path(path).open("rb") as fp:
             try:
                 return cls.read_mtx(fp)
@@ -64,11 +86,11 @@ class Mtx:
                 raise FileFormatError(f"{path} is not a valid `mtx` file") from e
 
     @classmethod
-    def read_mtx(cls, fp: BinaryIO) -> Self:
+    def read_mtx(cls, fp: BinaryIO) -> Mtx:
         return cls.decode_mtx(fp.read())
 
     @classmethod
-    def decode_mtx(cls, data: bytes) -> Self:
+    def decode_mtx(cls, data: bytes) -> Mtx:
         length = int.from_bytes(data[:4], ENDIAN)
 
         if length != len(data):
@@ -114,18 +136,18 @@ class Mtx:
             dialog.text = "\n"
 
             for character in string:
-                match character:
-                    case 0xF813:
-                        dialog.append(etree.Element("arrow"))
-                    # TODO: Figure out what this control character does
-                    case 0xF883:
-                        dialog.text += "0xF883"
-                    case 0xFFFD:
-                        dialog.text += "\n"
-                    case 0xFFFF:
-                        break
-                    case _:
-                        dialog.text += fpd[character]
+                # TODO: When upgrading to Python 3.10, use `match` statements
+                if character == 0xF813:
+                    dialog.append(etree.Element("arrow"))
+                # TODO: Figure out what this control character does
+                elif character == 0xF883:
+                    dialog.text += "0xF883"
+                elif character == 0xFFFD:
+                    dialog.text += "\n"
+                elif character == 0xFFFF:
+                    break
+                else:
+                    dialog.text += fpd[character]
 
         etree.indent(root)
 
