@@ -8,6 +8,7 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
 
     # Intended Audience
     "Intended Audience :: Other Audience",
@@ -78,6 +79,9 @@ select = [
 ]
 typing-modules = ["types-lxml"]
 
+[tool.ruff.lint.per-file-ignores]
+"**/tests/*" = ["S101"] # We need asserts for pytest
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
@@ -87,8 +91,12 @@ max-line-length = 88
 output-format = "colorized"
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "tests"]
 typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+minversion = "8.4"
 
 [build-system]
 build-backend = "hatchling.build"
@@ -99,6 +107,8 @@ dev = [
     "pre-commit>=4.2.0",
     "pylint>=3.3.7",
     "pyright>=1.1.403",
+    "pytest-cov>=6.2.1",
+    "pytest>=8.4.1",
     "reuse>=5.0.2",
     "ruff>=0.12.2",
     "types-lxml>=2025.3.30",
