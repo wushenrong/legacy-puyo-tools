@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
+from os import PathLike
 from pathlib import Path
 from typing import BinaryIO, Literal
 
@@ -78,7 +79,7 @@ class Mtx:
     strings: list[MtxString]
 
     @classmethod
-    def read_mtx_from_file(cls, path: Path) -> Mtx:
+    def read_mtx_from_file(cls, path: str | PathLike[str]) -> Mtx:
         with Path(path).open("rb") as fp:
             try:
                 return cls.read_mtx(fp)
@@ -120,7 +121,7 @@ class Mtx:
 
         return cls(strings)
 
-    def write_xml_to_file(self, path: Path, fpd: Fpd) -> None:
+    def write_xml_to_file(self, path: str | PathLike[str], fpd: Fpd) -> None:
         with Path(path).open("wb") as fp:
             self.write_xml(fp, fpd)
 

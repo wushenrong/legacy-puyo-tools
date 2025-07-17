@@ -11,6 +11,7 @@ and this project adheres to
 ### Changed
 
 - Downgrade Python version to 3.9 and dependencies to follow Debian LTS.
+- Take strings and Path-Like objects for path arguments.
 
 ## 0.1.0 - 2025-07-16
 

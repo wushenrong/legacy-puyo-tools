@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from codecs import BOM_UTF16_LE
 from io import BytesIO
+from os import PathLike
 from pathlib import Path
 from typing import BinaryIO
 
@@ -114,7 +115,7 @@ class Fpd:
         return self.entries[index].code_point
 
     @classmethod
-    def read_fpd_from_path(cls, path: Path) -> Fpd:
+    def read_fpd_from_path(cls, path: str | PathLike[str]) -> Fpd:
         """Reads and extract characters from a fpd file.
 
         Args:
@@ -164,7 +165,7 @@ class Fpd:
             for i in range(0, len(data), FPD_ENTRY_LENGTH)
         ])
 
-    def write_fpd_to_path(self, path: Path) -> None:
+    def write_fpd_to_path(self, path: str | PathLike[str]) -> None:
         """Writes the fpd character table to a fpd encoded file.
 
         Args:
@@ -196,7 +197,7 @@ class Fpd:
             return bytes_buffer.getvalue()
 
     @classmethod
-    def read_unicode_from_path(cls, path: Path) -> Fpd:
+    def read_unicode_from_path(cls, path: str | PathLike[str]) -> Fpd:
         """Reads and convert characters from a UTF-16 little-endian text file.
 
         Arguments:
@@ -250,7 +251,7 @@ class Fpd:
             for i in range(0, len(unicode), UTF16_LENGTH)
         ])
 
-    def write_unicode_to_path(self, path: Path) -> None:
+    def write_unicode_to_path(self, path: str | PathLike[str]) -> None:
         """Writes the fpd character table to a UTF-16 LE text file.
 
         Args:
