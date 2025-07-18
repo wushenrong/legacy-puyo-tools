@@ -1,4 +1,4 @@
-"""Testing creating mtx formats."""
+"""Tests for creating mtx formats."""
 
 from pathlib import Path
 

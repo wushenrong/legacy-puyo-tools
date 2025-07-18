@@ -68,6 +68,7 @@ select = [
     "PERF",   # Perflint: performance
     "PGH",    # pygrep-hooks
     "PIE",    # flake8-pie
+    "PT",     # flake8-pytest-style
     "PTH",    # flake8-use-pathlib
     "Q",      # flake8-quotes
     "RUF",    # Ruff specific rules
