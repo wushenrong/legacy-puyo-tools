@@ -6,7 +6,10 @@ them.
 
 ## The `fpd` format
 
-Both the creation and conversion of `fpd` are fully implemented.
+-   Status:
+    - Creation: Fully implemented.
+    - Conversion: Fully implemented.
+    - Testing: Full Coverage.
 
 The `fpd` format is a binary character table format used by the developers of
 Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to convert characters from UTF-16
@@ -22,6 +25,11 @@ The `fpd` is not used by the games internally except for the Nintendo DS version
 of the games.
 
 ## The `fmp` format
+
+-   Status:
+    - Creation: Not implemented.
+    - Conversion: Not implemented.
+    - Testing: No coverage.
 
 The `fmp` format is a 4 bits per pixel (4bpp) bitmap format used by the Nintendo
 DS versions of Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to store the
@@ -39,8 +47,13 @@ are no headers or padding bytes in the file.
 
 ## The `mtx` format
 
-The creation of `mtx` has not been implemented yet while conversion only has
-partial support.
+-   Status:
+    - Creation: Not implemented yet.
+    - Conversion: Partially implemented.
+    - Testing: 35% coverage.
+-   Notes:
+    -   Conversion only supports Puyo Puyo 7 and possibility Puyo Puyo! 15th
+        Anniversary and it's mostly complete.
 
 <!-- TODO: Finish the mtx format for PP15 and PP7 -->
 <!-- TODO: Look at the mtx format for PP20 -->
