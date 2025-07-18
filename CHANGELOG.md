@@ -16,8 +16,8 @@ and this project adheres to
 
 ### Changed
 
-- Downgrade Python version to 3.9 and dependencies to follow Debian LTS.
-- Take strings and Path-Like objects for path arguments.
+- Backport project to Python 3.9 to follow Debian LTS.
+- Take in strings and Path-Like objects for path arguments.
 - `main` to `app` for the command line interface.
 
 ## 0.1.0 - 2025-07-16
