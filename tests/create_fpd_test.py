@@ -1,47 +1,42 @@
-"""Test creating fpd formats."""
+"""Tests for creating fpd formats."""
 
+from codecs import BOM_UTF16_LE
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import create_fpd
 from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.fpd import BOM_UTF16_LE, ENCODING
-from tests.samples import FPD_SAMPLE_STRING, UNICODE_SAMPLE_STRING
+from legacy_puyo_tools.fpd import ENCODING
+from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
-def test_create_fpd() -> None:
+@pytest.mark.parametrize(
+    ("input_file", "output_file", "output"),
+    [
+        ("sample_data.txt", "sample_data.fpd", False),
+        ("sample_data.txt", "custom_output.fpd", True),
+    ],
+)
+def test_create_fpd(input_file: str, output_file: str, output: bool) -> None:
     """Test creating a fpd file."""
-    runner = CliRunner()
+    cli_runner = CliRunner()
 
-    with runner.isolated_filesystem():
-        with Path("sample_data.txt").open("w", encoding=ENCODING) as f:
+    with cli_runner.isolated_filesystem():
+        with Path(input_file).open("w", encoding=ENCODING) as f:
             f.write(BOM_UTF16_LE.decode(ENCODING))
-            f.write(UNICODE_SAMPLE_STRING)
+            f.write(SAMPLE_UNICODE_STRING)
 
-        result = runner.invoke(create_fpd, ["sample_data.txt"])
+        if output:
+            result = cli_runner.invoke(
+                create_fpd, [input_file, "--output", output_file]
+            )
+        else:
+            result = cli_runner.invoke(create_fpd, [input_file])
 
-        with Path("sample_data.fpd").open("rb") as f:
-            assert f.read() == FPD_SAMPLE_STRING
-
-        assert result.exit_code == 0
-
-
-def test_create_fpd_with_output() -> None:
-    """Test creating a fpd file."""
-    runner = CliRunner()
-
-    with runner.isolated_filesystem():
-        with Path("sample_data.txt").open("w", encoding=ENCODING) as f:
-            f.write(BOM_UTF16_LE.decode(ENCODING))
-            f.write(UNICODE_SAMPLE_STRING)
-
-        result = runner.invoke(
-            create_fpd, ["sample_data.txt", "--output", "sample.fpd"]
-        )
-
-        with Path("sample.fpd").open("rb") as f:
-            assert f.read() == FPD_SAMPLE_STRING
+        with Path(output_file).open("rb") as f:
+            assert f.read() == SAMPLE_FPD_STRING
 
         assert result.exit_code == 0
 
@@ -52,7 +47,7 @@ def test_create_fpd_no_bom() -> None:
 
     with runner.isolated_filesystem():
         with Path("sample_data.txt").open("w", encoding=ENCODING) as f:
-            f.write(UNICODE_SAMPLE_STRING)
+            f.write(SAMPLE_UNICODE_STRING)
 
         result = runner.invoke(create_fpd, ["sample_data.txt"])
 
