@@ -78,13 +78,13 @@ creating and converting them.
 ## Why
 
 The [Puyo Text Editor][puyo-text-editor] can already do what `legacy-puyo-tools`
-does and is the inspiration of this tool, but there are advantages to rewriting
-it in Python:
+does and is the inspiration of this tool, but there are advantages to rewrite it
+in Python:
 
 [puyo-text-editor]: https://github.com/nickworonekin/puyo-text-editor
 
 - Better cross compatibility with Linux.
-- Don't have to update the language version every time it becomes End of Life.
+- Easier migration when upgrade away from end of life language versions.
 - Avoids the rigidness of using a pure object-oriented design.
 
 ## License

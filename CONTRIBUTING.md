@@ -7,7 +7,7 @@ on why a feature should be added or how the bug occurred.
 
 If you are contributing code, be sure to add a signoff to your commits with the
 `-s` or `--signoff` flag as this project uses the
-[Developer Certificate of Origin][dco] to resolve licensing issues between
+[Developer Certificate of Origin][dco] for resolving licensing issues between
 contributors.
 
 [dco]: https://developercertificate.org/
