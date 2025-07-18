@@ -291,4 +291,4 @@ class Fpd:
         Returns:
             A UTF-16 LE encoded text stream with characters from the fpd.
         """
-        return self.__str__().encode(ENCODING)
+        return str(self).encode(ENCODING)
