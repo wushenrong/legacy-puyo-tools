@@ -45,7 +45,6 @@ def test_convert_fpd(input_file: str, output_file: str, output: bool) -> None:
         assert result.exit_code == 0
 
 
-@pytest.mark.xfail
 def test_convert_fpd_from_path(sample_fpd_file: Path) -> None:
     """Test converting a fpd file from a path instead of a file object."""
     assert str(Fpd.read_fpd_from_path(sample_fpd_file)) == SAMPLE_UNICODE_STRING
