@@ -12,6 +12,7 @@ and this project adheres to
 
 - A way to run the project using `runpy` or `python -m legacy_puyo_tools`.
 - Testing infrastructure to avoid regressions.
+- Custom `__str__` functions to avoid re-encoding.
 
 ### Changed
 

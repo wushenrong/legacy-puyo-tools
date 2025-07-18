@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 from codecs import BOM_UTF16_LE
-from io import BytesIO
+from io import BytesIO, StringIO
 from os import PathLike
 from pathlib import Path
 from typing import BinaryIO
@@ -55,6 +55,10 @@ class FpdCharacter:
         """
         self.code_point = code_point.decode(ENCODING)
         self.width = width
+
+    def __str__(self) -> str:
+        """Returns the character as a single character string."""
+        return self.code_point
 
     def encode(self) -> bytes:
         """Encodes the character back to a fpd character entry.
@@ -113,6 +117,14 @@ class Fpd:
             A string that contains the requested character.
         """
         return self.entries[index].code_point
+
+    def __str__(self) -> str:
+        """Returns a string representation of the fpd character table."""
+        with StringIO() as string_buffer:
+            for character in self.entries:
+                string_buffer.write(str(character))
+
+            return string_buffer.getvalue()
 
     @classmethod
     def read_fpd_from_path(cls, path: str | PathLike[str]) -> Fpd:
@@ -279,8 +291,4 @@ class Fpd:
         Returns:
             A UTF-16 LE encoded text stream with characters from the fpd.
         """
-        with BytesIO() as bytes_buffer:
-            for character in self.entries:
-                bytes_buffer.write(character.code_point.encode(ENCODING))
-
-            return bytes_buffer.getvalue()
+        return str(self).encode(ENCODING)
