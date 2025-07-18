@@ -27,6 +27,7 @@ jobs:
       # documentation or remove TODOs.
       - name: Ruff lint
         run: uv run ruff check --fix --ignore=D101,D102,FIX002
+
       - name: Lint using pylint
         run: uv run pylint src tests --disable=C0115,C0116,W0511
 

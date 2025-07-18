@@ -1,4 +1,8 @@
-"""Sample data for testing purposes."""
+"""Sample data and fixures for testing.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
 
 from pathlib import Path
 

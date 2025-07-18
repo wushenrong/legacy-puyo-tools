@@ -1,4 +1,8 @@
-"""Tests for converting fpd formats."""
+"""Test converting fpd formats.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
 
 from codecs import BOM_UTF16_LE
 from pathlib import Path
