@@ -1,4 +1,8 @@
-"""Tests for creating mtx formats."""
+"""Test creating mtx formats.
+
+SPDX-FileCopyrightText: 2025 Samuel Wu
+SPDX-License-Identifier: MIT
+"""
 
 from pathlib import Path
 
