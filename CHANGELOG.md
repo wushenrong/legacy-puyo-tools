@@ -12,6 +12,14 @@ and this project adheres to
 
 - Tox for testing project to test multiple python environments locally.
 
+### Changed
+
+- Use `StringIO` for converting `mtx` to XML.
+
+### Removed
+
+- Pretty printing when converting `mtx` to XML.
+
 ## 0.2.0 - 2025-07-18
 
 ### Added

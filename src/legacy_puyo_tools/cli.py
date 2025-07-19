@@ -4,6 +4,8 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
+# pyright: reportPossiblyUnboundVariable=false
+
 from __future__ import annotations
 
 from codecs import BOM_UTF16_LE
@@ -14,7 +16,7 @@ import cloup
 from cloup import option, option_group
 from cloup.constraints import require_one
 
-from legacy_puyo_tools.exceptions import ArgumentError, FileFormatError
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.fpd import Fpd
 from legacy_puyo_tools.mtx import Mtx
 
@@ -125,18 +127,16 @@ def convert_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
 def convert_mtx(
     input_file: BinaryIO,
     output_file: BinaryIO | None,
-    fpd: Path | None,
-    unicode: Path | None,
+    fpd: Path,
+    unicode: Path,
 ) -> None:
-    """Convert a mtx file to a XML file."""  # noqa: DOC501
+    """Convert a mtx file to a XML file."""
+    # pylint: disable=possibly-used-before-assignment
     if fpd:
         fpd_data = Fpd.read_fpd_from_path(fpd)
-    elif unicode:
+
+    if unicode:
         fpd_data = Fpd.read_unicode_from_path(unicode)
-    else:
-        raise ArgumentError(
-            "You must specify a character table using --fpd or --unicode."
-        )
 
     if output_file:
         Mtx.read_mtx(input_file).write_xml(output_file, fpd_data)

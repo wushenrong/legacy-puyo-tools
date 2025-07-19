@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
+from io import StringIO
 from os import PathLike
 from pathlib import Path
 from typing import BinaryIO, Literal
@@ -135,24 +136,22 @@ class Mtx:
 
         for string in self.strings:
             dialog = etree.SubElement(sheet, "text")
-            dialog.text = "\n"
 
-            for character in string:
-                # TODO: When upgrading to Python 3.10, use `match` statements
-                if character == 0xF813:
-                    dialog.append(etree.Element("arrow"))
-                # TODO: Figure out what this control character does
-                elif character == 0xF883:
-                    dialog.text += "0xF883"
-                elif character == 0xFFFD:
-                    dialog.text += "\n"
-                elif character == 0xFFFF:
-                    break
-                else:
-                    dialog.text += fpd[character]
+            with StringIO() as string_buffer:
+                for character in string:
+                    # TODO: When upgrading to Python 3.10, use `match` statements
+                    if character == 0xF813:
+                        dialog.append(etree.Element("arrow"))
+                    # TODO: Figure out what this control character does
+                    elif character == 0xF883:
+                        string_buffer.write("0xF883")
+                    elif character == 0xFFFD:
+                        string_buffer.write("\n")
+                    elif character == 0xFFFF:
+                        break
+                    else:
+                        string_buffer.write(fpd[character])
 
-        etree.indent(root)
+                dialog.text = string_buffer.getvalue()
 
-        return etree.tostring(
-            root, encoding="utf-8", xml_declaration=True, pretty_print=True
-        )
+        return etree.tostring(root, encoding="utf-8", xml_declaration=True)
