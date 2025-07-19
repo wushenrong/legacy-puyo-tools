@@ -45,15 +45,12 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
-          key: >
-              ${{ format('pre-commit-{0}-{1}-{2}',
-                matrix.os,
-                matrix.python-version,
-                hashFiles('.pre-commit-config.yaml')
-              ) }}
+          key: pre-commit-4|${{ matrix.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Install tox
         run: uv tool install tox --with tox-uv --with tox-gh-actions
+
+      - run: ls ~/.cache
 
       - name: Run test with tox
         run: tox
