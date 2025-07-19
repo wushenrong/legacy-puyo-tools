@@ -5,7 +5,8 @@ A command line tool for modding older Puyo Puyo games (Yes, the name is using a
 
 ## Installation
 
-Install the latest version [Python](https://www.python.org/).
+Install [Python](https://www.python.org/) 3.9 or later, preferably the latest
+version.
 
 `legacy-python-tools` is published to
 [PyPI](https://pypi.org/project/legacy-puyo-tools/). It is recommended to
@@ -34,14 +35,10 @@ And of course, you can use good old pip in a virtual Python environment using
 
 ```bash
 # Create a virtual python environment
-virualenv .venv
-# Or with the venv library
 python -m venv .venv
 # Activate the virtual environment
 ./.venv/Scripts/activate
 # Install legacy-python-tools
-pip install legacy-python-tools
-# Or using the pip module
 python -m pip install legacy-python-tools
 ```
 
@@ -86,6 +83,11 @@ in Python:
 - Better cross compatibility with Linux.
 - Easier migration when upgrade away from end of life language versions.
 - Avoids the rigidness of using a pure object-oriented design.
+
+## Contributing
+
+If you want to contribute to the project check out
+[Contributing](https://github.com/wushenrong/legacy-puyo-tools/blob/main/CONTRIBUTING.md).
 
 ## License
 
