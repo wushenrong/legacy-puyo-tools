@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT-0
 
-name: Lint, format, and test
+name: Run linters, formatters, and tests
 
 on:
   pull_request:
@@ -10,35 +10,12 @@ on:
     branches:
       - main
 
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
-    name: Lint and format
-    runs-on: ubuntu-latest
-    steps:
-      # Setup environment
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: "pyproject.toml"
-
-      # Disable rules about documentation and TODOs in CI.
-      # Instead yell at the developer and let them decide when to add
-      # documentation or remove TODOs.
-      - name: Ruff lint
-        run: uv run ruff check --fix --ignore=D101,D102,FIX002
-
-      - name: Lint using pylint
-        run: uv run pylint src tests --disable=C0115,C0116,W0511
-
-      - name: Lint using pyright
-        run: uv run pyright
-
-      - name: Ruff format
-        run: uv run ruff format
-
   test:
-    name: Run tests
     strategy:
       matrix:
         os:
@@ -55,8 +32,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - uses: actions/setup-python@v5
+        with:
+            enable-cache: true
+
+      - name: Install tox
+        run: uv tool install tox --with tox-uv --with tox-gh-actions
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: uv run pytest
+      - name: Run test with tox
+        run: tox

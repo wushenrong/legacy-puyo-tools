@@ -2,54 +2,77 @@
 #
 # SPDX-License-Identifier: MIT-0
 
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
 [project]
-authors = [{ name = "Samuel Wu", email = "twopizza9621536@gmail.com" }]
+name = "legacy-puyo-tools"
+version = "0.2.0"
+
+description = "A tool to edit text for older Puyo Puyo games."
+readme = "README.md"
+keywords = [ "puyopuyo" ]
+license = "MIT"
+license-files = [ "LICENSE" ]
+authors = [ { name = "Samuel Wu", email = "twopizza9621536@gmail.com" } ]
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
+    "Intended Audience :: Other Audience",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 
-    # Intended Audience
-    "Intended Audience :: Other Audience",
-    "Topic :: File Formats",
-    "Topic :: Games/Entertainment :: Puzzle Games",
-    "Topic :: Utilities",
+    "Programming Language :: Python :: 3 :: Only",
 
-    # Python Versions
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.9",
+    "Topic :: File Formats",
+    "Topic :: Games/Entertainment :: Puzzle Games",
+    "Topic :: Utilities",
 ]
-dependencies = ["attrs>=25.3.0", "click>=8.1.8", "cloup>=3.0.7", "lxml>=6.0.0"]
-description = "A tool to edit text for older Puyo Puyo games."
-keywords = ["puyopuyo"]
-license = "MIT"
-license-files = ["LICENSE"]
-name = "legacy-puyo-tools"
-readme = "README.md"
-requires-python = ">=3.9"
-version = "0.2.0"
+dependencies = [ "attrs>=25.3", "click>=8.1.8", "cloup>=3.0.7", "lxml>=6" ]
+urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
+urls.Homepage = "https://github.com/wushenrong/legacy-puyo-tools"
+urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
+urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
-[project.urls]
-changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
-homepage = "https://github.com/wushenrong/legacy-puyo-tools"
-issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
-source = "https://github.com/wushenrong/legacy-puyo-tools.git"
+scripts.legacy-puyo-tools = "legacy_puyo_tools.cli:app"
 
-[project.scripts]
-legacy-puyo-tools = "legacy_puyo_tools.cli:app"
+[dependency-groups]
+dev = [
+    "reuse>=5.0.2",
+    "ruff>=0.12.4",
+    { include-group = "lint" },
+    { include-group = "test" },
+    { include-group = "type" },
+]
+test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1" ]
+type = [
+    "pyright[nodejs]>=1.1.403",
+    "types-lxml>=2025.3.30",
+    { include-group = "test" },
+]
+
+lint = [ "pre-commit-uv>=4.1.4" ]
+pylint = [ "pylint>=3.3.7" ]
+pkg-meta = [
+    "check-wheel-contents>=0.6.1",
+    "twine>=6.1",
+    "uv>=0.8",
+]
 
 [tool.ruff]
-output-format = "concise"
 # Required for some rules
 preview = true
 
-[tool.ruff.lint]
-select = [
+output-format = "concise"
+
+lint.select = [
     "ANN",    # type annotations
     "ARG",    # falke8 unused arguments
     "B",      # flake8-bugbear
@@ -78,39 +101,41 @@ select = [
     "W",      # Warning
     "YTT",    # flake8-2020
 ]
-typing-modules = ["types-lxml"]
+lint.per-file-ignores."**/tests/*" = [ "S101" ] # We need asserts for pytest
+lint.typing-modules = [ "types-lxml" ]
 
-[tool.ruff.lint.per-file-ignores]
-"**/tests/*" = ["S101"] # We need asserts for pytest
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+lint.pydocstyle.convention = "google"
 
 [tool.pylint]
-extension-pkg-allow-list = ["lxml"]
+extension-pkg-allow-list = [ "lxml" ]
 max-line-length = 88
 output-format = "colorized"
 
-[tool.pyright]
-include = ["src", "tests"]
-typeCheckingMode = "strict"
+[tool.pyproject-fmt]
+column_width = 80
+indent = 4
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib"]
+addopts = [ "--cov", "--import-mode=importlib" ]
 minversion = "8.4"
 
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
+[tool.coverage.run]
+branch = true
 
-[dependency-groups]
-dev = [
-    "pre-commit>=4.2.0",
-    "pylint>=3.3.7",
-    "pyright>=1.1.403",
-    "pytest-cov>=6.2.1",
-    "pytest>=8.4.1",
-    "reuse>=5.0.2",
-    "ruff>=0.12.2",
-    "types-lxml>=2025.3.30",
+[tool.coverage.report]
+exclude_also = [
+    '@(abc\.)?abstractmethod',
+    'class .*\bProtocol\):',
+    'def __repr__',
+    'if 0:',
+    'if TYPE_CHECKING:',
+    'if __name__ == .__main__.:',
+    'if self.debug:',
+    'if settings.DEBUG',
+    'raise AssertionError',
+    'raise NotImplementedError',
 ]
+
+[tool.pyright]
+include = [ "src", "tests" ]
+typeCheckingMode = "strict"

@@ -12,7 +12,14 @@ path = ["formats.md"]
 [[annotations]]
 SPDX-FileCopyrightText = "2025 Samuel Wu"
 SPDX-License-Identifier = "MIT-0"
-path = ["CHANGELOG.md", "CONTRIBUTING.md", "README.md", "uv.lock"]
+path = [
+  ".github/ISSUE_TEMPLATE/*.md",
+  "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "README.md",
+  "tox.ini",
+  "uv.lock",
+]
 
 [[annotations]]
 SPDX-FileCopyrightText = "2014 Coraline Ada Ehmke"
