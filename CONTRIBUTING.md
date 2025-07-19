@@ -1,21 +1,24 @@
 # How to contribute
 
-Want a feature to be added to `legacy-puyo-tools` or found a bug that needs to
-be fixed. Great! Create an issue at
+First read and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Want a feature to be in to `legacy-puyo-tools`. Great! Create an issue at
 <https://github.com/wushenrong/legacy-puyo-tools/issues> and add a description
-on why a feature should be added or how the bug occurred.
+on why it should be added. Be sure that the feature is related to the project's
+goal.
+
+Found a bug? Create an issue on how the bug occurred.
 
 If you are contributing code, be sure to add a signoff to your commits with the
 `-s` or `--signoff` flag as this project uses the
 [Developer Certificate of Origin][dco] for resolving licensing issues between
-contributors.
+contributors. Make sure to add tests and make them pass to avoid regression.
 
 [dco]: https://developercertificate.org/
 
-Do not forget to read and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-
 ## Contributors
 
+- @nickworonekin for creating Puyo Text Editor, some code is from that project.
 - @52871299hzy for contributing information about the `fmp` format.
 
 ## Developer Certificate of Origin
