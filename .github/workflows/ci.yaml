@@ -50,6 +50,5 @@ jobs:
       - name: Install tox
         run: uv tool install tox --with tox-uv --with tox-gh-actions
 
-
       - name: Run test with tox
         run: tox

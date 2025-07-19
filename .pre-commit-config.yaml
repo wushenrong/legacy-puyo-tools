@@ -48,11 +48,6 @@ repos:
         args:
           - --fix
 
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.2
-    hooks:
-      - id: gitleaks
-
   - repo: https://github.com/fsfe/reuse-tool
     rev: v5.0.2
     hooks:
