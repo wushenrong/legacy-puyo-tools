@@ -48,6 +48,7 @@ dev = [
     "reuse>=5.0.2",
     "ruff>=0.12.4",
     { include-group = "lint" },
+    { include-group = "pylint" },
     { include-group = "test" },
     { include-group = "type" },
 ]
@@ -59,12 +60,8 @@ type = [
 ]
 
 lint = [ "pre-commit-uv>=4.1.4" ]
+pkg-meta = [ "check-wheel-contents>=0.6.1", "twine>=6.1", "uv>=0.8" ]
 pylint = [ "pylint>=3.3.7" ]
-pkg-meta = [
-    "check-wheel-contents>=0.6.1",
-    "twine>=6.1",
-    "uv>=0.8",
-]
 
 [tool.ruff]
 # Required for some rules
@@ -116,7 +113,7 @@ column_width = 80
 indent = 4
 
 [tool.pytest.ini_options]
-addopts = [ "--cov", "--import-mode=importlib" ]
+addopts = [ "--cov", "--cov-branch", "--import-mode=importlib" ]
 minversion = "8.4"
 
 [tool.coverage.run]

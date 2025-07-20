@@ -15,10 +15,12 @@ and this project adheres to
 ### Changed
 
 - Use `StringIO` for converting `mtx` to XML.
+- Reading `mtx` character entries correctly.
 
 ### Removed
 
 - Pretty printing when converting `mtx` to XML.
+- Support for 64-bit mtx format that are on Switch, PS4, Xbox One, and PC.
 
 ## 0.2.0 - 2025-07-18
 

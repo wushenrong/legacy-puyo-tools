@@ -11,11 +11,10 @@ SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import sys
-from collections.abc import Callable
-from io import StringIO
+from io import BytesIO, StringIO
 from os import PathLike
 from pathlib import Path
-from typing import BinaryIO, Literal
+from typing import BinaryIO
 
 import attrs
 from lxml import etree
@@ -42,34 +41,23 @@ else:
         return zip(a, b)
 
 
-CHARACTER_WIDTH = 2
 ENDIAN = "little"
 
-INT32_OFFSET = 8
-INT32_SIZE = 4
-INT64_OFFSET = 16
-INT64_SIZE = 8
+MTX_IDENTIFIER = 8
+MTX_INT32_WIDTH = 4
+MTX_CHARACTER_WIDTH = 2
+
+MTX_SIZE_WIDTH = MTX_INT32_WIDTH
+MTX_IDENTIFIER_WIDTH = MTX_INT32_WIDTH
+MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
+MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
 
-def _read_character(data: bytes, i: int) -> int:
-    return int.from_bytes(data[i : i + CHARACTER_WIDTH], ENDIAN)
+def _write_character(fp: BytesIO, i: int, length: int) -> None:
+    fp.write(i.to_bytes(length, ENDIAN))
 
 
-def _create_offset_reader(width: int) -> Callable[[bytes, int], int]:
-    def offset_reader(data: bytes, i: int) -> int:
-        return int.from_bytes(data[i : i + width], ENDIAN)
-
-    return offset_reader
-
-
-def _identify_mtx(data: bytes) -> tuple[Literal[8, 16], Literal[4, 8]]:
-    if int.from_bytes(data[:4], ENDIAN) == INT32_OFFSET:
-        return (INT32_OFFSET, INT32_SIZE)
-
-    if int.from_bytes(data[8:16], ENDIAN) == INT64_OFFSET:
-        return (INT64_OFFSET, INT64_SIZE)
-
-    raise FormatError("The given data is not in a valid `mtx` format")
+# def _calculate_offsets()
 
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of the alias
@@ -86,7 +74,9 @@ class Mtx:
             try:
                 return cls.read_mtx(fp)
             except FormatError as e:
-                raise FileFormatError(f"{path} is not a valid `mtx` file") from e
+                raise FileFormatError(
+                    f"{path} is not a valid mtx file, it might be a 64bit mtx file"
+                ) from e
 
     @classmethod
     def read_mtx(cls, fp: BinaryIO) -> Mtx:
@@ -94,20 +84,27 @@ class Mtx:
 
     @classmethod
     def decode_mtx(cls, data: bytes) -> Mtx:
-        length = int.from_bytes(data[:4], ENDIAN)
+        def read_bytes(i: int, width: int) -> int:
+            return int.from_bytes(data[i : i + width], ENDIAN)
+
+        length = read_bytes(0, MTX_SIZE_WIDTH)
 
         if length != len(data):
             raise FormatError("The size of the given data does not match")
 
-        section_table_index_offset, int_width = _identify_mtx(data[4:16])
-        read_offset = _create_offset_reader(int_width)
+        if read_bytes(MTX_SIZE_WIDTH, MTX_OFFSET_WIDTH) != MTX_IDENTIFIER:
+            raise FormatError(
+                "The given data is not in a valid mtx format, it might be a 64bit mtx"
+            )
 
-        section_table_offset = read_offset(data, section_table_index_offset)
-        string_table_offset = read_offset(data, section_table_offset)
+        section_table_offset = read_bytes(MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
+        string_table_offset = read_bytes(section_table_offset, MTX_OFFSET_WIDTH)
 
         sections = [
-            read_offset(data, section_table_offset + (i * int_width))
-            for i in range((string_table_offset - section_table_offset) // int_width)
+            read_bytes(section_table_offset + (i * MTX_INT32_WIDTH), MTX_INT32_WIDTH)
+            for i in range(
+                (string_table_offset - section_table_offset) // MTX_INT32_WIDTH
+            )
         ]
 
         # Add the length to the sections so we can read to end of stream
@@ -117,11 +114,51 @@ class Mtx:
 
         for current_string_offset, next_string_offset in pairwise(sections):
             strings.append([
-                _read_character(data, current_string_offset + (i * CHARACTER_WIDTH))
-                for i in range(next_string_offset - current_string_offset)
+                int.from_bytes(
+                    data[
+                        current_string_offset
+                        + (i * MTX_CHARACTER_WIDTH) : current_string_offset
+                        + (i * MTX_CHARACTER_WIDTH)
+                        + MTX_CHARACTER_WIDTH
+                    ],
+                    ENDIAN,
+                )
+                for i in range(
+                    (next_string_offset - current_string_offset) // MTX_CHARACTER_WIDTH
+                )
             ])
 
         return cls(strings)
+
+    def encode_mtx(self) -> bytes:
+        header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
+
+        mtx_length = sum(header_widths) + MTX_SECTION_WIDTH * (len(self.strings))
+
+        string_offsets: list[int] = []
+        string_lengths = [len(string) * MTX_CHARACTER_WIDTH for string in self.strings]
+
+        for string_length in string_lengths:
+            string_offsets.append(mtx_length)
+            mtx_length += string_length
+
+        with BytesIO() as bytes_buffer:
+            _write_character(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
+            _write_character(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
+            _write_character(
+                bytes_buffer,
+                MTX_SIZE_WIDTH + MTX_IDENTIFIER_WIDTH + MTX_OFFSET_WIDTH,
+                MTX_OFFSET_WIDTH,
+            )
+
+            for offset in string_offsets:
+                _write_character(bytes_buffer, offset, MTX_SECTION_WIDTH)
+
+            for string in self.strings:
+                for character in string:
+                    _write_character(bytes_buffer, character, MTX_CHARACTER_WIDTH)
+
+            return bytes_buffer.getvalue()
 
     def write_xml_to_file(self, path: str | PathLike[str], fpd: Fpd) -> None:
         with Path(path).open("wb") as fp:
