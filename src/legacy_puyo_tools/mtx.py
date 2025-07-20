@@ -53,13 +53,6 @@ MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
 
-def _write_character(fp: BytesIO, i: int, length: int) -> None:
-    fp.write(i.to_bytes(length, ENDIAN))
-
-
-# def _calculate_offsets()
-
-
 # TODO: When upgrading to Python 3.12, add type to the beginning of the alias
 MtxString = list[int]
 
@@ -138,6 +131,9 @@ class Mtx:
         fp.write(self.encode_mtx())
 
     def encode_mtx(self) -> bytes:
+        def write_character(fp: BytesIO, i: int, length: int) -> None:
+            fp.write(i.to_bytes(length, ENDIAN))
+
         header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
 
         mtx_length = sum(header_widths) + MTX_SECTION_WIDTH * (len(self.strings))
@@ -150,20 +146,20 @@ class Mtx:
             mtx_length += string_length
 
         with BytesIO() as bytes_buffer:
-            _write_character(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
-            _write_character(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
-            _write_character(
+            write_character(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
+            write_character(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
+            write_character(
                 bytes_buffer,
                 MTX_SIZE_WIDTH + MTX_IDENTIFIER_WIDTH + MTX_OFFSET_WIDTH,
                 MTX_OFFSET_WIDTH,
             )
 
             for offset in string_offsets:
-                _write_character(bytes_buffer, offset, MTX_SECTION_WIDTH)
+                write_character(bytes_buffer, offset, MTX_SECTION_WIDTH)
 
             for string in self.strings:
                 for character in string:
-                    _write_character(bytes_buffer, character, MTX_CHARACTER_WIDTH)
+                    write_character(bytes_buffer, character, MTX_CHARACTER_WIDTH)
 
             return bytes_buffer.getvalue()
 
