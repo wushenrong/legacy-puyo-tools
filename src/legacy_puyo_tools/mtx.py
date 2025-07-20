@@ -69,7 +69,7 @@ class Mtx:
     strings: list[MtxString]
 
     @classmethod
-    def read_mtx_from_file(cls, path: str | PathLike[str]) -> Mtx:
+    def read_mtx_from_path(cls, path: str | PathLike[str]) -> Mtx:
         with Path(path).open("rb") as fp:
             try:
                 return cls.read_mtx(fp)
@@ -130,6 +130,13 @@ class Mtx:
 
         return cls(strings)
 
+    def write_mtx_from_path(self, path: str | PathLike[str]) -> None:
+        with Path(path).open("rb") as fp:
+            self.write_mtx(fp)
+
+    def write_mtx(self, fp: BinaryIO) -> None:
+        fp.write(self.encode_mtx())
+
     def encode_mtx(self) -> bytes:
         header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
 
@@ -160,7 +167,7 @@ class Mtx:
 
             return bytes_buffer.getvalue()
 
-    def write_xml_to_file(self, path: str | PathLike[str], fpd: Fpd) -> None:
+    def write_xml_to_path(self, path: str | PathLike[str], fpd: Fpd) -> None:
         with Path(path).open("wb") as fp:
             self.write_xml(fp, fpd)
 

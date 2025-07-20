@@ -144,7 +144,7 @@ def convert_mtx(
 
     path = Path(input_file.name).with_suffix(".xml")
 
-    Mtx.read_mtx(input_file).write_xml_to_file(path, fpd_data)
+    Mtx.read_mtx(input_file).write_xml_to_path(path, fpd_data)
 
 
 if __name__ == "__main__":

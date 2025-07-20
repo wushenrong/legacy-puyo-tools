@@ -82,7 +82,7 @@ in Python:
 
 - Better cross compatibility with Linux.
 - Easier migration when upgrade away from end of life language versions.
-- Avoids the rigidness of using a pure object-oriented design.
+- Formats are stored in an intermediate representation before conversion.
 
 ## Contributing
 
