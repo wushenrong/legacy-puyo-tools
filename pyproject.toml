@@ -35,7 +35,14 @@ classifiers = [
     "Topic :: Games/Entertainment :: Puzzle Games",
     "Topic :: Utilities",
 ]
-dependencies = [ "attrs>=25.3", "click>=8.1.8", "cloup>=3.0.7", "lxml>=6" ]
+dependencies = [
+ "attrs>=25.3",
+ "click>=8.1.8",
+ "cloup>=3.0.7",
+ "lxml>=6",
+ "numpy>=2.0.2",
+ "pillow>=11.3.0",
+]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
 urls.Homepage = "https://github.com/wushenrong/legacy-puyo-tools"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
