@@ -131,6 +131,7 @@ def convert_mtx(
     unicode: Path,
 ) -> None:
     """Convert a mtx file to a XML file."""
+    # pylint: disable=possibly-used-before-assignment
     if fpd:
         fpd_data = Fpd.read_fpd_from_path(fpd)
 
@@ -138,12 +139,12 @@ def convert_mtx(
         fpd_data = Fpd.read_unicode_from_path(unicode)
 
     if output_file:
-        Mtx.read_mtx(input_file).write_xml(output_file, fpd_data)  # type: ignore[reportPossiblyUnboundVariable]
+        Mtx.read_mtx(input_file).write_xml(output_file, fpd_data)
         return
 
     path = Path(input_file.name).with_suffix(".xml")
 
-    Mtx.read_mtx(input_file).write_xml_to_file(path, fpd_data)  # type: ignore[reportPossiblyUnboundVariable]
+    Mtx.read_mtx(input_file).write_xml_to_file(path, fpd_data)
 
 
 if __name__ == "__main__":

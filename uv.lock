@@ -651,6 +651,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit-uv" },
+    { name = "pylint" },
     { name = "pyright", extra = ["nodejs"] },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -692,6 +693,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit-uv", specifier = ">=4.1.4" },
+    { name = "pylint", specifier = ">=3.3.7" },
     { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.403" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },

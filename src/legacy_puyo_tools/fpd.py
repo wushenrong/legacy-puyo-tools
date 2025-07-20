@@ -45,7 +45,7 @@ class FpdCharacter:
     width: int
 
     def __init__(self, code_point: bytes, width: int = 0x00) -> None:
-        """Initializes a fpd character.
+        """Initialize a fpd character.
 
         Args:
             code_point:
@@ -57,11 +57,11 @@ class FpdCharacter:
         self.width = width
 
     def __str__(self) -> str:
-        """Returns the character as a single character string."""
+        """Return the character as a single character string."""
         return self.code_point
 
     def encode(self) -> bytes:
-        """Encodes the character back to a fpd character entry.
+        """Encode the character back to a fpd character entry.
 
         Returns:
             The character in UTF-16 LE format and its width.
@@ -71,7 +71,7 @@ class FpdCharacter:
 
     @classmethod
     def decode(cls, fpd_entry: bytes) -> FpdCharacter:
-        """Decodes a fpd character into its code point and width.
+        """Decode a fpd character into its code point and width.
 
         Args:
             fpd_entry:
@@ -107,7 +107,7 @@ class Fpd:
     entries: list[FpdCharacter]
 
     def __getitem__(self, index: int) -> str:
-        """Retrieves a character from the fpd character table.
+        """Retrieve a character from the fpd character table.
 
         Args:
             index:
@@ -116,10 +116,10 @@ class Fpd:
         Returns:
             A string that contains the requested character.
         """
-        return self.entries[index].code_point
+        return str(self.entries[index])
 
     def __str__(self) -> str:
-        """Returns a string representation of the fpd character table."""
+        """Return a string representation of the fpd character table."""
         with StringIO() as string_buffer:
             for character in self.entries:
                 string_buffer.write(str(character))
@@ -128,7 +128,7 @@ class Fpd:
 
     @classmethod
     def read_fpd_from_path(cls, path: str | PathLike[str]) -> Fpd:
-        """Reads and extract characters from a fpd file.
+        """Read and extract characters from a fpd file.
 
         Args:
             path:
@@ -150,7 +150,7 @@ class Fpd:
 
     @classmethod
     def read_fpd(cls, fp: BinaryIO) -> Fpd:
-        """Reads and extract characters from a file object.
+        """Read and extract characters from a file object.
 
         Args:
             fp:
@@ -163,7 +163,7 @@ class Fpd:
 
     @classmethod
     def decode_fpd(cls, data: bytes) -> Fpd:
-        """Extracts the fpd character table from a fpd encoded stream.
+        """Extract the fpd character table from a fpd encoded stream.
 
         Args:
             data:
@@ -178,7 +178,7 @@ class Fpd:
         ])
 
     def write_fpd_to_path(self, path: str | PathLike[str]) -> None:
-        """Writes the fpd character table to a fpd encoded file.
+        """Write the fpd character table to a fpd encoded file.
 
         Args:
             path:
@@ -188,7 +188,7 @@ class Fpd:
             self.write_fpd(fp)
 
     def write_fpd(self, fp: BinaryIO) -> None:
-        """Writes the fpd character table to a file object.
+        """Write the fpd character table to a file object.
 
         Args:
             fp:
@@ -197,7 +197,7 @@ class Fpd:
         fp.write(self.encode_fpd())
 
     def encode_fpd(self) -> bytes:
-        """Encodes the fpd character table into a fpd encoded stream.
+        """Encode the fpd character table into a fpd encoded stream.
 
         Returns:
             A fpd encoded stream that contains the fpd character table.
@@ -210,7 +210,7 @@ class Fpd:
 
     @classmethod
     def read_unicode_from_path(cls, path: str | PathLike[str]) -> Fpd:
-        """Reads and convert characters from a UTF-16 little-endian text file.
+        """Read and convert characters from a UTF-16 little-endian text file.
 
         Arguments:
             path: A path to a UTF-16 LE text file.
@@ -235,7 +235,7 @@ class Fpd:
 
     @classmethod
     def read_unicode(cls, fp: BinaryIO) -> Fpd:
-        """Reads and convert UTF-16 LE characters from a file object.
+        """Read and convert UTF-16 LE characters from a file object.
 
         Args:
             fp:
@@ -249,7 +249,7 @@ class Fpd:
     # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
     def decode_unicode(cls, unicode: bytes) -> Fpd:
-        """Converts a UTF-16 LE stream into a fpd character table.
+        """Convert a UTF-16 LE stream into a fpd character table.
 
         Args:
             unicode:
@@ -264,7 +264,7 @@ class Fpd:
         ])
 
     def write_unicode_to_path(self, path: str | PathLike[str]) -> None:
-        """Writes the fpd character table to a UTF-16 LE text file.
+        """Write the fpd character table to a UTF-16 LE text file.
 
         Args:
             path:
@@ -277,7 +277,7 @@ class Fpd:
             self.write_unicode(fp)
 
     def write_unicode(self, fp: BinaryIO) -> None:
-        """Writes the fpd character table to a file object.
+        """Write the fpd character table to a file object.
 
         Args:
             fp:
@@ -286,9 +286,17 @@ class Fpd:
         fp.write(self.encode_unicode())
 
     def encode_unicode(self) -> bytes:
-        """Encodes the fpd character table into a UTF-16 LE text stream.
+        """Encode the fpd character table into a UTF-16 LE text stream.
 
         Returns:
             A UTF-16 LE encoded text stream with characters from the fpd.
         """
         return str(self).encode(ENCODING)
+
+    def create_lookup_table(self) -> dict[str, int]:
+        """Create a lookup table to convert character positions into indexes.
+
+        Returns:
+            A dictionary that maps characters to their index in the fpd character table.
+        """
+        return {str(k): v for v, k in enumerate(self.entries)}
