@@ -48,12 +48,14 @@ are no headers or padding bytes in the file.
 ## The `mtx` format
 
 -   Status:
-    - Creation: Not implemented yet.
+    - Creation: Partially implemented.
     - Conversion: Partially implemented.
-    - Testing: 35% coverage.
+    - Testing: 31% coverage.
 -   Notes:
-    -   Conversion only supports Puyo Puyo 7 and possibility Puyo Puyo! 15th
-        Anniversary and it's mostly complete.
+    -   Creation and conversion only supports Puyo Puyo 7 and possibility Puyo
+        Puyo! 15th Anniversary.
+    -   Creating from XML is not implemented yet while converting to XML is
+        mostly complete for main texts.
 
 <!-- TODO: Finish the mtx format for PP15 and PP7 -->
 <!-- TODO: Look at the mtx format for PP20 -->

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.3.0 - 2025-07-19
 
 ### Added
 
@@ -16,11 +16,12 @@ and this project adheres to
 
 - Use `StringIO` for converting `mtx` to XML.
 - Reading `mtx` character entries correctly.
+- Read from file methods to read from path for `mtx`.
 
 ### Removed
 
 - Pretty printing when converting `mtx` to XML.
-- Support for 64-bit mtx format that are on Switch, PS4, Xbox One, and PC.
+- Support for 64-bit `mtx` format that are on Switch, PS4, Xbox One, and PC.
 
 ## 0.2.0 - 2025-07-18
 
