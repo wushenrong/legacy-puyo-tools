@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Literal
 
 import attrs
+import numpy as np
 
 from legacy_puyo_tools.exceptions import FormatError
 
@@ -19,45 +20,43 @@ BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of the alias
-FmpCharacter = list[list[int]]
+FmpSize = Literal[8, 14]
+FmpCharacter = np.ndarray[tuple[FmpSize, FmpSize], np.dtype[np.bool]]
 
 
 @attrs.define
 class Fmp:
-    graphics: list[FmpCharacter]
-    font_width: Literal[8, 14]
+    font: list[FmpCharacter]
+    font_size: FmpSize
 
-    # TODO: Numpy the image array
     @classmethod
-    def decode_fmp(
-        cls, data: bytes, font_width: Literal[8, 14] = 8, padding: int = 2
-    ) -> Fmp:
-        bytes_width = font_width * BITS_PER_PIXEL // BITS_PER_BYTE
+    def decode(cls, data: bytes, font_size: FmpSize = 8) -> Fmp:
+        bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
 
-        graphics_size = bytes_width**2
+        # Accounting for the upper and lower half of the font
+        character_size = (bytes_width**2) * 2
 
-        if len(data) % graphics_size != 0:
+        if len(data) % character_size != 0:
             raise FormatError
 
         graphics: list[FmpCharacter] = []
 
-        for i in range(0, len(data), graphics_size):
-            graphic: FmpCharacter = []
+        for i in range(0, len(data), character_size):
+            graphic: list[list[int]] = []
 
-            for j in range(i, i + graphics_size, bytes_width):
+            for j in range(i, i + character_size, bytes_width):
                 row: list[int] = []
 
                 for byte in data[j : j + bytes_width]:
+                    # Swap byte order as fmp is little endian
                     lower_nibble, upper_nibble = (byte >> 4), byte & 0xF
                     row.extend((upper_nibble, lower_nibble))
 
-                row.extend([0] * padding)
                 graphic.append(row)
 
-            graphic.extend([[0] * (bytes_width + padding)] * padding)
-            graphics.append(graphic)
+            graphics.append(np.array(graphic, np.bool))
 
-        return cls(graphics, font_width)
+        return cls(graphics, font_size)
 
     # def write_bmp_to_path(self, path: str | PathLike[str]) -> None:
     #     with Image.new(s) as im:
