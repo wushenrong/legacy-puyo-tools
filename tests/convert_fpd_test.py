@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from legacy_puyo_tools.cli import convert_fpd
 from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.fpd import ENCODING, Fpd
-from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
+from tests.samples import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
 @pytest.mark.parametrize(
@@ -45,11 +45,6 @@ def test_convert_fpd(input_file: str, output_file: str, output: bool) -> None:
         assert result.exit_code == 0
 
 
-def test_convert_fpd_from_path(sample_fpd_file: Path) -> None:
-    """Test converting a fpd file from a path instead of a file object."""
-    assert str(Fpd.read_fpd_from_path(sample_fpd_file)) == SAMPLE_UNICODE_STRING
-
-
 def test_fpd_format_error(tmp_path: Path) -> None:
     """Test getting an error when fpd is not in the correct format."""
     invalid_fpd = tmp_path / "invalid.fpd"
@@ -58,4 +53,4 @@ def test_fpd_format_error(tmp_path: Path) -> None:
         f.write(b"Not a multiple of 3 bytes long.")
 
     with pytest.raises(FileFormatError):
-        Fpd.read_fpd_from_path(invalid_fpd)
+        Fpd.read_fpd(invalid_fpd)

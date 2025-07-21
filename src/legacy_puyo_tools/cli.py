@@ -8,7 +8,6 @@ SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
-from codecs import BOM_UTF16_LE
 from pathlib import Path
 from typing import BinaryIO
 
@@ -16,8 +15,8 @@ import cloup
 from cloup import option, option_group
 from cloup.constraints import require_one
 
-from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.fpd import Fpd
+from legacy_puyo_tools.io import get_file_name
 from legacy_puyo_tools.mtx import Mtx
 
 output_option = option(
@@ -66,19 +65,10 @@ def create() -> None:
 )
 @output_option
 def create_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
-    """Create a fpd file from a unicode text file."""  # noqa: DOC501
-    if input_file.read(2) != BOM_UTF16_LE:
-        raise FileFormatError(
-            f"{input_file.name} is not a UTF-16 little-endian encoded text file."
-        )
+    """Create a fpd file from a unicode text file."""
+    path = output_file or Path(get_file_name(input_file)).with_suffix(".fpd")
 
-    if output_file:
-        Fpd.read_unicode(input_file).write_fpd(output_file)
-        return
-
-    path = Path(input_file.name).with_suffix(".fpd")
-
-    Fpd.read_unicode(input_file).write_fpd_to_path(path)
+    Fpd.read_unicode(input_file).write_fpd(path)
 
 
 @create.command(name="mtx", show_constraints=True)
@@ -108,14 +98,9 @@ def convert() -> None:
 @output_option
 def convert_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
     """Convert a fpd file to a UTF-16 little-endian unicode text file."""
-    if output_file:
-        output_file.write(BOM_UTF16_LE)
-        Fpd.read_fpd(input_file).write_unicode(output_file)
-        return
+    path = output_file or Path(get_file_name(input_file)).with_suffix(".txt")
 
-    path = Path(input_file.name).with_suffix(".txt")
-
-    Fpd.read_fpd(input_file).write_unicode_to_path(path)
+    Fpd.read_fpd(input_file).write_unicode(path)
 
 
 @convert.command(name="mtx", show_constraints=True)
@@ -133,18 +118,14 @@ def convert_mtx(
     """Convert a mtx file to a XML file."""
     # pylint: disable=possibly-used-before-assignment
     if fpd:
-        fpd_data = Fpd.read_fpd_from_path(fpd)
+        fpd_data = Fpd.read_fpd(fpd)
 
     if unicode:
-        fpd_data = Fpd.read_unicode_from_path(unicode)
+        fpd_data = Fpd.read_unicode(unicode)
 
-    if output_file:
-        Mtx.read_mtx(input_file).write_xml(output_file, fpd_data)
-        return
+    path = output_file or Path(get_file_name(input_file)).with_suffix(".xml")
 
-    path = Path(input_file.name).with_suffix(".xml")
-
-    Mtx.read_mtx(input_file).write_xml_to_path(path, fpd_data)
+    Mtx.read_mtx(input_file).write_xml(path, fpd_data)
 
 
 if __name__ == "__main__":
