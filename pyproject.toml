@@ -36,12 +36,12 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
- "attrs>=25.3",
- "click>=8.1.8",
- "cloup>=3.0.7",
- "lxml>=6",
- "numpy>=2.0.2",
- "pillow>=11.3.0",
+    "attrs>=25.3",
+    "click>=8.1.8",
+    "cloup>=3.0.7",
+    "lxml>=6",
+    "numpy>=2.0.2",
+    "pillow>=11.3",
 ]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
 urls.Homepage = "https://github.com/wushenrong/legacy-puyo-tools"
@@ -54,6 +54,9 @@ scripts.legacy-puyo-tools = "legacy_puyo_tools.cli:app"
 dev = [
     "reuse>=5.0.2",
     "ruff>=0.12.4",
+    "tox>=4.28",
+    "tox-gh-actions>=3.3",
+    "tox-uv>=1.26.2",
     { include-group = "lint" },
     { include-group = "pylint" },
     { include-group = "test" },

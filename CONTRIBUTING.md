@@ -16,6 +16,26 @@ contributors. Make sure to add tests and make them pass to avoid regression.
 
 [dco]: https://developercertificate.org/
 
+## Development environment
+
+First install [Python](https://www.python.org) and then
+[`uv`](https://docs.astral.sh/uv/).
+
+Then clone the repository and create the development environment with `uv`:
+
+```bash
+# Clone repository
+git clone https://github.com/wushenrong/legacy-python-tools.git
+# Change into the repository
+cd legacy-python-tools
+# Create development environment and install tools
+uv sync
+# Activate development environment
+./.venv/Scripts/activate
+# Run linters and tests
+tox
+```
+
 ## Contributors
 
 - @nickworonekin for creating Puyo Text Editor, some code is from that project.

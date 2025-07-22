@@ -13,13 +13,15 @@ from typing import Literal
 
 import attrs
 import numpy as np
+from PIL import Image
 
 from legacy_puyo_tools.exceptions import FormatError
+from legacy_puyo_tools.io import PathOrFile
 
 BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
 
-# TODO: When upgrading to Python 3.12, add type to the beginning of the alias
+# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
 FmpSize = Literal[8, 14]
 FmpCharacter = np.ndarray[tuple[FmpSize, FmpSize], np.dtype[np.bool]]
 
@@ -30,7 +32,7 @@ class Fmp:
     font_size: FmpSize
 
     @classmethod
-    def decode(cls, data: bytes, font_size: FmpSize = 8) -> Fmp:
+    def decode(cls, data: bytes, *, font_size: FmpSize = 14) -> Fmp:
         bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
@@ -58,17 +60,45 @@ class Fmp:
 
         return cls(graphics, font_size)
 
-    # def write_bmp_to_path(self, path: str | PathLike[str]) -> None:
-    #     with Image.new(s) as im:
-    #         im.
+    def write_image(self, path_or_buf: PathOrFile) -> None:
+        self.to_image().save(path_or_buf)
 
-    # def encode_bmp(self, width: int, padding: int):
-    #     height = width // len(self.graphics)
-    #     character_size = self.font_width + padding
+    def to_image(self, width: int = 16, *, padding: int = 1) -> Image.Image:
+        num_of_characters = 0
 
-    #     image_size = (character_size * width, character_size * height)
+        for character in self.font:
+            if np.any(character):
+                num_of_characters += 1
 
-    #     img = Image.new("1", image_size)
+        # Add padding to the table so all of the characters gets printed out
+        # if the number of characters does not evenly divides into the width
+        # Also accounts for the space character that is all 0s
+        num_of_characters += width - (num_of_characters % width)
 
-    #     for character in self.graphics:
-    #         img.
+        height = (num_of_characters) // width
+        graphic_size = self.font_size + (padding * 2)
+
+        buf = Image.new("1", (graphic_size, graphic_size))
+        img = Image.new("1", (graphic_size * width, graphic_size * height))
+
+        end_of_font = False
+
+        for col in range(height):
+            for row in range(width):
+                character_index = (col * width) + row
+
+                if character_index >= len(self.font):
+                    end_of_font = True
+                    break
+
+                # TODO: Remove ignore once python-pillow/Pillow#8029 and
+                # python-pillow/Pillow#8362 gets resolved and merged
+                buf.putdata(  # pyright: ignore[reportUnknownMemberType]
+                    np.pad(self.font[character_index], padding).flatten()
+                )
+                img.paste(buf, (row * graphic_size, col * graphic_size))
+
+            if end_of_font:
+                break
+
+        return img
