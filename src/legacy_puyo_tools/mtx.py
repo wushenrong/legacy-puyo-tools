@@ -12,15 +12,14 @@ from __future__ import annotations
 
 import sys
 from io import BytesIO, StringIO
-from os import PathLike
-from pathlib import Path
-from typing import BinaryIO
 
 import attrs
 from lxml import etree
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 from legacy_puyo_tools.fpd import Fpd
+from legacy_puyo_tools.io import get_file_handle, get_file_name
+from legacy_puyo_tools.typing import MtxString, PathOrFile
 
 # TODO: When updating to Python 3.10, remove the stub implementation of pairwise
 # from the python documentation:
@@ -53,30 +52,22 @@ MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
 
-# TODO: When upgrading to Python 3.12, add type to the beginning of the alias
-MtxString = list[int]
-
-
 @attrs.define
 class Mtx:
     strings: list[MtxString]
 
     @classmethod
-    def read_mtx_from_path(cls, path: str | PathLike[str]) -> Mtx:
-        with Path(path).open("rb") as fp:
+    def read_mtx(cls, path_or_buf: PathOrFile) -> Mtx:
+        with get_file_handle(path_or_buf) as fp:
             try:
-                return cls.read_mtx(fp)
+                return cls.decode(fp.read())
             except FormatError as e:
                 raise FileFormatError(
-                    f"{path} is not a valid mtx file, it might be a 64bit mtx file"
+                    f"{get_file_name(path_or_buf)} is not a valid 32 bit mtx file"
                 ) from e
 
     @classmethod
-    def read_mtx(cls, fp: BinaryIO) -> Mtx:
-        return cls.decode_mtx(fp.read())
-
-    @classmethod
-    def decode_mtx(cls, data: bytes) -> Mtx:
+    def decode(cls, data: bytes) -> Mtx:
         def read_bytes(i: int, width: int) -> int:
             return int.from_bytes(data[i : i + width], ENDIAN)
 
@@ -123,14 +114,11 @@ class Mtx:
 
         return cls(strings)
 
-    def write_mtx_from_path(self, path: str | PathLike[str]) -> None:
-        with Path(path).open("rb") as fp:
-            self.write_mtx(fp)
+    def write_mtx(self, path_or_buf: PathOrFile) -> None:
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.encode())
 
-    def write_mtx(self, fp: BinaryIO) -> None:
-        fp.write(self.encode_mtx())
-
-    def encode_mtx(self) -> bytes:
+    def encode(self) -> bytes:
         def write_character(fp: BytesIO, i: int, length: int) -> None:
             fp.write(i.to_bytes(length, ENDIAN))
 
@@ -163,14 +151,11 @@ class Mtx:
 
             return bytes_buffer.getvalue()
 
-    def write_xml_to_path(self, path: str | PathLike[str], fpd: Fpd) -> None:
-        with Path(path).open("wb") as fp:
-            self.write_xml(fp, fpd)
+    def write_xml(self, path_or_buf: PathOrFile, fpd: Fpd) -> None:
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.to_xml(fpd))
 
-    def write_xml(self, fp: BinaryIO, fpd: Fpd) -> None:
-        fp.write(self.encode_xml(fpd))
-
-    def encode_xml(self, fpd: Fpd) -> bytes:
+    def to_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 

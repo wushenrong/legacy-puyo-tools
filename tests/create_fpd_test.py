@@ -12,7 +12,7 @@ from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import create_fpd
 from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.fpd import ENCODING, Fpd
+from legacy_puyo_tools.fpd import ENCODING
 from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
@@ -57,25 +57,3 @@ def test_create_fpd_no_bom() -> None:
 
         assert isinstance(result.exception, FileFormatError)
         assert result.exit_code == 1
-
-
-def test_manual_fpd_creation(tmp_path: Path) -> None:
-    """Test creating a fpd from unicode file manually."""
-    unicode_file = tmp_path / "sample_data.txt"
-
-    with unicode_file.open("w", encoding=ENCODING) as f:
-        f.write(BOM_UTF16_LE.decode(ENCODING))
-        f.write(SAMPLE_UNICODE_STRING)
-
-    assert Fpd.read_unicode_from_path(unicode_file).encode_fpd() == SAMPLE_FPD_STRING
-
-
-def test_missing_bom_in_file(tmp_path: Path) -> None:
-    """Test getting an error when the unicode text file does not have a BOM."""
-    invalid_unicode_file = tmp_path / "invalid_data.txt"
-
-    with invalid_unicode_file.open("w", encoding=ENCODING) as f:
-        f.write(SAMPLE_UNICODE_STRING)
-
-    with pytest.raises(FileFormatError):
-        Fpd.read_unicode_from_path(invalid_unicode_file)

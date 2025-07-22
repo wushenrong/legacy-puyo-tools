@@ -11,13 +11,12 @@ from __future__ import annotations
 
 from codecs import BOM_UTF16_LE
 from io import BytesIO, StringIO
-from os import PathLike
-from pathlib import Path
-from typing import BinaryIO
 
 import attrs
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+from legacy_puyo_tools.io import get_file_handle, get_file_name
+from legacy_puyo_tools.typing import PathOrFile
 
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -127,12 +126,13 @@ class Fpd:
             return string_buffer.getvalue()
 
     @classmethod
-    def read_fpd_from_path(cls, path: str | PathLike[str]) -> Fpd:
+    def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
         """Read and extract characters from a fpd file.
 
         Args:
-            path:
-                A path to a fpd encoded file that contains a fpd character table.
+            path_or_buf:
+                A path or file-like object to a fpd encoded file that contains a fpd
+                character table.
 
         Raises:
             FileFormatError:
@@ -142,27 +142,16 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        with Path(path).open("rb") as fp:
+        with get_file_handle(path_or_buf) as fp:
             try:
-                return cls.read_fpd(fp)
+                return cls.decode(fp.read())
             except FormatError as e:
-                raise FileFormatError(f"{path} is not a valid fpd file") from e
+                raise FileFormatError(
+                    f"{get_file_name(path_or_buf)} is not a valid fpd file"
+                ) from e
 
     @classmethod
-    def read_fpd(cls, fp: BinaryIO) -> Fpd:
-        """Read and extract characters from a file object.
-
-        Args:
-            fp:
-                A file object that points to a fpd encoded stream.
-
-        Returns:
-            A fpd character table.
-        """
-        return cls.decode_fpd(fp.read())
-
-    @classmethod
-    def decode_fpd(cls, data: bytes) -> Fpd:
+    def decode(cls, data: bytes) -> Fpd:
         """Extract the fpd character table from a fpd encoded stream.
 
         Args:
@@ -177,26 +166,17 @@ class Fpd:
             for i in range(0, len(data), FPD_ENTRY_LENGTH)
         ])
 
-    def write_fpd_to_path(self, path: str | PathLike[str]) -> None:
+    def write_fpd(self, path_or_buf: PathOrFile) -> None:
         """Write the fpd character table to a fpd encoded file.
 
         Args:
-            path:
-                A path to write the fpd encoded stream.
+            path_or_buf:
+                A path or file-like object to write the fpd encoded stream.
         """
-        with Path(path).open("wb") as fp:
-            self.write_fpd(fp)
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.encode())
 
-    def write_fpd(self, fp: BinaryIO) -> None:
-        """Write the fpd character table to a file object.
-
-        Args:
-            fp:
-                A binary file object.
-        """
-        fp.write(self.encode_fpd())
-
-    def encode_fpd(self) -> bytes:
+    def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
 
         Returns:
@@ -209,11 +189,11 @@ class Fpd:
             return bytes_buffer.getvalue()
 
     @classmethod
-    def read_unicode_from_path(cls, path: str | PathLike[str]) -> Fpd:
+    def read_unicode(cls, path_or_buf: PathOrFile) -> Fpd:
         """Read and convert characters from a UTF-16 little-endian text file.
 
         Arguments:
-            path: A path to a UTF-16 LE text file.
+            path_or_buf: A path or file-like object to a UTF-16 LE text file.
 
         Raises:
             FileFormatError:
@@ -223,32 +203,19 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        with Path(path).open("rb") as fp:
+        with get_file_handle(path_or_buf) as fp:
             # Check the Byte Order Mark (BOM) to see if it is really a UTF-16 LE text
             # file
             if fp.read(2) != BOM_UTF16_LE:
                 raise FileFormatError(
-                    f"{path} is not a UTF-16 little-endian text file."
+                    f"{get_file_name(path_or_buf)} is not a UTF-16 little-endian file"
                 )
 
-            return cls.read_unicode(fp)
-
-    @classmethod
-    def read_unicode(cls, fp: BinaryIO) -> Fpd:
-        """Read and convert UTF-16 LE characters from a file object.
-
-        Args:
-            fp:
-                A binary file object.
-
-        Returns:
-            A fpd character table.
-        """
-        return cls.decode_unicode(fp.read())
+            return cls.from_unicode(fp.read())
 
     # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
-    def decode_unicode(cls, unicode: bytes) -> Fpd:
+    def from_unicode(cls, unicode: bytes) -> Fpd:
         """Convert a UTF-16 LE stream into a fpd character table.
 
         Args:
@@ -263,29 +230,20 @@ class Fpd:
             for i in range(0, len(unicode), UTF16_LENGTH)
         ])
 
-    def write_unicode_to_path(self, path: str | PathLike[str]) -> None:
+    def write_unicode(self, path_or_buf: PathOrFile) -> None:
         """Write the fpd character table to a UTF-16 LE text file.
 
         Args:
-            path:
-                A path to store the converted UTF-16 LE text file.
+            path_or_buf:
+                A path or file-like object to store the converted UTF-16 LE text file.
         """
-        with Path(path).open("wb") as fp:
+        with get_file_handle(path_or_buf, "wb") as fp:
             # Write the Byte Order Mark (BOM) for plain text editors
             fp.write(BOM_UTF16_LE)
 
-            self.write_unicode(fp)
+            fp.write(self.to_unicode())
 
-    def write_unicode(self, fp: BinaryIO) -> None:
-        """Write the fpd character table to a file object.
-
-        Args:
-            fp:
-                A binary file object.
-        """
-        fp.write(self.encode_unicode())
-
-    def encode_unicode(self) -> bytes:
+    def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.
 
         Returns:
