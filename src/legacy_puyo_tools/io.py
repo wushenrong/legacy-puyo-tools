@@ -4,8 +4,6 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
-from __future__ import annotations
-
 import contextlib
 import os
 import pathlib

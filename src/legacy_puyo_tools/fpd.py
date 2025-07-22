@@ -241,6 +241,7 @@ class Fpd:
             for i in range(0, len(unicode), UTF16_LENGTH)
         ])
 
+
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.
 
