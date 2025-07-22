@@ -20,7 +20,6 @@ from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 from legacy_puyo_tools.fpd import Fpd
 from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
-
 # TODO: When updating to Python 3.10, remove the stub implementation of pairwise
 # from the python documentation:
 # https://docs.python.org/3/library/itertools.html#itertools.pairwise
