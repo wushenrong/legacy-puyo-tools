@@ -29,6 +29,7 @@ def get_file_handle(
         A file-like object in binary mode.
     """
     if isinstance(path_or_buf, (str, os.PathLike)):
+        # pylint: disable=unspecified-encoding
         with pathlib.Path(path_or_buf).open(mode) as fp:
             yield fp
     else:

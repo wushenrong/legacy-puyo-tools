@@ -5,7 +5,7 @@ SPDX-License-Identifier: MIT
 """
 
 from legacy_puyo_tools.fpd import Fpd
-from tests.samples import SAMPLE_FPD_STRING
+from tests.conftest import SAMPLE_FPD_STRING
 
 
 def test_get_fpd_character() -> None:

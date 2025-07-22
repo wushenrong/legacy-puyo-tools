@@ -6,8 +6,6 @@ SPDX-License-Identifier: MIT
 
 # pyright: reportPossiblyUnboundVariable=false
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import BinaryIO
 
@@ -64,7 +62,7 @@ def create() -> None:
     type=cloup.File("rb"),
 )
 @output_option
-def create_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
+def create_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
     """Create a fpd file from a unicode text file."""
     path = output_file or Path(get_file_name(input_file)).with_suffix(".fpd")
 
@@ -80,7 +78,7 @@ def create_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
 @output_option
 @mtx_options
 def create_mtx(
-    input_file: BinaryIO, output_file: BinaryIO, fpd: Path | None, unicode: Path | None
+    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, unicode: Path
 ) -> None:
     """Create a mtx file from a XML file."""
     raise NotImplementedError("Creating MTX files is currently not implemented yet.")
@@ -96,7 +94,7 @@ def convert() -> None:
     "input_file", help="Fpd file containing character data.", type=cloup.File("rb")
 )
 @output_option
-def convert_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
+def convert_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
     """Convert a fpd file to a UTF-16 little-endian unicode text file."""
     path = output_file or Path(get_file_name(input_file)).with_suffix(".txt")
 
@@ -110,10 +108,7 @@ def convert_fpd(input_file: BinaryIO, output_file: BinaryIO | None) -> None:
 @output_option
 @mtx_options
 def convert_mtx(
-    input_file: BinaryIO,
-    output_file: BinaryIO | None,
-    fpd: Path,
-    unicode: Path,
+    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, unicode: Path
 ) -> None:
     """Convert a mtx file to a XML file."""
     # pylint: disable=possibly-used-before-assignment
