@@ -15,6 +15,7 @@ SPDX-License-Identifier = "MIT-0"
 path = [
     ".github/ISSUE_TEMPLATE/*.md",
     ".python-version",
+    ".vscode/*.json",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "README.md",

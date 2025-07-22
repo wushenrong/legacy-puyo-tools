@@ -8,6 +8,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Conversion support for the `fmp` format.
+
 ### Changed
 
 - Simplified file handling by taking in both a path and file-like object.

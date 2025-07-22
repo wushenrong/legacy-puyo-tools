@@ -18,8 +18,7 @@ from lxml import etree
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
 from legacy_puyo_tools.fpd import Fpd
-from legacy_puyo_tools.io import get_file_handle, get_file_name
-from legacy_puyo_tools.typing import MtxString, PathOrFile
+from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
 # TODO: When updating to Python 3.10, remove the stub implementation of pairwise
 # from the python documentation:
@@ -51,6 +50,9 @@ MTX_IDENTIFIER_WIDTH = MTX_INT32_WIDTH
 MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
+# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
+MtxString = list[int]
+
 
 @attrs.define
 class Mtx:
@@ -65,6 +67,10 @@ class Mtx:
                 raise FileFormatError(
                     f"{get_file_name(path_or_buf)} is not a valid 32 bit mtx file"
                 ) from e
+
+    def write_mtx(self, path_or_buf: PathOrFile) -> None:
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.encode())
 
     @classmethod
     def decode(cls, data: bytes) -> Mtx:
@@ -113,10 +119,6 @@ class Mtx:
             ])
 
         return cls(strings)
-
-    def write_mtx(self, path_or_buf: PathOrFile) -> None:
-        with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.encode())
 
     def encode(self) -> bytes:
         def write_character(fp: BytesIO, i: int, length: int) -> None:

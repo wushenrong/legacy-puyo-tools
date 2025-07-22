@@ -8,9 +8,12 @@ import contextlib
 import os
 import pathlib
 from collections.abc import Generator
-from typing import BinaryIO
+from typing import BinaryIO, Literal, Union
 
-from legacy_puyo_tools.typing import BinaryModes, PathOrFile
+# TODO: When upgrading to Python 3.10, switch union syntax
+# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
+PathOrFile = Union[str, os.PathLike[str], BinaryIO]
+BinaryModes = Literal["rb", "wb"]
 
 
 @contextlib.contextmanager

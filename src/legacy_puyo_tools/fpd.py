@@ -15,8 +15,7 @@ from io import BytesIO, StringIO
 import attrs
 
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
-from legacy_puyo_tools.io import get_file_handle, get_file_name
-from legacy_puyo_tools.typing import PathOrFile
+from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -150,6 +149,16 @@ class Fpd:
                     f"{get_file_name(path_or_buf)} is not a valid fpd file"
                 ) from e
 
+    def write_fpd(self, path_or_buf: PathOrFile) -> None:
+        """Write the fpd character table to a fpd encoded file.
+
+        Args:
+            path_or_buf:
+                A path or file-like object to write the fpd encoded stream.
+        """
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.encode())
+
     @classmethod
     def decode(cls, data: bytes) -> Fpd:
         """Extract the fpd character table from a fpd encoded stream.
@@ -165,16 +174,6 @@ class Fpd:
             FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
             for i in range(0, len(data), FPD_ENTRY_LENGTH)
         ])
-
-    def write_fpd(self, path_or_buf: PathOrFile) -> None:
-        """Write the fpd character table to a fpd encoded file.
-
-        Args:
-            path_or_buf:
-                A path or file-like object to write the fpd encoded stream.
-        """
-        with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.encode())
 
     def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
@@ -213,6 +212,18 @@ class Fpd:
 
             return cls.from_unicode(fp.read())
 
+    def write_unicode(self, path_or_buf: PathOrFile) -> None:
+        """Write the fpd character table to a UTF-16 LE text file.
+
+        Args:
+            path_or_buf:
+                A path or file-like object to store the converted UTF-16 LE text file.
+        """
+        with get_file_handle(path_or_buf, "wb") as fp:
+            # Write the Byte Order Mark (BOM) for plain text editors
+            fp.write(BOM_UTF16_LE)
+            fp.write(self.to_unicode())
+
     # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
     def from_unicode(cls, unicode: bytes) -> Fpd:
@@ -229,19 +240,6 @@ class Fpd:
             FpdCharacter(unicode[i : i + UTF16_LENGTH])
             for i in range(0, len(unicode), UTF16_LENGTH)
         ])
-
-    def write_unicode(self, path_or_buf: PathOrFile) -> None:
-        """Write the fpd character table to a UTF-16 LE text file.
-
-        Args:
-            path_or_buf:
-                A path or file-like object to store the converted UTF-16 LE text file.
-        """
-        with get_file_handle(path_or_buf, "wb") as fp:
-            # Write the Byte Order Mark (BOM) for plain text editors
-            fp.write(BOM_UTF16_LE)
-
-            fp.write(self.to_unicode())
 
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.

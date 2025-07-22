@@ -7,8 +7,8 @@ them.
 ## The `fpd` format
 
 -   Status:
-    - Creation: Fully implemented.
     - Conversion: Fully implemented.
+    - Creation: Fully implemented.
     - Testing: Full Coverage.
 
 The `fpd` format is a binary character table format used by the developers of
@@ -27,8 +27,8 @@ of the games.
 ## The `fmp` format
 
 -   Status:
+    - Conversion: Fully implemented.
     - Creation: Not implemented.
-    - Conversion: Not implemented.
     - Testing: No coverage.
 
 The `fmp` format is a 4 bits per pixel (4bpp) bitmap format used by the Nintendo
@@ -38,7 +38,7 @@ graphical data of the font in the same character order corresponding to the
 `test.fmp`) or 8x8 pixels (in `puyo8.fmp`).
 
 Although it uses a bit-depth that can encode 16 colors, the format is mainly
-encoded with `0x1` or `0x0` for a black and white pixel respectively. Each
+black and white with `0x1` or `0x0` for an on or off pixel respectively. Each
 nibble, not byte, is also stored in little-endian where the least significant
 nibble is store first before the most significant nibble.
 
@@ -48,8 +48,8 @@ are no headers or padding bytes in the file.
 ## The `mtx` format
 
 -   Status:
-    - Creation: Partially implemented.
     - Conversion: Partially implemented.
+    - Creation: Partially implemented.
     - Testing: 31% coverage.
 -   Notes:
     -   Creation and conversion only supports Puyo Puyo 7 and possibility Puyo
