@@ -13,12 +13,13 @@ path = ["formats.md"]
 SPDX-FileCopyrightText = "2025 Samuel Wu"
 SPDX-License-Identifier = "MIT-0"
 path = [
-  ".github/ISSUE_TEMPLATE/*.md",
-  "CHANGELOG.md",
-  "CONTRIBUTING.md",
-  "README.md",
-  "tox.ini",
-  "uv.lock",
+    ".github/ISSUE_TEMPLATE/*.md",
+    ".python-version",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "tox.ini",
+    "uv.lock",
 ]
 
 [[annotations]]
