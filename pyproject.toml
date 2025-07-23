@@ -8,7 +8,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "legacy-puyo-tools"
-version = "2025.7.23"
+version = "2025.07.23"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
@@ -113,6 +113,8 @@ lint.typing-modules = [ "types-lxml" ]
 lint.pydocstyle.convention = "google"
 
 [tool.pylint]
+# All done by ruff with DOC and FIX
+disable = ["missing-class-docstring", "missing-function-docstring", "fixme"]
 extension-pkg-allow-list = [ "lxml" ]
 max-line-length = 88
 output-format = "colorized"

@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
-import enum
+from typing import Literal
 
 import attrs
 import numpy as np
@@ -33,9 +33,7 @@ class Fmp:
     font_size: FmpSize
 
     @classmethod
-    def read_fmp(
-        cls, path_or_buf: PathOrFile, *, font_size: FmpSize = FmpSize.PUYO14
-    ) -> Fmp:
+    def read_fmp(cls, path_or_buf: PathOrFile, *, font_size: FmpSize = 14) -> Fmp:
         with get_file_handle(path_or_buf) as fp:
             try:
                 return cls.decode(fp.read(), font_size=font_size)
@@ -45,7 +43,7 @@ class Fmp:
                 ) from e
 
     @classmethod
-    def decode(cls, data: bytes, *, font_size: FmpSize = FmpSize.PUYO14) -> Fmp:
+    def decode(cls, data: bytes, *, font_size: FmpSize = 14) -> Fmp:
         bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
@@ -73,7 +71,7 @@ class Fmp:
 
         return cls(graphics, font_size)
 
-    def to_image(self, width: int = 16, *, padding: int = 1) -> Image.Image:
+    def to_image(self, *, width: int = 16, padding: int = 1) -> Image.Image:
         num_of_characters = 0
 
         for character in self.font:
@@ -115,5 +113,7 @@ class Fmp:
 
         return img
 
-    def write_image(self, path_or_buf: PathOrFile) -> None:
-        self.to_image().save(path_or_buf)
+    def write_image(
+        self, path_or_buf: PathOrFile, *, width: int = 16, padding: int = 1
+    ) -> None:
+        self.to_image(width=width, padding=padding).save(path_or_buf)
