@@ -5,7 +5,7 @@ A command line tool for modding older Puyo Puyo games (Yes, the name is using a
 
 ## Installation
 
-Install [Python](https://www.python.org/) 3.9 or later, preferably the latest
+Install [Python](https://www.python.org/) 3.10 or later, preferably the latest
 version.
 
 `legacy-python-tools` is published to

@@ -3,8 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Calendar Versioning](https://calver.org/) as of
+July 23, 2025 (2025-07-23).
 
 ## Unreleased
 
@@ -17,6 +17,11 @@ and this project adheres to
 - Simplified file handling by taking in both a path and file-like object.
 - Renamed encode, decode, read, and write functions.
 - Change from `MIT` to `(MIT AND MIT-0)` for license expression.
+- Switch to calendar versioning.
+
+### Removed
+
+- Python 3.9 support following [Pallets](https://palletsprojects.com/).
 
 ## 0.3.0 - 2025-07-19
 

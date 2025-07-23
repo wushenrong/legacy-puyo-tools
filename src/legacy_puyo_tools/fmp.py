@@ -13,6 +13,7 @@ from typing import Literal
 
 import attrs
 import numpy as np
+import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools.exceptions import FormatError
@@ -23,7 +24,7 @@ BITS_PER_BYTE = 8
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of aliases
 FmpSize = Literal[8, 14]
-FmpCharacter = np.ndarray[tuple[FmpSize, FmpSize], np.dtype[np.bool]]
+FmpCharacter = npt.NDArray[np.bool]
 
 
 @attrs.define
@@ -59,9 +60,6 @@ class Fmp:
             graphics.append(np.array(graphic, np.bool))
 
         return cls(graphics, font_size)
-
-    def write_image(self, path_or_buf: PathOrFile) -> None:
-        self.to_image().save(path_or_buf)
 
     def to_image(self, width: int = 16, *, padding: int = 1) -> Image.Image:
         num_of_characters = 0
@@ -102,3 +100,6 @@ class Fmp:
                 break
 
         return img
+
+    def write_image(self, path_or_buf: PathOrFile) -> None:
+        self.to_image().save(path_or_buf)
