@@ -10,34 +10,15 @@ SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
-import sys
 from io import BytesIO, StringIO
+from itertools import pairwise
 
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+from legacy_puyo_tools.exceptions import FormatError
 from legacy_puyo_tools.fpd import Fpd
-from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
-
-# TODO: When updating to Python 3.10, remove the stub implementation of pairwise
-# from the python documentation:
-# https://docs.python.org/3/library/itertools.html#itertools.pairwise
-if sys.version_info >= (3, 10):
-    from itertools import pairwise
-else:
-    from collections.abc import Iterable
-    from itertools import tee
-    from typing import TypeVar
-
-    T = TypeVar("T")
-
-    def pairwise(iterable: Iterable[T]) -> Iterable[tuple[T, T]]:
-        """Simple pairwise implementation for Python < 3.10."""  # noqa: DOC201
-        a, b = tee(iterable)
-        next(b, None)
-        return zip(a, b)
-
+from legacy_puyo_tools.io import PathOrFile, decode_file, get_file_handle
 
 ENDIAN = "little"
 
@@ -60,13 +41,7 @@ class Mtx:
 
     @classmethod
     def read_mtx(cls, path_or_buf: PathOrFile) -> Mtx:
-        with get_file_handle(path_or_buf) as fp:
-            try:
-                return cls.decode(fp.read())
-            except FormatError as e:
-                raise FileFormatError(
-                    f"{get_file_name(path_or_buf)} is not a valid 32 bit mtx file"
-                ) from e
+        return decode_file(cls, path_or_buf)
 
     def write_mtx(self, path_or_buf: PathOrFile) -> None:
         with get_file_handle(path_or_buf, "wb") as fp:

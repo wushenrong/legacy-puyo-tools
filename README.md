@@ -5,7 +5,7 @@ A command line tool for modding older Puyo Puyo games (Yes, the name is using a
 
 ## Installation
 
-Install [Python](https://www.python.org/) 3.9 or later, preferably the latest
+Install [Python](https://www.python.org/) 3.10 or later, preferably the latest
 version.
 
 `legacy-python-tools` is published to
@@ -92,4 +92,5 @@ If you want to contribute to the project check out
 ## License
 
 Under the MIT License. Based on [Puyo Text Editor][puyo-text-editor] which is
-also under the MIT License.
+also under the MIT License. Some code is generated using AI in which they are
+licensed under the MIT-0 License.

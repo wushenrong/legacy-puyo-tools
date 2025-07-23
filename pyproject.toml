@@ -8,15 +8,15 @@ requires = [ "hatchling" ]
 
 [project]
 name = "legacy-puyo-tools"
-version = "0.3.0"
+version = "2025.7.23"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
 keywords = [ "puyopuyo" ]
-license = "MIT"
+license = "(MIT AND MIT-0)"
 license-files = [ "LICENSE" ]
 authors = [ { name = "Samuel Wu", email = "twopizza9621536@gmail.com" } ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
@@ -26,7 +26,6 @@ classifiers = [
 
     "Programming Language :: Python :: 3 :: Only",
 
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -37,7 +36,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs>=25.3",
-    "click>=8.1.8",
+    "click>=8.2.1",
     "cloup>=3.0.7",
     "lxml>=6",
     "numpy>=2.0.2",
