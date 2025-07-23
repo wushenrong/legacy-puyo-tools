@@ -9,20 +9,28 @@ SPDX-License-Identifier: MIT
 
 from __future__ import annotations
 
-from typing import Literal
+import enum
 
 import attrs
 import numpy as np
 from PIL import Image
 
-from legacy_puyo_tools.exceptions import FormatError
-from legacy_puyo_tools.io import PathOrFile
+from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
 BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of aliases
-FmpSize = Literal[8, 14]
+
+
+class FmpSize(enum.Enum):
+    """The available font sizes for the fmp format."""
+
+    PUYO8 = 8
+    PUYO14 = 14
+
+
 FmpCharacter = np.ndarray[tuple[FmpSize, FmpSize], np.dtype[np.bool]]
 
 
@@ -32,14 +40,26 @@ class Fmp:
     font_size: FmpSize
 
     @classmethod
-    def decode(cls, data: bytes, *, font_size: FmpSize = 14) -> Fmp:
+    def read_fmp(
+        cls, path_or_buf: PathOrFile, *, font_size: FmpSize = FmpSize.PUYO14
+    ) -> Fmp:
+        with get_file_handle(path_or_buf) as fp:
+            try:
+                return cls.decode(fp.read(), font_size=font_size)
+            except FormatError as e:
+                raise FileFormatError(
+                    f"{get_file_name(path_or_buf)} is not a valid fmp file"
+                ) from e
+
+    @classmethod
+    def decode(cls, data: bytes, *, font_size: FmpSize = FmpSize.PUYO14) -> Fmp:
         bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
 
         if len(data) % character_size != 0:
-            raise FormatError
+            raise FormatError("The size of the given fmp does not match")
 
         graphics: list[FmpCharacter] = []
 
@@ -60,8 +80,8 @@ class Fmp:
 
         return cls(graphics, font_size)
 
-    def write_image(self, path_or_buf: PathOrFile) -> None:
-        self.to_image().save(path_or_buf)
+    def write_image(self, path_or_buf: PathOrFile, *, padding: int = 1) -> None:
+        self.to_image(padding=padding).save(path_or_buf)
 
     def to_image(self, width: int = 16, *, padding: int = 1) -> Image.Image:
         num_of_characters = 0
@@ -94,7 +114,9 @@ class Fmp:
                 # TODO: Remove ignore once python-pillow/Pillow#8029 and
                 # python-pillow/Pillow#8362 gets resolved and merged
                 buf.putdata(  # pyright: ignore[reportUnknownMemberType]
-                    np.pad(self.font[character_index], padding).flatten()
+                    # A way that tries to flatten multidimensional arrays without making
+                    # additional copies
+                    np.pad(self.font[character_index], padding).reshape(-1)
                 )
                 img.paste(buf, (row * graphic_size, col * graphic_size))
 

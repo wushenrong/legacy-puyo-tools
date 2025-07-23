@@ -80,7 +80,7 @@ class Mtx:
         length = read_bytes(0, MTX_SIZE_WIDTH)
 
         if length != len(data):
-            raise FormatError("The size of the given data does not match")
+            raise FormatError("The size of the given mtx does not match")
 
         if read_bytes(MTX_SIZE_WIDTH, MTX_OFFSET_WIDTH) != MTX_IDENTIFIER:
             raise FormatError(
