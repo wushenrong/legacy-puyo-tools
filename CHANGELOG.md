@@ -16,6 +16,7 @@ and this project adheres to
 
 - Simplified file handling by taking in both a path and file-like object.
 - Renamed encode, decode, read, and write functions.
+- Change from `MIT` to `(MIT AND MIT-0)` for license expression.
 
 ## 0.3.0 - 2025-07-19
 

@@ -13,7 +13,7 @@ version = "0.3.0"
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
 keywords = [ "puyopuyo" ]
-license = "MIT"
+license = "(MIT AND MIT-0)"
 license-files = [ "LICENSE" ]
 authors = [ { name = "Samuel Wu", email = "twopizza9621536@gmail.com" } ]
 requires-python = ">=3.9"
