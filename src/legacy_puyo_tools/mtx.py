@@ -43,10 +43,6 @@ class Mtx:
     def read_mtx(cls, path_or_buf: PathOrFile) -> Mtx:
         return decode_file(cls, path_or_buf)
 
-    def write_mtx(self, path_or_buf: PathOrFile) -> None:
-        with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.encode())
-
     @classmethod
     def decode(cls, data: bytes) -> Mtx:
         def read_bytes(i: int, width: int) -> int:
@@ -55,7 +51,7 @@ class Mtx:
         length = read_bytes(0, MTX_SIZE_WIDTH)
 
         if length != len(data):
-            raise FormatError("The size of the given data does not match")
+            raise FormatError("The size of the given mtx does not match")
 
         if read_bytes(MTX_SIZE_WIDTH, MTX_OFFSET_WIDTH) != MTX_IDENTIFIER:
             raise FormatError(
@@ -128,9 +124,9 @@ class Mtx:
 
             return bytes_buffer.getvalue()
 
-    def write_xml(self, path_or_buf: PathOrFile, fpd: Fpd) -> None:
+    def write_mtx(self, path_or_buf: PathOrFile) -> None:
         with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.to_xml(fpd))
+            fp.write(self.encode())
 
     def to_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")
@@ -141,19 +137,23 @@ class Mtx:
 
             with StringIO() as string_buffer:
                 for character in string:
-                    # TODO: When upgrading to Python 3.10, use `match` statements
-                    if character == 0xF813:
-                        dialog.append(etree.Element("arrow"))
-                    # TODO: Figure out what this control character does
-                    elif character == 0xF883:
-                        string_buffer.write("0xF883")
-                    elif character == 0xFFFD:
-                        string_buffer.write("\n")
-                    elif character == 0xFFFF:
-                        break
-                    else:
-                        string_buffer.write(fpd[character])
+                    match character:
+                        case 0xF813:
+                            dialog.append(etree.Element("arrow"))
+                        # TODO: Figure out what this control character does
+                        case 0xF883:
+                            string_buffer.write("0xF883")
+                        case 0xFFFD:
+                            string_buffer.write("\n")
+                        case 0xFFFF:
+                            break
+                        case _:
+                            string_buffer.write(fpd[character])
 
                 dialog.text = string_buffer.getvalue()
 
         return etree.tostring(root, encoding="utf-8", xml_declaration=True)
+
+    def write_xml(self, path_or_buf: PathOrFile, fpd: Fpd) -> None:
+        with get_file_handle(path_or_buf, "wb") as fp:
+            fp.write(self.to_xml(fpd))

@@ -125,6 +125,20 @@ class Fpd:
             return string_buffer.getvalue()
 
     @classmethod
+    def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
+        """Read and extract characters from a fpd file.
+
+        Args:
+            path_or_buf:
+                A path or file-like object to a fpd encoded file that contains a fpd
+                character table.
+
+        Returns:
+            A fpd character table.
+        """
+        return decode_file(cls, path_or_buf)
+
+    @classmethod
     def decode(cls, data: bytes) -> Fpd:
         """Extract the fpd character table from a fpd encoded stream.
 
@@ -151,45 +165,6 @@ class Fpd:
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
-
-    # TODO: Somehow allow people to specify the width of the character during decoding
-    @classmethod
-    def from_unicode(cls, unicode: bytes) -> Fpd:
-        """Convert a UTF-16 LE stream into a fpd character table.
-
-        Args:
-            unicode:
-                A UTF-16 LE encoded character stream.
-
-        Returns:
-            A fpd character table.
-        """
-        return cls([
-            FpdCharacter(unicode[i : i + UTF16_LENGTH])
-            for i in range(0, len(unicode), UTF16_LENGTH)
-        ])
-
-    def to_unicode(self) -> bytes:
-        """Encode the fpd character table into a UTF-16 LE text stream.
-
-        Returns:
-            A UTF-16 LE encoded text stream with characters from the fpd.
-        """
-        return str(self).encode(ENCODING)
-
-    @classmethod
-    def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
-        """Read and extract characters from a fpd file.
-
-        Args:
-            path_or_buf:
-                A path or file-like object to a fpd encoded file that contains a fpd
-                character table.
-
-        Returns:
-            A fpd character table.
-        """
-        return decode_file(cls, path_or_buf)
 
     def write_fpd(self, path_or_buf: PathOrFile) -> None:
         """Write the fpd character table to a fpd encoded file.
@@ -225,6 +200,33 @@ class Fpd:
                 )
 
             return cls.from_unicode(fp.read())
+
+    # TODO: Somehow allow people to specify the width of the character during decoding
+    @classmethod
+    def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
+        """Convert a UTF-16 LE stream into a fpd character table.
+
+        Args:
+            unicode:
+                A UTF-16 LE encoded character stream.
+            width:
+                How wide is the character graphic in the fmp.
+
+        Returns:
+            A fpd character table.
+        """
+        return cls([
+            FpdCharacter(unicode[i : i + UTF16_LENGTH], width=width)
+            for i in range(0, len(unicode), UTF16_LENGTH)
+        ])
+
+    def to_unicode(self) -> bytes:
+        """Encode the fpd character table into a UTF-16 LE text stream.
+
+        Returns:
+            A UTF-16 LE encoded text stream with characters from the fpd.
+        """
+        return str(self).encode(ENCODING)
 
     def write_unicode(self, path_or_buf: PathOrFile) -> None:
         """Write the fpd character table to a UTF-16 LE text file.
