@@ -14,12 +14,8 @@ from io import BytesIO, StringIO
 
 import attrs
 
-from legacy_puyo_tools.formats.base import BaseFormat, FileFormatError, FormatError
-from legacy_puyo_tools.io import (
-    PathOrFile,
-    get_file_handle,
-    get_file_name,
-)
+from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
+from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -27,7 +23,7 @@ UTF16_LENGTH = 2
 WIDTH_ENTRY_OFFSET = 2
 
 
-@attrs.define(frozen=True)
+@attrs.frozen
 class FpdCharacter:
     """A fpd character entry.
 
@@ -84,7 +80,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd(BaseFormat):
+class Fpd(Format):
     """A fpd character table.
 
     The fpd stores character table in which each entry is placed right next to each

@@ -16,7 +16,7 @@ from itertools import pairwise
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 from legacy_puyo_tools.io import PathOrFile, get_file_handle
 
@@ -36,7 +36,7 @@ MtxString = list[int]
 
 
 @attrs.define
-class Mtx(BaseFormat):
+class Mtx(Format):
     strings: list[MtxString]
 
     @classmethod

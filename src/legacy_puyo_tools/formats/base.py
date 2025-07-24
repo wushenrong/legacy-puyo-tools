@@ -22,7 +22,7 @@ class FileFormatError(FormatError):
     """The file does not conform to a file format or is malformed."""
 
 
-class BaseFormat(ABC):
+class Format(ABC):
     """Classes that implements a format and with encoding and decoding support."""
 
     @classmethod

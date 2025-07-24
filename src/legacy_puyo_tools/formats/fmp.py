@@ -16,7 +16,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.io import PathOrFile
 
 BITS_PER_PIXEL = 4
@@ -28,7 +28,7 @@ FmpCharacter = npt.NDArray[np.bool]
 
 
 @attrs.define
-class Fmp(BaseFormat):
+class Fmp(Format):
     font: list[FmpCharacter]
     font_size: FmpSize
 
