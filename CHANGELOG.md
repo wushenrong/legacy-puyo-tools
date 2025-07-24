@@ -18,6 +18,7 @@ July 23, 2025 (2025-07-23).
 - Renamed encode, decode, read, and write functions.
 - Change from `MIT` to `(MIT AND MIT-0)` for license expression.
 - Switch to calendar versioning.
+- Use a bidirectional dictionary instead of a list for the `fpd` format.
 
 ### Removed
 

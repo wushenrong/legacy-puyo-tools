@@ -13,9 +13,10 @@ from codecs import BOM_UTF16_LE
 from io import BytesIO, StringIO
 
 import attrs
+from bidict import bidict
 
-from legacy_puyo_tools.exceptions import FileFormatError, FormatError
-from legacy_puyo_tools.io import PathOrFile, decode_file, get_file_handle, get_file_name
+from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
+from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
 
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -23,7 +24,7 @@ UTF16_LENGTH = 2
 WIDTH_ENTRY_OFFSET = 2
 
 
-@attrs.define
+@attrs.frozen
 class FpdCharacter:
     """A fpd character entry.
 
@@ -40,19 +41,7 @@ class FpdCharacter:
     """
 
     code_point: str
-    width: int
-
-    def __init__(self, code_point: bytes, width: int = 0x00) -> None:
-        """Initialize a fpd character.
-
-        Args:
-            code_point:
-                A Unicode character in the UTF-16 LE format.
-            width:
-                The width of the character. Defaults to 0x00.
-        """
-        self.code_point = code_point.decode(ENCODING)
-        self.width = width
+    width: int = attrs.field(default=0x00, eq=False)
 
     def __str__(self) -> str:
         """Return the character as a single character string."""
@@ -76,7 +65,10 @@ class FpdCharacter:
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
 
-        return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
+        code_point = fpd_entry[:UTF16_LENGTH].decode(ENCODING)
+        width = fpd_entry[WIDTH_ENTRY_OFFSET]
+
+        return cls(code_point, width)
 
     def encode(self) -> bytes:
         """Encode the character back to a fpd character entry.
@@ -89,7 +81,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd:
+class Fpd(Format):
     """A fpd character table.
 
     The fpd stores character table in which each entry is placed right next to each
@@ -99,17 +91,17 @@ class Fpd:
 
     Attributes:
         entries:
-            A list of fpd character entries.
+            A bidirectional dictionary of fpd character entries.
     """
 
-    entries: list[FpdCharacter]
+    entries: bidict[int, FpdCharacter]
 
     def __getitem__(self, index: int) -> str:
         """Retrieve a character from the fpd character table.
 
         Args:
             index:
-                The index of the character to retrieve.
+                The index of a character in the fpd character table..
 
         Returns:
             A string that contains the requested character.
@@ -119,10 +111,22 @@ class Fpd:
     def __str__(self) -> str:
         """Return a string representation of the fpd character table."""
         with StringIO() as string_buffer:
-            for character in self.entries:
+            for character in self.entries.inverse:
                 string_buffer.write(str(character))
 
             return string_buffer.getvalue()
+
+    def get_index(self, character: str) -> int:
+        """Get the index of a character from the fpd character table.
+
+        Args:
+            character:
+                A character that is in the fpd character table.
+
+        Returns:
+            A index of the character in the fpd character table.
+        """
+        return self.entries.inverse[FpdCharacter(character)]
 
     @classmethod
     def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
@@ -136,7 +140,7 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return decode_file(cls, path_or_buf)
+        return super()._decode_file(path_or_buf)
 
     @classmethod
     def decode(cls, data: bytes) -> Fpd:
@@ -149,10 +153,14 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return cls([
-            FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
-            for i in range(0, len(data), FPD_ENTRY_LENGTH)
-        ])
+        return cls(
+            bidict({
+                i // FPD_ENTRY_LENGTH: FpdCharacter.decode(
+                    data[i : i + FPD_ENTRY_LENGTH]
+                )
+                for i in range(0, len(data), FPD_ENTRY_LENGTH)
+            })
+        )
 
     def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
@@ -161,7 +169,7 @@ class Fpd:
             A fpd encoded stream that contains the fpd character table.
         """
         with BytesIO() as bytes_buffer:
-            for character in self.entries:
+            for character in self.entries.inverse:
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
@@ -201,7 +209,7 @@ class Fpd:
 
             return cls.from_unicode(fp.read())
 
-    # TODO: Somehow allow people to specify the width of the character during decoding
+    # TODO: Get width from another file
     @classmethod
     def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
         """Convert a UTF-16 LE stream into a fpd character table.
@@ -215,10 +223,14 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return cls([
-            FpdCharacter(unicode[i : i + UTF16_LENGTH], width=width)
-            for i in range(0, len(unicode), UTF16_LENGTH)
-        ])
+        return cls(
+            bidict({
+                i // UTF16_LENGTH: FpdCharacter.decode(
+                    unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
+                )
+                for i in range(0, len(unicode), UTF16_LENGTH)
+            })
+        )
 
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.
@@ -239,11 +251,3 @@ class Fpd:
             # Write the Byte Order Mark (BOM) for plain text editors
             fp.write(BOM_UTF16_LE)
             fp.write(self.to_unicode())
-
-    def create_lookup_table(self) -> dict[str, int]:
-        """Create a lookup table to convert character positions into indexes.
-
-        Returns:
-            A dictionary that maps characters to their index in the fpd character table.
-        """
-        return {str(k): v for v, k in enumerate(self.entries)}

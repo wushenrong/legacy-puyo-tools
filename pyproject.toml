@@ -36,6 +36,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs>=25.3",
+    "bidict>=0.23.1",
     "click>=8.2.1",
     "cloup>=3.0.7",
     "lxml>=6",
@@ -61,7 +62,7 @@ dev = [
     { include-group = "test" },
     { include-group = "type" },
 ]
-test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1" ]
+test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1", "typing-extensions>=4.14.1" ]
 type = [
     "pyright[nodejs]>=1.1.403",
     "types-lxml>=2025.3.30",

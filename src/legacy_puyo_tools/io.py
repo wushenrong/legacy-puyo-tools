@@ -15,44 +15,12 @@ from __future__ import annotations
 import contextlib
 import os
 import pathlib
-from abc import abstractmethod
 from collections.abc import Generator
-from typing import BinaryIO, Literal, Protocol, TypeVar
-
-from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+from typing import BinaryIO, Literal
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of aliases
 PathOrFile = str | os.PathLike[str] | BinaryIO
 BinaryModes = Literal["rb", "wb"]
-
-
-T_co = TypeVar("T_co", covariant=True)
-
-
-class Format(Protocol[T_co]):
-    """Classes that supports encoding and decoding of a format specification."""
-
-    @classmethod
-    @abstractmethod
-    def decode(cls, data: bytes) -> T_co:
-        """Decode byte streams into an object representation of the implemented format.
-
-        Args:
-            data: _description_
-
-        Returns:
-            The object representation of the implemented format.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def encode(self) -> bytes:
-        """Encode a format from a Python object into a byte stream.
-
-        Returns:
-            A byte stream that conforms to the implemented format.
-        """
-        raise NotImplementedError
 
 
 @contextlib.contextmanager
@@ -76,33 +44,6 @@ def get_file_handle(
             yield fp
     else:
         yield path_or_buf
-
-
-def decode_file(cls: type[Format[T_co]], path_or_buf: PathOrFile) -> T_co:
-    """Decode file that conforms to a format into an object.
-
-    Args:
-        cls:
-            A class that implements a format.
-        path_or_buf:
-            A string path, path-like object, or a file-like object that point to a file
-            that contains data in the format that the class implements.
-
-    Raises:
-        FileFormatError:
-            The given file does not conform to the format that the class
-            implements.
-
-    Returns:
-        An object that represents the format that the class implements.
-    """
-    with get_file_handle(path_or_buf) as fp:
-        try:
-            return cls.decode(fp.read())
-        except FormatError as e:
-            raise FileFormatError(
-                f"{get_file_name(path_or_buf)} is not a valid {cls.__name__} file"
-            ) from e
 
 
 def get_file_name(path_or_buf: PathOrFile) -> str:

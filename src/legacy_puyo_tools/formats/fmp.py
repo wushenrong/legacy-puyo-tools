@@ -16,8 +16,8 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 
-from legacy_puyo_tools.exceptions import FileFormatError, FormatError
-from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
+from legacy_puyo_tools.formats.base import Format, FormatError
+from legacy_puyo_tools.io import PathOrFile
 
 BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
@@ -28,22 +28,21 @@ FmpCharacter = npt.NDArray[np.bool]
 
 
 @attrs.define
-class Fmp:
+class Fmp(Format):
     font: list[FmpCharacter]
     font_size: FmpSize
 
     @classmethod
-    def read_fmp(cls, path_or_buf: PathOrFile, *, font_size: FmpSize = 14) -> Fmp:
-        with get_file_handle(path_or_buf) as fp:
-            try:
-                return cls.decode(fp.read(), font_size=font_size)
-            except FormatError as e:
-                raise FileFormatError(
-                    f"{get_file_name(path_or_buf)} is not a valid fmp file"
-                ) from e
+    def read_fmp(
+        cls, path_or_buf: PathOrFile, *, font_size: FmpSize | None = None
+    ) -> Fmp:
+        return super()._decode_file(path_or_buf, font_size=font_size)
 
     @classmethod
-    def decode(cls, data: bytes, *, font_size: FmpSize = 14) -> Fmp:
+    def decode(cls, data: bytes, *, font_size: FmpSize | None = None) -> Fmp:
+        if not font_size:
+            font_size = 14
+
         bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
@@ -70,6 +69,9 @@ class Fmp:
             graphics.append(np.array(graphic, np.bool))
 
         return cls(graphics, font_size)
+
+    def encode(self) -> bytes:
+        raise NotImplementedError
 
     def to_image(self, *, width: int = 16, padding: int = 1) -> Image.Image:
         num_of_characters = 0

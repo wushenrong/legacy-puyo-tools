@@ -13,10 +13,10 @@ import cloup
 from cloup import option, option_group
 from cloup.constraints import require_one
 
-from legacy_puyo_tools.fmp import Fmp, FmpSize
-from legacy_puyo_tools.fpd import Fpd
+from legacy_puyo_tools.formats.fmp import Fmp, FmpSize
+from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.formats.mtx import Mtx
 from legacy_puyo_tools.io import get_file_name
-from legacy_puyo_tools.mtx import Mtx
 
 output_option = option(
     "--output",
