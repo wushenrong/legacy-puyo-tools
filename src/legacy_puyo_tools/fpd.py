@@ -201,8 +201,7 @@ class Fpd:
 
             return cls.from_unicode(fp.read())
 
-        # TODO: Somehow allow people to specify the width of the character during decoding
-
+    # TODO: Somehow allow people to specify the width of the character during decoding
     @classmethod
     def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
         """Convert a UTF-16 LE stream into a fpd character table.
@@ -210,6 +209,8 @@ class Fpd:
         Args:
             unicode:
                 A UTF-16 LE encoded character stream.
+            width:
+                How wide is the character graphic in the fmp.
 
         Returns:
             A fpd character table.
