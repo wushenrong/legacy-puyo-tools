@@ -16,9 +16,9 @@ from itertools import pairwise
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.exceptions import FormatError
-from legacy_puyo_tools.fpd import Fpd
-from legacy_puyo_tools.io import PathOrFile, decode_file, get_file_handle
+from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.io import PathOrFile, get_file_handle
 
 ENDIAN = "little"
 
@@ -36,12 +36,12 @@ MtxString = list[int]
 
 
 @attrs.define
-class Mtx:
+class Mtx(BaseFormat):
     strings: list[MtxString]
 
     @classmethod
     def read_mtx(cls, path_or_buf: PathOrFile) -> Mtx:
-        return decode_file(cls, path_or_buf)
+        return super()._decode_file(path_or_buf)
 
     @classmethod
     def decode(cls, data: bytes) -> Mtx:

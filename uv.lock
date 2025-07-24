@@ -594,6 +594,7 @@ dev = [
     { name = "tox-gh-actions" },
     { name = "tox-uv" },
     { name = "types-lxml" },
+    { name = "typing-extensions" },
 ]
 lint = [
     { name = "pre-commit-uv" },
@@ -609,12 +610,14 @@ pylint = [
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "typing-extensions" },
 ]
 type = [
     { name = "pyright", extra = ["nodejs"] },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "types-lxml" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -640,6 +643,7 @@ dev = [
     { name = "tox-gh-actions", specifier = ">=3.3" },
     { name = "tox-uv", specifier = ">=1.26.2" },
     { name = "types-lxml", specifier = ">=2025.3.30" },
+    { name = "typing-extensions", specifier = ">=4.14.1" },
 ]
 lint = [{ name = "pre-commit-uv", specifier = ">=4.1.4" }]
 pkg-meta = [
@@ -651,12 +655,14 @@ pylint = [{ name = "pylint", specifier = ">=3.3.7" }]
 test = [
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "typing-extensions", specifier = ">=4.14.1" },
 ]
 type = [
     { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.403" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "types-lxml", specifier = ">=2025.3.30" },
+    { name = "typing-extensions", specifier = ">=4.14.1" },
 ]
 
 [[package]]

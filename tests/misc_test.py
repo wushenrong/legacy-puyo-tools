@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2025 Samuel Wu
 SPDX-License-Identifier: MIT
 """
 
-from legacy_puyo_tools.fpd import Fpd
+from legacy_puyo_tools.formats.fpd import Fpd
 from tests.conftest import SAMPLE_FPD_STRING
 
 

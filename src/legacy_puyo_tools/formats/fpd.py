@@ -14,8 +14,12 @@ from io import BytesIO, StringIO
 
 import attrs
 
-from legacy_puyo_tools.exceptions import FileFormatError, FormatError
-from legacy_puyo_tools.io import PathOrFile, decode_file, get_file_handle, get_file_name
+from legacy_puyo_tools.formats.base import BaseFormat, FileFormatError, FormatError
+from legacy_puyo_tools.io import (
+    PathOrFile,
+    get_file_handle,
+    get_file_name,
+)
 
 ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -23,7 +27,7 @@ UTF16_LENGTH = 2
 WIDTH_ENTRY_OFFSET = 2
 
 
-@attrs.define
+@attrs.define(frozen=True)
 class FpdCharacter:
     """A fpd character entry.
 
@@ -40,19 +44,7 @@ class FpdCharacter:
     """
 
     code_point: str
-    width: int
-
-    def __init__(self, code_point: bytes, width: int = 0x00) -> None:
-        """Initialize a fpd character.
-
-        Args:
-            code_point:
-                A Unicode character in the UTF-16 LE format.
-            width:
-                The width of the character. Defaults to 0x00.
-        """
-        self.code_point = code_point.decode(ENCODING)
-        self.width = width
+    width: int = attrs.field(default=0x00, eq=False)
 
     def __str__(self) -> str:
         """Return the character as a single character string."""
@@ -76,7 +68,10 @@ class FpdCharacter:
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
 
-        return cls(fpd_entry[:UTF16_LENGTH], fpd_entry[WIDTH_ENTRY_OFFSET])
+        code_point = fpd_entry[:UTF16_LENGTH].decode(ENCODING)
+        width = fpd_entry[WIDTH_ENTRY_OFFSET]
+
+        return cls(code_point, width)
 
     def encode(self) -> bytes:
         """Encode the character back to a fpd character entry.
@@ -89,7 +84,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd:
+class Fpd(BaseFormat):
     """A fpd character table.
 
     The fpd stores character table in which each entry is placed right next to each
@@ -136,7 +131,7 @@ class Fpd:
         Returns:
             A fpd character table.
         """
-        return decode_file(cls, path_or_buf)
+        return super()._decode_file(path_or_buf)
 
     @classmethod
     def decode(cls, data: bytes) -> Fpd:
@@ -201,7 +196,7 @@ class Fpd:
 
             return cls.from_unicode(fp.read())
 
-    # TODO: Somehow allow people to specify the width of the character during decoding
+    # TODO: Get width from another file
     @classmethod
     def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
         """Convert a UTF-16 LE stream into a fpd character table.
@@ -216,7 +211,9 @@ class Fpd:
             A fpd character table.
         """
         return cls([
-            FpdCharacter(unicode[i : i + UTF16_LENGTH], width=width)
+            FpdCharacter.decode(
+                unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
+            )
             for i in range(0, len(unicode), UTF16_LENGTH)
         ])
 

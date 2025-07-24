@@ -11,8 +11,8 @@ import pytest
 from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import create_fpd
-from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.fpd import ENCODING
+from legacy_puyo_tools.formats.base import FileFormatError
+from legacy_puyo_tools.formats.fpd import ENCODING
 from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
