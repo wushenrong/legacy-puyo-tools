@@ -13,6 +13,7 @@ from codecs import BOM_UTF16_LE
 from io import BytesIO, StringIO
 
 import attrs
+from bidict import bidict
 
 from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
 from legacy_puyo_tools.io import PathOrFile, get_file_handle, get_file_name
@@ -90,17 +91,17 @@ class Fpd(Format):
 
     Attributes:
         entries:
-            A list of fpd character entries.
+            A bidirectional dictionary of fpd character entries.
     """
 
-    entries: list[FpdCharacter]
+    entries: bidict[int, FpdCharacter]
 
     def __getitem__(self, index: int) -> str:
         """Retrieve a character from the fpd character table.
 
         Args:
             index:
-                The index of the character to retrieve.
+                The index of a character in the fpd character table..
 
         Returns:
             A string that contains the requested character.
@@ -110,10 +111,22 @@ class Fpd(Format):
     def __str__(self) -> str:
         """Return a string representation of the fpd character table."""
         with StringIO() as string_buffer:
-            for character in self.entries:
+            for character in self.entries.inverse:
                 string_buffer.write(str(character))
 
             return string_buffer.getvalue()
+
+    def get_index(self, character: str) -> int:
+        """Get the index of a character from the fpd character table.
+
+        Args:
+            character:
+                A character that is in the fpd character table.
+
+        Returns:
+            A index of the character in the fpd character table.
+        """
+        return self.entries.inverse[FpdCharacter(character)]
 
     @classmethod
     def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
@@ -140,10 +153,14 @@ class Fpd(Format):
         Returns:
             A fpd character table.
         """
-        return cls([
-            FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
-            for i in range(0, len(data), FPD_ENTRY_LENGTH)
-        ])
+        return cls(
+            bidict({
+                i // FPD_ENTRY_LENGTH: FpdCharacter.decode(
+                    data[i : i + FPD_ENTRY_LENGTH]
+                )
+                for i in range(0, len(data), FPD_ENTRY_LENGTH)
+            })
+        )
 
     def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
@@ -152,7 +169,7 @@ class Fpd(Format):
             A fpd encoded stream that contains the fpd character table.
         """
         with BytesIO() as bytes_buffer:
-            for character in self.entries:
+            for character in self.entries.inverse:
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
@@ -206,12 +223,14 @@ class Fpd(Format):
         Returns:
             A fpd character table.
         """
-        return cls([
-            FpdCharacter.decode(
-                unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
-            )
-            for i in range(0, len(unicode), UTF16_LENGTH)
-        ])
+        return cls(
+            bidict({
+                i // UTF16_LENGTH: FpdCharacter.decode(
+                    unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
+                )
+                for i in range(0, len(unicode), UTF16_LENGTH)
+            })
+        )
 
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.
@@ -232,11 +251,3 @@ class Fpd(Format):
             # Write the Byte Order Mark (BOM) for plain text editors
             fp.write(BOM_UTF16_LE)
             fp.write(self.to_unicode())
-
-    def create_lookup_table(self) -> dict[str, int]:
-        """Create a lookup table to convert character positions into indexes.
-
-        Returns:
-            A dictionary that maps characters to their index in the fpd character table.
-        """
-        return {str(k): v for v, k in enumerate(self.entries)}

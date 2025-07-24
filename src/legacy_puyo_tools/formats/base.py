@@ -40,14 +40,6 @@ class Format(ABC):
             The object representation of the implemented format.
         """
 
-    @abstractmethod
-    def encode(self) -> bytes:
-        """Encode a format from a Python object into a byte stream.
-
-        Returns:
-            A byte stream that conforms to the implemented format.
-        """
-
     @classmethod
     def _decode_file(cls, path_or_buf: PathOrFile, **kwargs: int | None) -> Self:
         """Decode file that conforms to a format into an object.
@@ -76,3 +68,11 @@ class Format(ABC):
                 raise FileFormatError(
                     f"{get_file_name(path_or_buf)} is not a valid {cls.__name__} file"
                 ) from e
+
+    @abstractmethod
+    def encode(self) -> bytes:
+        """Encode a format from a Python object into a byte stream.
+
+        Returns:
+            A byte stream that conforms to the implemented format.
+        """
