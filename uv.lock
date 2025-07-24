@@ -578,7 +578,7 @@ wheels = [
 
 [[package]]
 name = "legacy-puyo-tools"
-version = "2025.7.23"
+version = "2025.7.24"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
