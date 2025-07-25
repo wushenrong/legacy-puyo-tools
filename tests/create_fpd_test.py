@@ -12,7 +12,7 @@ from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import create_fpd
 from legacy_puyo_tools.formats.base import FileFormatError
-from legacy_puyo_tools.formats.fpd import ENCODING
+from legacy_puyo_tools.formats.fpd import FPD_ENCODING
 from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
@@ -28,8 +28,8 @@ def test_create_fpd(input_file: str, output_file: str, output: bool) -> None:
     cli_runner = CliRunner()
 
     with cli_runner.isolated_filesystem():
-        with Path(input_file).open("w", encoding=ENCODING) as f:
-            f.write(BOM_UTF16_LE.decode(ENCODING))
+        with Path(input_file).open("w", encoding=FPD_ENCODING) as f:
+            f.write(BOM_UTF16_LE.decode(FPD_ENCODING))
             f.write(SAMPLE_UNICODE_STRING)
 
         if output:
@@ -50,7 +50,7 @@ def test_create_fpd_no_bom() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
-        with Path("sample_data_no_bom.txt").open("w", encoding=ENCODING) as f:
+        with Path("sample_data_no_bom.txt").open("w", encoding=FPD_ENCODING) as f:
             f.write(SAMPLE_UNICODE_STRING)
 
         result = runner.invoke(create_fpd, ["sample_data_no_bom.txt"])

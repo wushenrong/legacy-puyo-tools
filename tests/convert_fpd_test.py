@@ -12,7 +12,7 @@ from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import convert_fpd
 from legacy_puyo_tools.formats.base import FileFormatError
-from legacy_puyo_tools.formats.fpd import ENCODING, Fpd
+from legacy_puyo_tools.formats.fpd import FPD_ENCODING, Fpd
 from tests.conftest import SAMPLE_FPD_STRING, SAMPLE_UNICODE_STRING
 
 
@@ -38,8 +38,8 @@ def test_convert_fpd(input_file: str, output_file: str, output: bool) -> None:
         else:
             result = cli_runner.invoke(convert_fpd, [input_file])
 
-        with Path(output_file).open("r", encoding=ENCODING) as f:
-            assert f.read(1) == BOM_UTF16_LE.decode(ENCODING)
+        with Path(output_file).open("r", encoding=FPD_ENCODING) as f:
+            assert f.read(1) == BOM_UTF16_LE.decode(FPD_ENCODING)
             assert f.read() == SAMPLE_UNICODE_STRING
 
         assert result.exit_code == 0
