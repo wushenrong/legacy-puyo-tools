@@ -12,15 +12,14 @@ from __future__ import annotations
 
 from io import BytesIO, StringIO
 from itertools import pairwise
+from typing import BinaryIO
 
 import attrs
 from lxml import etree
 
+from legacy_puyo_tools.formats._io import PathOrFile, write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
-from legacy_puyo_tools.io import PathOrFile, get_file_handle
-
-ENDIAN = "little"
 
 MTX_IDENTIFIER = 8
 MTX_INT32_WIDTH = 4
@@ -30,6 +29,8 @@ MTX_SIZE_WIDTH = MTX_INT32_WIDTH
 MTX_IDENTIFIER_WIDTH = MTX_INT32_WIDTH
 MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
+
+ENDIAN = "little"
 
 # TODO: When upgrading to Python 3.12, add type to the beginning of aliases
 MtxString = list[int]
@@ -92,7 +93,7 @@ class Mtx(Format):
         return cls(strings)
 
     def encode(self) -> bytes:
-        def write_character(fp: BytesIO, i: int, length: int) -> None:
+        def write_bytes(fp: BinaryIO, i: int, length: int) -> None:
             fp.write(i.to_bytes(length, ENDIAN))
 
         header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
@@ -107,26 +108,25 @@ class Mtx(Format):
             mtx_length += string_length
 
         with BytesIO() as bytes_buffer:
-            write_character(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
-            write_character(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
-            write_character(
+            write_bytes(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
+            write_bytes(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
+            write_bytes(
                 bytes_buffer,
                 MTX_SIZE_WIDTH + MTX_IDENTIFIER_WIDTH + MTX_OFFSET_WIDTH,
                 MTX_OFFSET_WIDTH,
             )
 
             for offset in string_offsets:
-                write_character(bytes_buffer, offset, MTX_SECTION_WIDTH)
+                write_bytes(bytes_buffer, offset, MTX_SECTION_WIDTH)
 
             for string in self.strings:
                 for character in string:
-                    write_character(bytes_buffer, character, MTX_CHARACTER_WIDTH)
+                    write_bytes(bytes_buffer, character, MTX_CHARACTER_WIDTH)
 
             return bytes_buffer.getvalue()
 
     def write_mtx(self, path_or_buf: PathOrFile) -> None:
-        with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.encode())
+        write_file(path_or_buf, self.encode())
 
     def to_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")
@@ -155,5 +155,4 @@ class Mtx(Format):
         return etree.tostring(root, encoding="utf-8", xml_declaration=True)
 
     def write_xml(self, path_or_buf: PathOrFile, fpd: Fpd) -> None:
-        with get_file_handle(path_or_buf, "wb") as fp:
-            fp.write(self.to_xml(fpd))
+        write_file(path_or_buf, self.to_xml(fpd))

@@ -115,7 +115,12 @@ lint.pydocstyle.convention = "google"
 
 [tool.pylint]
 # All done by ruff with DOC and FIX
-disable = [ "missing-class-docstring", "missing-function-docstring", "fixme" ]
+disable = [
+    "fixme",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
 extension-pkg-allow-list = [ "lxml" ]
 max-line-length = 88
 output-format = "colorized"

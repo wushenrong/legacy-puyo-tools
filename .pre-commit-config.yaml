@@ -9,7 +9,6 @@ repos:
       - id: check-added-large-files
       - id: check-ast
       - id: check-builtin-literals
-      - id: check-docstring-first
       - id: check-illegal-windows-names
       - id: check-toml
       - id: check-yaml

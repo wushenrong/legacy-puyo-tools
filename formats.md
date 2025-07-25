@@ -33,14 +33,14 @@ of the games.
 
 The `fmp` format is a 4 bits per pixel (4bpp) bitmap format used by the Nintendo
 DS versions of Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to store the
-graphical data of the font in the same character order corresponding to the
+graphical data of characters corresponding to the
 `fpd` file. Each character is either 14x14 pixels (in `puyo14.fmp` and
 `test.fmp`) or 8x8 pixels (in `puyo8.fmp`).
 
 Although it uses a bit-depth that can encode 16 colors, the format is mainly
-black and white with `0x1` or `0x0` for an on or off pixel respectively. Each
-nibble, not byte, is also stored in little-endian where the least significant
-nibble is store first before the most significant nibble.
+black and white with `0x0` and `0x1` encoding an off and on pixel respectively.
+Each nibble, not byte, is also stored in little-endian where the least
+significant nibble is store first before the most significant nibble.
 
 Pixels are stored row by row, in top-to-bottom and left-to-right order. There
 are no headers or padding bytes in the file.
