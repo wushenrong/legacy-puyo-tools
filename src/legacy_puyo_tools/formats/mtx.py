@@ -18,10 +18,12 @@ from typing import BinaryIO
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats._io import PathOrFile, write_file
+from legacy_puyo_tools.formats._io import StrPath, write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.typing import MtxString
 
+MTX_ENDIAN = "little"
 MTX_IDENTIFIER = 8
 MTX_INT32_WIDTH = 4
 MTX_CHARACTER_WIDTH = 2
@@ -31,24 +33,19 @@ MTX_IDENTIFIER_WIDTH = MTX_INT32_WIDTH
 MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
-ENDIAN = "little"
-
-# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
-MtxString = list[int]
-
 
 @attrs.define
 class Mtx(Format):
     strings: list[MtxString]
 
     @classmethod
-    def read_mtx(cls, path_or_buf: PathOrFile) -> Mtx:
+    def read_mtx(cls, path_or_buf: StrPath | BinaryIO) -> Mtx:
         return super()._decode_file(path_or_buf)
 
     @classmethod
     def decode(cls, data: bytes) -> Mtx:
         def read_bytes(i: int, width: int) -> int:
-            return int.from_bytes(data[i : i + width], ENDIAN)
+            return int.from_bytes(data[i : i + width], MTX_ENDIAN)
 
         length = read_bytes(0, MTX_SIZE_WIDTH)
 
@@ -84,7 +81,7 @@ class Mtx(Format):
                         + (i * MTX_CHARACTER_WIDTH)
                         + MTX_CHARACTER_WIDTH
                     ],
-                    ENDIAN,
+                    MTX_ENDIAN,
                 )
                 for i in range(
                     (next_string_offset - current_string_offset) // MTX_CHARACTER_WIDTH
@@ -95,7 +92,7 @@ class Mtx(Format):
 
     def encode(self) -> bytes:
         def write_bytes(fp: BinaryIO, i: int, length: int) -> None:
-            fp.write(i.to_bytes(length, ENDIAN))
+            fp.write(i.to_bytes(length, MTX_ENDIAN))
 
         header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
 
@@ -126,7 +123,7 @@ class Mtx(Format):
 
             return bytes_buffer.getvalue()
 
-    def write_mtx(self, path_or_buf: PathOrFile) -> None:
+    def write_mtx(self, path_or_buf: StrPath | BinaryIO) -> None:
         write_file(path_or_buf, self.encode())
 
     def to_xml(self, fpd: Fpd) -> bytes:
@@ -155,5 +152,5 @@ class Mtx(Format):
 
         return etree.tostring(root, encoding="utf-8", xml_declaration=True)
 
-    def write_xml(self, path_or_buf: PathOrFile, fpd: Fpd) -> None:
+    def write_xml(self, path_or_buf: StrPath | BinaryIO, fpd: Fpd) -> None:
         write_file(path_or_buf, self.to_xml(fpd))

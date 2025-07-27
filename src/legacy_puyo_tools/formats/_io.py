@@ -12,24 +12,15 @@ from __future__ import annotations
 import os
 from codecs import BOM_UTF16_LE
 from pathlib import Path
-from typing import BinaryIO, Literal
+from typing import BinaryIO
+
+from legacy_puyo_tools.exceptions import FileFormatError
+from legacy_puyo_tools.typing import StrPath
 
 UTF16_LENGTH = 2
 
-# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
-PathOrFile = str | os.PathLike[str] | BinaryIO
-BinaryModes = Literal["rb", "wb"]
 
-
-class FormatError(Exception):
-    """The current input data does not conform to an expected format."""
-
-
-class FileFormatError(FormatError):
-    """The file does not conform to a file format or is malformed."""
-
-
-def read_file(path_or_buf: PathOrFile) -> bytes:
+def read_file(path_or_buf: StrPath | BinaryIO) -> bytes:
     """Return contents of a file from a path-like object or file-like object."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         return Path(path_or_buf).read_bytes()
@@ -37,7 +28,7 @@ def read_file(path_or_buf: PathOrFile) -> bytes:
     return path_or_buf.read()
 
 
-def read_unicode_file(path_or_buf: PathOrFile) -> bytes:
+def read_unicode_file(path_or_buf: StrPath | BinaryIO) -> bytes:
     """Return the contents of a UTF-16 LE text file in bytes.
 
     Raises:
@@ -55,7 +46,7 @@ def read_unicode_file(path_or_buf: PathOrFile) -> bytes:
     return data[UTF16_LENGTH:]
 
 
-def write_file(path_or_buf: PathOrFile, data: bytes) -> None:
+def write_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
     """Write bytes to a file from a path-like object or file-like object."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         Path(path_or_buf).write_bytes(data)
@@ -64,12 +55,12 @@ def write_file(path_or_buf: PathOrFile, data: bytes) -> None:
     path_or_buf.write(data)
 
 
-def write_unicode_file(path_or_buf: PathOrFile, data: bytes) -> None:
+def write_unicode_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
     """Write UTF-16 LE encoded text to a file."""
     write_file(path_or_buf, BOM_UTF16_LE + data)
 
 
-def get_file_name(path_or_buf: PathOrFile) -> str:
+def get_file_name(path_or_buf: StrPath | BinaryIO) -> str:
     """Return the name of the file from a path or a file-like object in binary mode."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         return Path(os.fspath(path_or_buf)).name

@@ -17,11 +17,12 @@ from legacy_puyo_tools.formats._io import get_file_name
 from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_FONT_SIZE,
     FMP_DEFAULT_MAX_TABLE_WIDTH,
+    FMP_DEFAULT_PADDING,
     Fmp,
-    FmpSize,
 )
 from legacy_puyo_tools.formats.fpd import Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
+from legacy_puyo_tools.typing import FmpSize
 
 mtx_options = option_group(
     "Character table options",
@@ -53,7 +54,7 @@ fmp_option = option_group(
     option(
         "--padding",
         help="Size of the padding around the characters.",
-        default=1,
+        default=FMP_DEFAULT_PADDING,
         type=cloup.IntRange(0, 4),
         show_default=True,
     ),

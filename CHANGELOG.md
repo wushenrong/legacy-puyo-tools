@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) as of
 July 23, 2025 (2025-07-23).
 
+## Unreleased
+
+### Changed
+
+- Restructure project again for better documentation.
+
 ## 2025.07.24
 
 ### Added

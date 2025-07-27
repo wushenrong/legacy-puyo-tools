@@ -7,17 +7,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import BinaryIO
 
 # TODO: Remove typing extensions when migrating to Python 3.11.
 from typing_extensions import Self
 
-from legacy_puyo_tools.formats._io import (
-    FileFormatError,
-    FormatError,
-    PathOrFile,
-    get_file_name,
-    read_file,
-)
+from legacy_puyo_tools.exceptions import FileFormatError, FormatError
+from legacy_puyo_tools.formats._io import get_file_name, read_file
+from legacy_puyo_tools.typing import StrPath
 
 
 class Format(ABC):
@@ -37,7 +34,7 @@ class Format(ABC):
         """
 
     @classmethod
-    def _decode_file(cls, path_or_buf: PathOrFile, **kwargs: int) -> Self:
+    def _decode_file(cls, path_or_buf: StrPath | BinaryIO, **kwargs: int) -> Self:
         """Decode a file that conforms to a format implemented by the class.
 
         Arguments:
