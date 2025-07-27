@@ -11,18 +11,19 @@ Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 from io import BytesIO, StringIO
+from typing import BinaryIO
 
 import attrs
 from bidict import bidict
 
 from legacy_puyo_tools.formats._io import (
     UTF16_LENGTH,
-    PathOrFile,
     read_unicode_file,
     write_file,
     write_unicode_file,
 )
 from legacy_puyo_tools.formats.base import Format, FormatError
+from legacy_puyo_tools.typing import StrPath
 
 FPD_ENCODING = "utf-16-le"
 FPD_ENTRY_LENGTH = 3
@@ -70,7 +71,7 @@ class FpdCharacter:
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
 
-        code_point = fpd_entry[:UTF16_LENGTH].decode(FPD_ENCODING)
+        code_point = fpd_entry[: FPD_ENTRY_LENGTH - 1].decode(FPD_ENCODING)
         width = fpd_entry[FPD_WIDTH_OFFSET]
 
         return cls(code_point, width)
@@ -118,13 +119,13 @@ class Fpd(Format):
         return self.entries.inverse[FpdCharacter(character)]
 
     @classmethod
-    def read_fpd(cls, path_or_buf: PathOrFile) -> Fpd:
+    def read_fpd(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
         """Read and decode the fpd character table from a fpd file.
 
         Arguments:
             path_or_buf:
-                A path or file-like object in binary mode to a fpd encoded file that
-                contains a fpd character table.
+                A string path or file-like object in binary mode to a fpd encoded file
+                that contains a fpd character table.
 
         Returns:
             A fpd character table.
@@ -163,22 +164,22 @@ class Fpd(Format):
 
             return bytes_buffer.getvalue()
 
-    def write_fpd(self, path_or_buf: PathOrFile) -> None:
+    def write_fpd(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fpd character table to a fpd encoded file.
 
         Arguments:
             path_or_buf:
-                A path or file-like object in binary mode to write the fpd character
-                table.
+                A string path or file-like object in binary mode to write the fpd
+                character table.
         """
         write_file(path_or_buf, self.encode())
 
     @classmethod
-    def read_unicode(cls, path_or_buf: PathOrFile) -> Fpd:
+    def read_unicode(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
         """Read and decode characters from a UTF-16 little-endian text file.
 
         Arguments:
-            path_or_buf: A path or file-like object to a UTF-16 LE text file.
+            path_or_buf: A string path or file-like object to a UTF-16 LE text file.
 
         Returns:
             A fpd character table.
@@ -217,12 +218,12 @@ class Fpd(Format):
         """
         return str(self).encode(FPD_ENCODING)
 
-    def write_unicode(self, path_or_buf: PathOrFile) -> None:
+    def write_unicode(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fpd character table to a UTF-16 LE text file.
 
         Arguments:
             path_or_buf:
-                A path or file-like object in binary mode to store the encoded UTF-16 LE
-                text file.
+                A string path or file-like object in binary mode to store the encoded
+                UTF-16 LE text file.
         """
         write_unicode_file(path_or_buf, self.to_unicode())

@@ -11,40 +11,23 @@ format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 from io import BytesIO
-from typing import Literal
+from typing import BinaryIO
 
 import attrs
 import numpy as np
-import numpy.typing as npt
 from PIL import Image
 
-from legacy_puyo_tools.formats._io import PathOrFile, get_file_name, write_file
+from legacy_puyo_tools.formats._io import StrPath, get_file_name, write_file
 from legacy_puyo_tools.formats._math import find_largest_proper_divisor_pair
 from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
+from legacy_puyo_tools.typing import FmpCharacter, FmpSize
 
 FMP_DEFAULT_FONT_SIZE = 14
 FMP_DEFAULT_PADDING = 1
 FMP_DEFAULT_MAX_TABLE_WIDTH = 32
 
-BITS_PER_PIXEL = 4
-BITS_PER_BYTE = 8
-
-# TODO: When upgrading to Python 3.12, add type to the beginning of aliases
-FmpSize = Literal[8, 14]
-"""The available font sizes for the fmp format: 8px or 14px."""
-
-FmpCharacter = npt.NDArray[np.bool]
-"""A fmp character graphic.
-
-A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
-bitmap that stores the graphical data of a character in the fpd character table. A `0x0`
-and `0x1` encoding an off and on pixel respectively. Pixels are stored row by row, in
-top-to-bottom and left-to-right order.
-
-The graphic is stored in a multi-dimensional (usually 2D) numpy array for easier
-conversion using Pillow. Remember to use the numpy library instead of the standard
-library to not have a performance detriment.
-"""
+_BITS_PER_PIXEL = 4
+_BITS_PER_BYTE = 8
 
 
 @attrs.define
@@ -68,14 +51,17 @@ class Fmp(Format):
 
     @classmethod
     def read_fmp(
-        cls, path_or_buf: PathOrFile, *, font_size: FmpSize = FMP_DEFAULT_FONT_SIZE
+        cls,
+        path_or_buf: StrPath | BinaryIO,
+        *,
+        font_size: FmpSize = FMP_DEFAULT_FONT_SIZE,
     ) -> Fmp:
         """Read and extract character graphics from a fmp file.
 
         Args:
             path_or_buf:
-                A path or file-like object in binary mode to a fmp encoded file that
-                contains a fmp character table.
+                A string path or file-like object in binary mode to a fmp encoded file
+                that contains a fmp character table.
             font_size:
                 The size of the character graphics in pixels. Defaults to
                 FMP_DEFAULT_FONT_SIZE.
@@ -104,7 +90,7 @@ class Fmp(Format):
         Returns:
             A fmp character graphics table.
         """
-        bytes_width = font_size * BITS_PER_PIXEL // BITS_PER_BYTE
+        bytes_width = font_size * _BITS_PER_PIXEL // _BITS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
@@ -124,7 +110,7 @@ class Fmp(Format):
 
                 for byte in data[j : j + bytes_width]:
                     # Swap byte order as fmp is little endian
-                    lower_nibble, upper_nibble = (byte >> BITS_PER_PIXEL), byte & 0xF
+                    lower_nibble, upper_nibble = (byte >> _BITS_PER_PIXEL), byte & 0xF
                     row.extend((upper_nibble, lower_nibble))
 
                 graphic.append(row)
@@ -143,24 +129,24 @@ class Fmp(Format):
             for graphics in self.font:
                 graphic = graphics.reshape(-1)
 
-                for i in range(0, graphic.size, BITS_PER_BYTE // BITS_PER_PIXEL):
-                    pixels = graphic[i : i + BITS_PER_BYTE // BITS_PER_PIXEL]
+                for i in range(0, graphic.size, _BITS_PER_BYTE // _BITS_PER_PIXEL):
+                    pixels = graphic[i : i + _BITS_PER_BYTE // _BITS_PER_PIXEL]
 
                     # Swap byte order as fmp is little endian
                     lower_nubble, upper_nibble = pixels.tolist()
-                    byte: int = (upper_nibble << BITS_PER_PIXEL) | lower_nubble
+                    byte: int = (upper_nibble << _BITS_PER_PIXEL) | lower_nubble
 
                     # TODO: When updating Python to 3.11, remove for to_bytes
                     bytes_buffer.write(byte.to_bytes(1, "little"))
 
             return bytes_buffer.getvalue()
 
-    def write_fmp(self, path_or_buf: PathOrFile) -> None:
+    def write_fmp(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fmp character graphics table to a fmp encoded file.
 
         Arguments:
             path_or_buf:
-                A path or file-like object in binary mode to write the fmp
+                A string path or file-like object in binary mode to write the fmp
                 character graphics table.
         """
         write_file(path_or_buf, self.encode())
@@ -168,7 +154,7 @@ class Fmp(Format):
     @classmethod
     def read_image(
         cls,
-        path_or_buf: PathOrFile,
+        path_or_buf: StrPath | BinaryIO,
         *,
         font_size: FmpSize = FMP_DEFAULT_FONT_SIZE,
         padding: int = FMP_DEFAULT_PADDING,
@@ -177,8 +163,8 @@ class Fmp(Format):
 
         Args:
             path_or_buf:
-                A path or file-like object in binary mode to an black and white image,
-                preferably from BMP or PNG.
+                A string path or file-like object in binary mode to an black and white
+                image, preferably from BMP or PNG.
             font_size:
                 The size of the character graphics in pixels. Defaults to
                 FMP_DEFAULT_FONT_SIZE.
@@ -241,22 +227,20 @@ class Fmp(Format):
         if im.width % graphic_size != 0 or im.height % graphic_size != 0:
             raise ValueError("The size of the character or padding is incorrect")
 
-        return cls(
-            [
-                np.array(
-                    im.crop((
-                        row * graphic_size + padding,
-                        col * graphic_size + padding,
-                        (row + 1) * graphic_size - padding,
-                        (col + 1) * graphic_size - padding,
-                    )),
-                    np.bool,
-                )
-                for col in range(im.height // graphic_size)
-                for row in range(im.width // graphic_size)
-            ],
-            font_size,
-        )
+        graphics: list[FmpCharacter] = []
+
+        for row in range(im.width // graphic_size):
+            for col in range(im.height // graphic_size):
+                graphic = im.crop((
+                    col * graphic_size + padding,
+                    row * graphic_size + padding,
+                    (col + 1) * graphic_size - padding,
+                    (row + 1) * graphic_size - padding,
+                ))
+
+                graphics.append(np.array(graphic, np.bool))
+
+        return cls(graphics, font_size)
 
     def to_image(
         self,
@@ -318,7 +302,7 @@ class Fmp(Format):
 
     def write_image(
         self,
-        path_or_buf: PathOrFile,
+        path_or_buf: StrPath | BinaryIO,
         *,
         max_width: int = FMP_DEFAULT_MAX_TABLE_WIDTH,
         padding: int = FMP_DEFAULT_PADDING,
@@ -327,8 +311,8 @@ class Fmp(Format):
 
         Args:
             path_or_buf:
-                A path or file-like object in binary mode to an image. Can be in any
-                image format but preferably BMP or PNG.
+                A string path or file-like object in binary mode to an image. Can be in
+                any image format but preferably BMP or PNG.
             max_width:
                 The maximum amount of characters per columns in the image. Tries to find
                 the best width to height ratio.
