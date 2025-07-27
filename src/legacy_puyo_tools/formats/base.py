@@ -1,8 +1,8 @@
-"""Base class that defines what is required to create a format.
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT
 
-SPDX-FileCopyrightText: 2025 Samuel Wu
-SPDX-License-Identifier: MIT
-"""
+"""Base class that defines what is required to create a format."""
 
 from __future__ import annotations
 

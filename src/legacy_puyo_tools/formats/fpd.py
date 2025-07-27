@@ -1,10 +1,11 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT
+
 """Fpd conversion tool for older Puyo games.
 
 This module supports the encoding and decoding of the fpd format used by Puyo Puyo! 15th
 Anniversary and Puyo Puyo 7.
-
-SPDX-FileCopyrightText: 2025 Samuel Wu
-SPDX-License-Identifier: MIT
 """
 
 from __future__ import annotations
