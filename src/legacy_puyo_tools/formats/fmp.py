@@ -1,10 +1,11 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT
+
 """Fmp conversion tool for older Puyo games.
 
 This module supports the encoding and decoding of the fmp format in tandem with the fpd
 format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
-
-SPDX-FileCopyrightText: 2025 Samuel Wu
-SPDX-License-Identifier: MIT
 """
 
 from __future__ import annotations

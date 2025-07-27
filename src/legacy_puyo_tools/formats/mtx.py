@@ -1,11 +1,12 @@
+# SPDX-FileCopyrightText: 2021 Nick Woronekin
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT
+
 """Manzai text conversion tool for older Puyo Puyo games.
 
 This module converts mtx files to and from XML for modding Puyo games. Currently
 supports Puyo Puyo 7 and might support Puyo Puyo! 15th Anniversary.
-
-SPDX-FileCopyrightText: 2021 Nick Woronekin
-SPDX-FileCopyrightText: 2025 Samuel Wu
-SPDX-License-Identifier: MIT
 """
 
 from __future__ import annotations
