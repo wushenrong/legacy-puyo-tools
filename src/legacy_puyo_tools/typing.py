@@ -12,9 +12,10 @@ import numpy as np
 import numpy.typing as npt
 
 StrPath: TypeAlias = str | os.PathLike[str]
+"""A string like path."""
 
 FmpSize: TypeAlias = Literal[8, 14]
-"""The available font sizes for the fmp format: 8px or 14px."""
+"""The available font sizes for the fmp format in pixels."""
 
 FmpCharacter: TypeAlias = npt.NDArray[np.bool]
 """A fmp character graphic.

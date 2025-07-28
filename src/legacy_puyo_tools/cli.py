@@ -73,7 +73,7 @@ output_option = option(
 @cloup.group()
 @cloup.version_option()
 def app() -> None:
-    """A conversion tool for files used by older Puyo games."""
+    """Tools to create and convert files used by older Puyo Puyo games."""
 
 
 @app.group()

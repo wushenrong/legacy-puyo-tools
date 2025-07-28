@@ -44,7 +44,7 @@ dependencies = [
     "pillow>=11.3",
 ]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
-urls.Homepage = "https://github.com/wushenrong/legacy-puyo-tools"
+urls.Homepage = "https://wushenrong.github.io/legacy_puyo_tools/"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
@@ -57,6 +57,7 @@ dev = [
     "tox>=4.28",
     "tox-gh-actions>=3.3",
     "tox-uv>=1.26.2",
+    { include-group = "docs" },
     { include-group = "lint" },
     { include-group = "pylint" },
     { include-group = "test" },
@@ -69,49 +70,58 @@ type = [
     { include-group = "test" },
 ]
 
+docs = [
+    "furo>=2025.7.19",
+    "myst-parser[linkify]>=4.0.1",
+    "sphinx>=8.1.3",
+    "sphinx-autodoc2>=0.5",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-inline-tabs>=2023.4.21",
+    "sphinx-pyproject>=0.3",
+    "sphinxext-opengraph[social-cards]>=0.10",
+]
 lint = [ "pre-commit-uv>=4.1.4" ]
 pkg-meta = [ "check-wheel-contents>=0.6.1", "twine>=6.1", "uv>=0.8" ]
 pylint = [ "pylint>=3.3.7" ]
 
 [tool.ruff]
-# Required for some rules
 preview = true
 
 output-format = "concise"
-
 lint.select = [
     "ANN",    # type annotations
     "ARG",    # falke8 unused arguments
     "B",      # flake8-bugbear
     "C4",     # flake8-comprehensions
     "COM818", # flake8-commas (let the formatter handle commas)
-    "D",      # pydocstyle
-    "DOC",    # pydoclint
-    "E",      # Error
-    "ERA",    # eradicate commented out code
-    "F",      # pyflakes
-    "FIX",    # flake8 fixme
-    "FURB",   # refurb
-    "I",      # isort
-    "ISC",    # flake8-implicit-str-concat
-    "N",      # pep8-naming
-    "PERF",   # Perflint: performance
-    "PGH",    # pygrep-hooks
-    "PIE",    # flake8-pie
-    "PT",     # flake8-pytest-style
-    "PTH",    # flake8-use-pathlib
-    "Q",      # flake8-quotes
-    "RUF",    # Ruff specific rules
-    "S",      # bandit security checks
-    "SIM",    # flake8-simplify
-    "UP",     # pyupgrade
-    "W",      # Warning
-    "YTT",    # flake8-2020
+    # "D",    # pydocstyle
+    # "DOC",  # pydoclint
+    "E",    # Error
+    "ERA",  # eradicate commented out code
+    "F",    # pyflakes
+    "FIX",  # flake8 fixme
+    "FURB", # refurb
+    "I",    # isort
+    "ISC",  # flake8-implicit-str-concat
+    "N",    # pep8-naming
+    "PERF", # Perflint: performance
+    "PGH",  # pygrep-hooks
+    "PIE",  # flake8-pie
+    "PT",   # flake8-pytest-style
+    "PTH",  # flake8-use-pathlib
+    "Q",    # flake8-quotes
+    "RUF",  # Ruff specific rules
+    "S",    # bandit security checks
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+    "W",    # Warning
+    "YTT",  # flake8-2020
 ]
+# Required for some rules
 lint.per-file-ignores."**/tests/*" = [ "S101" ] # We need asserts for pytest
-lint.typing-modules = [ "types-lxml" ]
+# lint.pydocstyle.convention = "google"
 
-lint.pydocstyle.convention = "google"
+lint.typing-modules = [ "types-lxml" ]
 
 [tool.pylint]
 # All done by ruff with DOC and FIX
@@ -153,3 +163,54 @@ exclude_also = [
 [tool.pyright]
 include = [ "src", "tests" ]
 typeCheckingMode = "strict"
+
+[tool.sphinx-pyproject]
+copyright = "%Y Samuel Wu and Contributors"
+
+# -- General configuration ---------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+extensions = [
+    "autodoc2",
+    "myst_parser",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.duration",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx_copybutton",
+    "sphinx_inline_tabs",
+    "sphinxext.opengraph",
+]
+
+exclude_patterns = [  ]
+templates_path = [ "_templates" ]
+
+nitpicky = true
+
+maximum_signature_line_length = 88
+
+# Extensions
+extlinks_detect_hardcoded_links = true
+todo_include_todos = true
+
+# MyST parser
+myst_enable_extensions = [ "colon_fence", "fieldlist" ]
+
+# Auto documentation
+autodoc2_hidden_objects = [ "dunder", "inherited", "private" ]
+autodoc2_packages = [
+    { path = "../../src/legacy_puyo_tools", auto_mode = false },
+]
+autodoc2_render_plugin = "myst"
+
+# Opengraph
+ogp_site_url = 'https://wushenrong.github.io/legacy_puyo_tools/'
+
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+html_static_path = [ "_static" ]
+html_theme = "furo"
+html_theme_options.source_branch = "main"
+html_theme_options.source_directory = "docs/"
+html_theme_options.source_repository = "https://github.com/wushenrong/legacy-puyo-tools/"

@@ -17,14 +17,17 @@ import attrs
 import numpy as np
 from PIL import Image
 
-from legacy_puyo_tools.formats._io import StrPath, get_file_name, write_file
+from legacy_puyo_tools.formats._io import get_file_name, write_file
 from legacy_puyo_tools.formats._math import find_largest_proper_divisor_pair
 from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
-from legacy_puyo_tools.typing import FmpCharacter, FmpSize
+from legacy_puyo_tools.typing import FmpCharacter, FmpSize, StrPath
 
 FMP_DEFAULT_FONT_SIZE = 14
+"""The default character graphics size used by manzais in pixels."""
 FMP_DEFAULT_PADDING = 1
+"""The default padding around character graphics during conversion in pixels."""
 FMP_DEFAULT_MAX_TABLE_WIDTH = 32
+"""The default maximum number of characters per row in an image."""
 
 _BITS_PER_PIXEL = 4
 _BITS_PER_BYTE = 8
@@ -37,17 +40,13 @@ class Fmp(Format):
     The fmp stores a bitmap graphic table in which each graphic correspond to a
     character entry in the fpd character table and it is stored right next to each other
     in the file.
-
-    Attributes:
-        font:
-            List of character graphics whose indices matches the character it represents
-            in the fpd.
-        font_size:
-            The width and height of the graphics in pixels, either 8 or 14 pixels.
     """
 
     font: list[FmpCharacter]
+    """List of character graphics whose indices matches the character it represents in
+    the fpd."""
     font_size: FmpSize
+    """The width and height of the graphics in pixels, either 8 or 14 pixels."""
 
     @classmethod
     def read_fmp(
@@ -58,16 +57,11 @@ class Fmp(Format):
     ) -> Fmp:
         """Read and extract character graphics from a fmp file.
 
-        Args:
-            path_or_buf:
-                A string path or file-like object in binary mode to a fmp encoded file
-                that contains a fmp character table.
-            font_size:
-                The size of the character graphics in pixels. Defaults to
-                FMP_DEFAULT_FONT_SIZE.
+        :param path_or_buf: A string path or file-like object in binary mode to a fmp
+            encoded file that contains a fmp character table.
+        :param font_size: The size of the character graphics in pixels.
 
-        Returns:
-            A fmp character graphics table.
+        :return: A fmp character graphics table.
         """
         return super()._decode_file(path_or_buf, font_size=font_size)
 
@@ -75,20 +69,14 @@ class Fmp(Format):
     def decode(cls, data: bytes, *, font_size: FmpSize = FMP_DEFAULT_FONT_SIZE) -> Fmp:
         """Decode graphics from a fmp character graphics table from 4bpp to 8bpp.
 
-        Args:
-            data:
-                A fpd encoded stream that contains a fmp character graphics table.
-            font_size:
-                The size of the character graphics in pixels. Defaults to
-                FMP_DEFAULT_FONT_SIZE.
+        :param data: A fpd encoded stream that contains a fmp character graphics table.
+        :param font_size: The size of the character graphics in pixels, defaults to
+            FMP_DEFAULT_FONT_SIZE.
 
-        Raises:
-            FormatError:
-                The size of the fmp does not align to the size of the character
-                graphics.
+        :raises FormatError: The size of the fmp does not align to the size of the
+            character graphics.
 
-        Returns:
-            A fmp character graphics table.
+        :return: A fmp character graphics table.
         """
         bytes_width = font_size * _BITS_PER_PIXEL // _BITS_PER_BYTE
 
@@ -122,8 +110,7 @@ class Fmp(Format):
     def encode(self) -> bytes:
         """Encode the fmp character graphics table into a 4bpp fmp stream.
 
-        Returns:
-            A fmp character graphics table encoded into a byte stream.
+        :return: A fmp character graphics table encoded into a byte stream.
         """
         with BytesIO() as bytes_buffer:
             for graphics in self.font:
@@ -144,10 +131,8 @@ class Fmp(Format):
     def write_fmp(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fmp character graphics table to a fmp encoded file.
 
-        Arguments:
-            path_or_buf:
-                A string path or file-like object in binary mode to write the fmp
-                character graphics table.
+        :param path_or_buf: A string path or file-like object in binary mode to write
+            the fmp character graphics table.
         """
         write_file(path_or_buf, self.encode())
 
@@ -159,33 +144,26 @@ class Fmp(Format):
         font_size: FmpSize = FMP_DEFAULT_FONT_SIZE,
         padding: int = FMP_DEFAULT_PADDING,
     ) -> Fmp:
-        """Reads and convert a character graphics table from an image.
+        """Read and convert a character graphics table from an image.
 
-        Args:
-            path_or_buf:
-                A string path or file-like object in binary mode to an black and white
-                image, preferably from BMP or PNG.
-            font_size:
-                The size of the character graphics in pixels. Defaults to
-                FMP_DEFAULT_FONT_SIZE.
-            padding:
-                The amount of padding around the characters in pixels. Defaults to
-                FMP_DEFAULT_PADDING.
+        :param path_or_buf: A string path or file-like object in binary mode to an black
+            and white image, preferably from BMP or PNG.
+        :param font_size: The size of the character graphics in pixels, defaults to
+            FMP_DEFAULT_FONT_SIZE.
+        :param padding: The amount of padding around the characters in pixels, defaults
+            to FMP_DEFAULT_PADDING.
 
-        Raises:
-            FileFormatError:
-                The image is not in or saved as a black and white.
+        :raises FileFormatError: The image is not using a black and white palette.
 
-        Returns:
-            A fmp character graphics table.
+        :return: A fmp character graphics table.
         """
         with Image.open(path_or_buf) as im:
             try:
                 return cls.from_image(im, font_size=font_size, padding=padding)
             except FormatError as e:
                 raise FileFormatError(
-                    f"{get_file_name(path_or_buf)} is not in or saved as a black and "
-                    "white image"
+                    f"{get_file_name(path_or_buf)} is not using a black and white "
+                    "palette"
                 ) from e
 
     @classmethod
@@ -196,28 +174,20 @@ class Fmp(Format):
         font_size: FmpSize = FMP_DEFAULT_FONT_SIZE,
         padding: int = FMP_DEFAULT_PADDING,
     ) -> Fmp:
-        """Reads and convert a character graphics table from a Pillow Image to fmp.
+        """Read and convert a character graphics table from a Pillow Image to fmp.
 
-        Args:
-            im:
-                An image object from the Pillow library, must be in black and white
-                mode.
-            font_size:
-                The size of the character graphics in pixels. Defaults to
-                FMP_DEFAULT_FONT_SIZE.
-            padding:
-                The amount of padding around the characters in pixels. Defaults to
-                FMP_DEFAULT_PADDING.
+        :param im: An image object from the Pillow library, must be in black and white
+            mode.
+        :param font_size: The size of the character graphics in pixels, defaults to
+            FMP_DEFAULT_FONT_SIZE.
+        :param padding: The amount of padding around the characters in pixels, defaults
+            to FMP_DEFAULT_PADDING.
 
-        Raises:
-            FormatError:
-                The image is not in black and white.
-            ValueError:
-                The image does not align to the given size of the character graphics and
-                padding padding.
+        :raises FormatError: The image is not using a black and white palette.
+        :raises ValueError: The image does not align to the given size of the character
+            graphics and padding padding.
 
-        Returns:
-            A fmp character graphics table.
+        :return: A fmp character graphics table.
         """
         if im.mode != "1":
             raise FormatError("The image is not in black and white")
@@ -250,21 +220,16 @@ class Fmp(Format):
     ) -> Image.Image:
         """Encode the fmp character graphics table to a Pillow Image.
 
-        Args:
-            max_width:
-                The maximum amount of characters per columns in the image. Tries to find
-                the best width to height ratio.
-                Defaults to FMP_DEFAULT_MAX_TABLE_WIDTH.
-            padding:
-                The amount of padding around the characters in pixels. Defaults to
-                FMP_DEFAULT_PADDING.
+        :param max_width: The maximum amount of characters per columns in the image.
+            Tries to find the best width to height ratio, defaults to
+            FMP_DEFAULT_MAX_TABLE_WIDTH.
+        :param padding: The amount of padding around the characters in pixels, defaults
+            to FMP_DEFAULT_PADDING.
 
-        Raises:
-            ValueError:
-                There is no good width to height ratio below the given max width.
+        :raises ValueError: There is no good width to height ratio below the given max
+            width.
 
-        Returns:
-            An image object that contains the fmp character graphics table.
+        :return: An image object that contains the fmp character graphics table.
         """
         # Find the optimal width and height of the character table by
         # calculating factors to put them into a rectangle or square.
@@ -309,16 +274,12 @@ class Fmp(Format):
     ) -> None:
         """Write the fmp character graphics table to an image.
 
-        Args:
-            path_or_buf:
-                A string path or file-like object in binary mode to an image. Can be in
-                any image format but preferably BMP or PNG.
-            max_width:
-                The maximum amount of characters per columns in the image. Tries to find
-                the best width to height ratio.
-                Defaults to FMP_DEFAULT_MAX_TABLE_WIDTH.
-            padding:
-                The amount of padding around the characters in pixels. Defaults to
-                FMP_DEFAULT_PADDING.
+        :param path_or_buf: A string path or file-like object in binary mode to an
+            image. Can be in any image format but preferably BMP or PNG.
+        :param max_width: The maximum amount of characters per columns in the image.
+            Tries to find the best width to height ratio, defaults to
+            FMP_DEFAULT_MAX_TABLE_WIDTH.
+        :param padding: The amount of padding around the characters in pixels, defaults
+            to FMP_DEFAULT_PADDING.
         """
         self.to_image(max_width=max_width, padding=padding).save(path_or_buf)

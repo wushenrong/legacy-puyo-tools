@@ -8,6 +8,10 @@ July 23, 2025 (2025-07-23).
 
 ## Unreleased
 
+### Added
+
+- Documentation site at <https://wushenrong.github.io/legacy_puyo_tools/>.
+
 ### Changed
 
 - Restructure project again for better documentation.

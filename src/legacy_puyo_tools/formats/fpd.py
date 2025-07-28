@@ -26,8 +26,11 @@ from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.typing import StrPath
 
 FPD_ENCODING = "utf-16-le"
+"""The default character encoding that the fpd character table uses."""
 FPD_ENTRY_LENGTH = 3
+"""The length of a fpd character entry."""
 FPD_WIDTH_OFFSET = 2
+"""The offset of the width in a fpd character entry."""
 
 
 @attrs.frozen
@@ -37,17 +40,13 @@ class FpdCharacter:
     A fpd character is a binary entry that is 3 bytes long and formatted as follows:
     `XX XX YY`. Where `XX XX` is the character encoded in UTF-16 little-endian and `YY`
     is the width of the character.
-
-    Attributes:
-        code_point:
-            A string that stores a single character.
-        width:
-            How wide should the character be, only used in the Nintendo DS versions of
-            the games.
     """
 
     code_point: str
+    """A string that stores a single character."""
     width: int = attrs.field(default=0x00, eq=False)
+    """How wide should the character be, only used in the Nintendo DS versions of the
+    games."""
 
     def __str__(self) -> str:
         """Return the character as a single character string."""
@@ -57,16 +56,12 @@ class FpdCharacter:
     def decode(cls, fpd_entry: bytes) -> FpdCharacter:
         """Decode a fpd character into its code point and width.
 
-        Arguments:
-            fpd_entry:
-                A fpd character entry that is 3 bytes long.
+        :param fpd_entry: A fpd character entry that is 3 bytes long.
 
-        Raises:
-            FormatError:
-                The entry given does not conform to the fpd character format.
+        :raises FormatError: The entry given does not conform to the fpd character
+            format.
 
-        Returns:
-            A fpd character entry containing its code point and width.
+        :return: A fpd character entry containing its code point and width.
         """
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
@@ -79,8 +74,7 @@ class FpdCharacter:
     def encode(self) -> bytes:
         """Encode the character back to a fpd character entry.
 
-        Returns:
-            The character in UTF-16 LE format and its width.
+        :return: The character in UTF-16 LE format and its width.
         """
         # TODO: When updating Python to 3.11, remove for to_bytes
         return self.code_point.encode(FPD_ENCODING) + self.width.to_bytes(1, "little")
@@ -94,13 +88,10 @@ class Fpd(Format):
     other and the indices is offset by multiples of `0x03`. I.e. The 1st character is at
     index `0x00`, the 2nd character is at index `0x03`, the 3rd character is at index
     `0x06`, etc.
-
-    Attributes:
-        entries:
-            A bidirectional dictionary of fpd character entries.
     """
 
     entries: bidict[int, FpdCharacter]
+    """A bidirectional dictionary of fpd character entries."""
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the fpd character table."""
@@ -122,13 +113,10 @@ class Fpd(Format):
     def read_fpd(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
         """Read and decode the fpd character table from a fpd file.
 
-        Arguments:
-            path_or_buf:
-                A string path or file-like object in binary mode to a fpd encoded file
-                that contains a fpd character table.
+        :param path_or_buf: A string path or file-like object in binary mode to
+            a fpd encoded file that contains a fpd character table.
 
-        Returns:
-            A fpd character table.
+        :return: A fpd character table.
         """
         return super()._decode_file(path_or_buf)
 
@@ -136,12 +124,9 @@ class Fpd(Format):
     def decode(cls, data: bytes) -> Fpd:
         """Decode the fpd character table from a fpd encoded stream.
 
-        Arguments:
-            data:
-                A fpd encoded stream that contains a fpd character table.
+        :param data: A fpd encoded stream that contains a fpd character table.
 
-        Returns:
-            A fpd character table.
+        :return: A fpd character table.
         """
         return cls(
             bidict({
@@ -155,8 +140,7 @@ class Fpd(Format):
     def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
 
-        Returns:
-            A fpd character table encoded into a byte stream.
+        :return: A fpd character table encoded into a byte stream.
         """
         with BytesIO() as bytes_buffer:
             for character in self.entries.inverse:
@@ -167,10 +151,8 @@ class Fpd(Format):
     def write_fpd(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fpd character table to a fpd encoded file.
 
-        Arguments:
-            path_or_buf:
-                A string path or file-like object in binary mode to write the fpd
-                character table.
+        :param path_or_buf: A string path or file-like object in binary mode to write
+            the fpd character table.
         """
         write_file(path_or_buf, self.encode())
 
@@ -178,11 +160,9 @@ class Fpd(Format):
     def read_unicode(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
         """Read and decode characters from a UTF-16 little-endian text file.
 
-        Arguments:
-            path_or_buf: A string path or file-like object to a UTF-16 LE text file.
+        :param path_or_buf: A string path or file-like object to a UTF-16 LE text file.
 
-        Returns:
-            A fpd character table.
+        :return: A fpd character table.
         """
         return cls.from_unicode(read_unicode_file(path_or_buf))
 
@@ -191,14 +171,10 @@ class Fpd(Format):
     def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
         """Decode a UTF-16 LE stream into a fpd character table.
 
-        Arguments:
-            unicode:
-                A UTF-16 LE encoded character stream.
-            width:
-                How wide is the character graphic in the fmp.
+        :param unicode: A UTF-16 LE encoded character stream.
+        :param width: How wide is the character graphic in the fmp.
 
-        Returns:
-            A fpd character table.
+        :return: A fpd character table.
         """
         # TODO: When updating Python to 3.11, remove for to_bytes
         return cls(
@@ -213,17 +189,14 @@ class Fpd(Format):
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.
 
-        Returns:
-            A UTF-16 LE encoded text stream with characters from the fpd.
+        :return: A UTF-16 LE encoded text stream with characters from the fpd.
         """
         return str(self).encode(FPD_ENCODING)
 
     def write_unicode(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fpd character table to a UTF-16 LE text file.
 
-        Arguments:
-            path_or_buf:
-                A string path or file-like object in binary mode to store the encoded
-                UTF-16 LE text file.
+        :param path_or_buf: A string path or file-like object in binary mode to store
+            the encoded UTF-16 LE text file.
         """
         write_unicode_file(path_or_buf, self.to_unicode())

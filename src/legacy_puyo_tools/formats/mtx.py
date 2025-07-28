@@ -7,6 +7,12 @@
 
 This module converts mtx files to and from XML for modding Puyo games. Currently
 supports Puyo Puyo 7 and might support Puyo Puyo! 15th Anniversary.
+
+:::{todo} Complete full support for Puyo Puyo 7, tutorials and voiced manzais.
+:::
+
+:::{todo} Complete documentation of mtx.
+:::
 """
 
 from __future__ import annotations
@@ -18,10 +24,10 @@ from typing import BinaryIO
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats._io import StrPath, write_file
+from legacy_puyo_tools.formats._io import write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
-from legacy_puyo_tools.typing import MtxString
+from legacy_puyo_tools.typing import MtxString, StrPath
 
 MTX_ENDIAN = "little"
 MTX_IDENTIFIER = 8

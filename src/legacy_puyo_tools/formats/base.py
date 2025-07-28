@@ -25,32 +25,23 @@ class Format(ABC):
     def decode(cls, data: bytes) -> Self:
         """Decode byte streams into an object representation of the implemented format.
 
-        Arguments:
-            data:
-                A byte stream that contains data that follows the implemented format.
+        :param data: A byte stream that contains data that follows the implemented
+            format.
 
-        Returns:
-            The object representation of the implemented format.
+        :return: The object representation of the implemented format.
         """
 
     @classmethod
     def _decode_file(cls, path_or_buf: StrPath | BinaryIO, **kwargs: int) -> Self:
         """Decode a file that conforms to a format implemented by the class.
 
-        Arguments:
-            path_or_buf:
-                A string path, path-like object, or a file-like object that point to a
-                file that contains data in the format that the class implements.
-            **kwargs:
-                Any additional keywords arguments that the format needs for decoding.
+        :param path_or_buf: A string path, path-like object, or a file-like object that
+            point to a file that contains data in the format that the class implements.
 
-        Raises:
-            FileFormatError:
-                The given file does not conform to the format that the class
-                implements.
+        :raises FileFormatError: The given file does not conform to the format that the
+            class implements.
 
-        Returns:
-            An object that represents the format that the class implements.
+        :return: An object that represents the format that the class implements.
         """
         try:
             return cls.decode(read_file(path_or_buf), **kwargs)
@@ -63,6 +54,5 @@ class Format(ABC):
     def encode(self) -> bytes:
         """Encode a format from an object into a byte stream.
 
-        Returns:
-            A byte stream that conforms to the implemented format.
+        :return: A byte stream that conforms to the implemented format.
         """

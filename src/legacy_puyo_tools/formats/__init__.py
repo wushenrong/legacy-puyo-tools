@@ -2,4 +2,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Formats that older Puyo Puyo games uses."""
+"""Formats that the older Puyo Puyo games uses."""

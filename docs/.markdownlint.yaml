@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT-0
+
+extends: ../.markdownlint.yaml
+
+fenced-code-language:
+  language_only: false
+
+first-line-heading: false

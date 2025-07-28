@@ -31,10 +31,8 @@ def read_file(path_or_buf: StrPath | BinaryIO) -> bytes:
 def read_unicode_file(path_or_buf: StrPath | BinaryIO) -> bytes:
     """Return the contents of a UTF-16 LE text file in bytes.
 
-    Raises:
-        FileFormatError:
-            The file is not a UTF-16 little-endian encoded text file or is missing
-            the Byte Order Mark for UTF-16 little-endian.
+    :raises FileFormatError: The file is not a UTF-16 little-endian encoded text file or
+        is missing the Byte Order Mark for UTF-16 little-endian.
     """
     data = read_file(path_or_buf)
 
