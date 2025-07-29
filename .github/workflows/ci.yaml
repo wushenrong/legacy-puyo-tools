@@ -41,7 +41,6 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-            activate-environment: true
             enable-cache: true
             cache-dependency-glob: "pyproject.toml"
 
@@ -52,4 +51,4 @@ jobs:
           key: pre-commit-4|${{ matrix.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run test with tox
-        run: tox
+        run: uv run tox
