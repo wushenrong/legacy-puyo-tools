@@ -4,9 +4,6 @@
 
 name: gitleaks
 
-permissions:
-  contents: read
-
 on:
   pull_request:
   push:
@@ -17,6 +14,8 @@ on:
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:

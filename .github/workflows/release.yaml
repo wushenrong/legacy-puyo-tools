@@ -20,10 +20,12 @@ jobs:
     steps:
       # Setup environment
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+
       - uses: actions/setup-python@v5
         with:
           python-version-file: "pyproject.toml"
+
+      - uses: astral-sh/setup-uv@v6
 
       - name: Build package
         run: uv build

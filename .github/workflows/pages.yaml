@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT-0
+
+name: Sphinx Documentation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths:
+      - docs
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  sphinx:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Setup environment
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site
+        run: make -C docs html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/build/html
+
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: sphinx
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

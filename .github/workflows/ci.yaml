@@ -4,14 +4,13 @@
 
 name: Run linters, formatters, and tests
 
-permissions:
-  contents: read
-
 on:
   pull_request:
   push:
     branches:
       - main
+    paths:
+      - src
 
 concurrency:
   group: check-${{ github.ref }}
@@ -30,6 +29,8 @@ jobs:
           - "3.12"
           - "3.13"
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +41,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
+            activate-environment: true
             enable-cache: true
             cache-dependency-glob: "pyproject.toml"
 
@@ -48,9 +50,6 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-4|${{ matrix.python-version }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Install tox
-        run: uv tool install tox --with tox-uv --with tox-gh-actions
 
       - name: Run test with tox
         run: tox
