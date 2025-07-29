@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/) as of
-July 23, 2025 (2025-07-23).
+July 23, 2025 (2025-07-23) where each number is the year, month, and day
+respectively.
+
+This project is still in development, expect breaking changes over its lifetime.
 
 ## Unreleased
 
@@ -15,6 +18,7 @@ July 23, 2025 (2025-07-23).
 ### Changed
 
 - Restructure project again for better documentation.
+- The code of conduct to 3.0 of the Contributor Covenant.
 
 ## 2025.07.24
 
