@@ -19,6 +19,8 @@ This project is still in development, expect breaking changes over its lifetime.
 
 - Restructure project again for better documentation.
 - The code of conduct to 3.0 of the Contributor Covenant.
+- Contributing guidelines for this project.
+- The license expression again.
 
 ## 2025.07.24
 
