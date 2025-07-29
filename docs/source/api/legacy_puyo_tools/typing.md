@@ -1,6 +1,6 @@
-# {py:mod}`legacy_puyo_tools.typing`
+# {mod}`legacy_puyo_tools.typing`
 
-````{py:module} legacy_puyo_tools.typing
+````{module} legacy_puyo_tools.typing
 
 ```{autodoc2-docstring} legacy_puyo_tools.typing
     :allowtitles:
@@ -20,22 +20,22 @@
 
 ## API
 
-````{py:class} legacy_puyo_tools.typing.StrPath
+````{class} legacy_puyo_tools.typing.StrPath
 ```{autodoc2-docstring} legacy_puyo_tools.typing.StrPath
 ```
 ````
 
-````{py:class} legacy_puyo_tools.typing.FmpSize
+````{class} legacy_puyo_tools.typing.FmpSize
 ```{autodoc2-docstring} legacy_puyo_tools.typing.FmpSize
 ```
 ````
 
-````{py:class} legacy_puyo_tools.typing.FmpCharacter
+````{class} legacy_puyo_tools.typing.FmpCharacter
 ```{autodoc2-docstring} legacy_puyo_tools.typing.FmpCharacter
 ```
 ````
 
-````{py:class} legacy_puyo_tools.typing.MtxString
+````{class} legacy_puyo_tools.typing.MtxString
 ```{autodoc2-docstring} legacy_puyo_tools.typing.MtxString
 ```
 ````

@@ -1,6 +1,6 @@
-# {py:mod}`legacy_puyo_tools.exceptions`
+# {mod}`legacy_puyo_tools.exceptions`
 
-````{py:module} legacy_puyo_tools.exceptions
+````{module} legacy_puyo_tools.exceptions
 
 ```{autodoc2-docstring} legacy_puyo_tools.exceptions
     :allowtitles:

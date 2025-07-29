@@ -1,6 +1,6 @@
-# {py:mod}`legacy_puyo_tools.formats.mtx`
+# {mod}`legacy_puyo_tools.formats.mtx`
 
-````{py:module} legacy_puyo_tools.formats.mtx
+````{module} legacy_puyo_tools.formats.mtx
 
 ```{autodoc2-docstring} legacy_puyo_tools.formats.mtx
     :allowtitles:

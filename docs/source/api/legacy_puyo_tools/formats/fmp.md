@@ -1,6 +1,6 @@
-# {py:mod}`legacy_puyo_tools.formats.fmp`
+# {mod}`legacy_puyo_tools.formats.fmp`
 
-````{py:module} legacy_puyo_tools.formats.fmp
+````{module} legacy_puyo_tools.formats.fmp
 
 ```{autodoc2-docstring} legacy_puyo_tools.formats.fmp
     :allowtitles:

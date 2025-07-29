@@ -1,6 +1,6 @@
-# {py:mod}`legacy_puyo_tools.formats`
+# {mod}`legacy_puyo_tools.formats`
 
-````{py:module} legacy_puyo_tools.formats
+````{module} legacy_puyo_tools.formats
 
 ```{autodoc2-docstring} legacy_puyo_tools.formats
     :allowtitles:
