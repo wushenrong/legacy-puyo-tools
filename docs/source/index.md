@@ -28,5 +28,6 @@ api/index
 develop/contributing
 develop/code_of_conduct
 develop/changelog
+develop/contributors
 develop/license
 ```

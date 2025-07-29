@@ -18,6 +18,7 @@ path = [
     ".vscode/*.json",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
+    "CONTRIBUTORS.md",
     "README.md",
     "tox.ini",
     "uv.lock",
