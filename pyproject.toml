@@ -8,7 +8,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "legacy-puyo-tools"
-version = "2025.7.29"
+version = "2025.7.30"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
@@ -42,6 +42,7 @@ dependencies = [
     "lxml>=6",
     "numpy>=2.0.2",
     "pillow>=11.3",
+    "typing-extensions>=4.14.1",
 ]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
 urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"
@@ -63,7 +64,7 @@ dev = [
     { include-group = "test" },
     { include-group = "type" },
 ]
-test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1", "typing-extensions>=4.14.1" ]
+test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1" ]
 type = [
     "pyright[nodejs]>=1.1.403",
     "types-lxml>=2025.3.30",
@@ -88,6 +89,7 @@ pylint = [ "pylint>=3.3.7" ]
 preview = true
 
 output-format = "concise"
+
 lint.select = [
     "ANN",    # type annotations
     "ARG",    # falke8 unused arguments

@@ -9,6 +9,12 @@ respectively.
 
 This project is still in development, expect breaking changes over its lifetime.
 
+## 2025.7.30
+
+## Changed
+
+- `typing_extensions` to be a runtime dependency.
+
 ## 2025.7.29
 
 ### Added
