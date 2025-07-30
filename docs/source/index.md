@@ -4,7 +4,7 @@
 ## Table of Contents
 
 ```{toctree}
-    :maxdepth: 2
+    :maxdepth: 1
 
 install
 usage
@@ -30,4 +30,12 @@ develop/code_of_conduct
 develop/changelog
 develop/contributors
 develop/license
+```
+
+```{toctree}
+    :caption: Useful Links
+    :maxdepth: 1
+
+PyPI <https://pypi.org/project/legacy-puyo-tools>
+GitHub <https://github.com/wushenrong/legacy-puyo-tools>
 ```
