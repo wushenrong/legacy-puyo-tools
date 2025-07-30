@@ -44,7 +44,7 @@ dependencies = [
     "pillow>=11.3",
 ]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
-urls.Homepage = "https://wushenrong.github.io/legacy_puyo_tools/"
+urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
