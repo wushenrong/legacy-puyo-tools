@@ -9,11 +9,11 @@ respectively.
 
 This project is still in development, expect breaking changes over its lifetime.
 
-## Unreleased
+## 2025.7.29
 
 ### Added
 
-- Documentation site at <https://wushenrong.github.io/legacy_puyo_tools/>.
+- Documentation site at <https://wushenrong.github.io/legacy-puyo-tools/>.
 
 ### Changed
 
