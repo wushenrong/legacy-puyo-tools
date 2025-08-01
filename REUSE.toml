@@ -7,7 +7,7 @@ version = 1
 [[annotations]]
 SPDX-FileCopyrightText = "2025 Samuel Wu and contributors"
 SPDX-License-Identifier = "MIT"
-path = ["docs/**", "formats.md"]
+path = ["docs/**", "tests/*_test/**"]
 
 [[annotations]]
 SPDX-FileCopyrightText = "2025 Samuel Wu"

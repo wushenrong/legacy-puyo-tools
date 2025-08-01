@@ -40,7 +40,8 @@ def read_unicode_file(path_or_buf: StrPath | BinaryIO) -> bytes:
             f"{get_file_name(path_or_buf)} is not a UTF-16 little-endian file"
         )
 
-    return data[UTF16_LENGTH:]
+    # Reencode to strip newlines.
+    return data[UTF16_LENGTH:].decode("utf-16-le").strip().encode("utf-16-le")
 
 
 def write_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
@@ -54,7 +55,7 @@ def write_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
 
 def write_unicode_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
     """Write UTF-16 LE encoded text to a file."""
-    write_file(path_or_buf, BOM_UTF16_LE + data)
+    write_file(path_or_buf, BOM_UTF16_LE + data + "\n".encode("utf-16-le"))
 
 
 def get_file_name(path_or_buf: StrPath | BinaryIO) -> str:
