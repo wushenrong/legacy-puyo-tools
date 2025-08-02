@@ -5,7 +5,7 @@
 """Tests for creating and converting fpd formats.
 
 The sample data is the following string sectioned off by language:
-ABC, 123, bo fo mo fo, 123, A, ra ri ru re ro (hiragana and katakana)".
+ABC, 123, bo fo mo fo, 123, A, ra ri ru re ro (hiragana and katakana), A".
 """
 
 from pathlib import Path
