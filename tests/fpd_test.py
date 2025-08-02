@@ -4,7 +4,8 @@
 
 """Tests for creating and converting fpd formats.
 
-The sample data is "ABC, 123, bo fo mo fo, 123, ra ri ru re ro (hiragana and katakana)".
+The sample data is the following string sectioned off by language:
+ABC, 123, bo fo mo fo, 123, A, ra ri ru re ro (hiragana and katakana)".
 """
 
 from pathlib import Path
@@ -79,8 +80,8 @@ def test_fpd_creation(lazy_datadir: Path, custom_output: str) -> None:
         assert result.exit_code == 0
 
 
-def test_fpd_look_up(lazy_datadir: Path) -> None:
-    """Test getting a character and index from a fpd character table."""
+def test_fpd_lookup(lazy_datadir: Path) -> None:
+    """Test looking up a character and index from a fpd character table."""
     sample_data = (lazy_datadir / "sample.fpd").read_bytes()
 
     fpd_data = Fpd.decode(sample_data)
@@ -90,3 +91,6 @@ def test_fpd_look_up(lazy_datadir: Path) -> None:
 
     # The character "佛" in the sample fpd data should be the 9th index
     assert fpd_data.get_index("佛") == 9
+
+    # The 13th index in the sample fpd data should be the second "A"
+    assert fpd_data[13] == "A"

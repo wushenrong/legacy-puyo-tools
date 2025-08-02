@@ -14,7 +14,7 @@ from io import BytesIO, StringIO
 from typing import BinaryIO
 
 import attrs
-from bidict import bidict
+from bidict import OrderedBidict
 
 from legacy_puyo_tools.formats._io import (
     UTF16_LENGTH,
@@ -90,17 +90,25 @@ class Fpd(Format):
     `0x06`, etc.
     """
 
-    entries: bidict[int, FpdCharacter]
-    """A bidirectional dictionary of fpd character entries."""
+    entries: OrderedBidict[int, int | FpdCharacter]
+    """A ordered bidirectional dictionary of fpd character entries."""
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the fpd character table."""
-        return str(self.entries[index])
+        character = self.entries[index]
+
+        while isinstance(character, int):
+            character = self.entries[character]
+
+        return str(character)
 
     def __str__(self) -> str:
         """Return a string representation of the fpd character table."""
         with StringIO() as string_buffer:
             for character in self.entries.inverse:
+                while isinstance(character, int):
+                    character = self.entries[character]
+
                 string_buffer.write(str(character))
 
             return string_buffer.getvalue()
@@ -128,14 +136,20 @@ class Fpd(Format):
 
         :return: A fpd character table.
         """
-        return cls(
-            bidict({
-                i // FPD_ENTRY_LENGTH: FpdCharacter.decode(
-                    data[i : i + FPD_ENTRY_LENGTH]
-                )
-                for i in range(0, len(data), FPD_ENTRY_LENGTH)
-            })
-        )
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
+
+        for i in range(0, len(data), FPD_ENTRY_LENGTH):
+            fpd_index = i // FPD_ENTRY_LENGTH
+            character = FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
+
+            character_index = character_table.inverse.get(character, -1)
+
+            if character_index != -1:
+                character_table.put(fpd_index, character_index)
+            else:
+                character_table.put(fpd_index, character)
+
+        return cls(character_table)
 
     def encode(self) -> bytes:
         """Encode the fpd character table into a fpd encoded stream.
@@ -144,6 +158,9 @@ class Fpd(Format):
         """
         with BytesIO() as bytes_buffer:
             for character in self.entries.inverse:
+                while isinstance(character, int):
+                    character = self.entries[character]
+
                 bytes_buffer.write(character.encode())
 
             return bytes_buffer.getvalue()
@@ -176,15 +193,23 @@ class Fpd(Format):
 
         :return: A fpd character table.
         """
-        # TODO: When updating Python to 3.11, remove for to_bytes
-        return cls(
-            bidict({
-                i // UTF16_LENGTH: FpdCharacter.decode(
-                    unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
-                )
-                for i in range(0, len(unicode), UTF16_LENGTH)
-            })
-        )
+        # TODO: When updating Python to 3.11, remove arguments for to_bytes
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
+
+        for i in range(0, len(unicode), UTF16_LENGTH):
+            fpd_index = i // UTF16_LENGTH
+            character = FpdCharacter.decode(
+                unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
+            )
+
+            character_index = character_table.inverse.get(character, -1)
+
+            if character_index != -1:
+                character_table.put(fpd_index, character_index)
+            else:
+                character_table.put(fpd_index, character)
+
+        return cls(character_table)
 
     def to_unicode(self) -> bytes:
         """Encode the fpd character table into a UTF-16 LE text stream.

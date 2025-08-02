@@ -9,9 +9,17 @@ respectively.
 
 This project is still in development, expect breaking changes over its lifetime.
 
+## Unreleased
+
+### Changed
+
+- Moved sample data for tests into their own files.
+- Using an ordered bidirectional dictionary for `fpd`.
+- Allow duplicate entries in the `fpd` by mapping indexes to indexes.
+
 ## 2025.7.30
 
-## Changed
+### Changed
 
 - `typing_extensions` to be a runtime dependency.
 
