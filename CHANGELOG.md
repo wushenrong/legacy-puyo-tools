@@ -9,7 +9,7 @@ respectively.
 
 This project is still in development, expect breaking changes over its lifetime.
 
-## Unreleased
+## 2025.8.2
 
 ### Changed
 
