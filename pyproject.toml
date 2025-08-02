@@ -148,6 +148,7 @@ indent = 4
 [tool.pytest.ini_options]
 addopts = [ "--cov", "--import-mode=importlib" ]
 minversion = "8.4"
+testpaths = "tests"
 
 [tool.coverage.run]
 branch = true
