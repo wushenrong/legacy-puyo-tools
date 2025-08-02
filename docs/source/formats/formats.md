@@ -3,8 +3,8 @@
 Below are the formats that are used by the older Puyo Puyo games and how they
 are structured.
 
-```{todo} Add formats that is out of scope for this project.
-```
+:::{todo} Add formats that is out of scope for this project.
+:::
 
 ## The `fpd` format
 
@@ -14,9 +14,17 @@ little-endian into an index that can be used by the `mtx` for text. Each
 character entry in the `fpd` is 3 bytes long and formatted as follows:
 `XX XX YY`. Where `XX XX` is the character encoded in UTF-16 little-endian and
 `YY` is the width of the character. The entries are placed next to each other,
-creating a zero-based index that is offset by multiples of `0x03`. I.e. the 1st
-character is at index `0x00`, the 2nd character is at index `0x03`, the 3rd
-character is at index `0x06`, etc.
+creating a zero-based index that is offset by multiples of `0x03`. For example,
+the 1st character is at index `0x00`, the 2nd character is at index `0x03`, the
+3rd character is at index `0x06`, etc.
+
+:::{warning} If there are multiple entries that maps to the same code point in
+the fpd, then all other entries will be eventually be mapped to the first entry
+in the bidirectional dictionary.
+
+This will lead to the loss of accuracy if the character graphics are different
+for the duplicate entries.
+:::
 
 The `fpd` is not used by the games internally except for the Nintendo DS version
 of the games.
@@ -42,8 +50,8 @@ are no headers or padding bytes in the file.
 The `mtx` format is a binary-encoded format used by older Puyo games for
 storing character dialog and text.
 
-```{todo} Information about the mtx format for PP15 and PP7
-```
+:::{todo} Information about the mtx format for PP15 and PP7
+:::
 
-```{todo} Look at the mtx format for PP20
-```
+:::{todo} Look at the mtx format for PP20
+:::

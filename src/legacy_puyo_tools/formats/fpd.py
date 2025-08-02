@@ -142,9 +142,10 @@ class Fpd(Format):
             fpd_index = i // FPD_ENTRY_LENGTH
             character = FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
 
-            character_index = character_table.inverse.get(character, -1)
+            if (character_index := character_table.inverse.get(character, -1)) != -1:
+                while character_table.inverse.get(character_index, -1) != -1:
+                    character_index = character_table.inverse.get(character_index, -1)
 
-            if character_index != -1:
                 character_table.put(fpd_index, character_index)
             else:
                 character_table.put(fpd_index, character)
@@ -202,9 +203,10 @@ class Fpd(Format):
                 unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
             )
 
-            character_index = character_table.inverse.get(character, -1)
+            if (character_index := character_table.inverse.get(character, -1)) != -1:
+                while character_table.inverse.get(character_index, -1) != -1:
+                    character_index = character_table.inverse.get(character_index, -1)
 
-            if character_index != -1:
                 character_table.put(fpd_index, character_index)
             else:
                 character_table.put(fpd_index, character)

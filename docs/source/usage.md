@@ -1,7 +1,7 @@
 # Usage
 
-```{todo} Create a more comprehensive usage page.
-```
+:::{todo} Create a more comprehensive usage page.
+:::
 
 First check you have the latest version of `legacy-puyo-tools`:
 

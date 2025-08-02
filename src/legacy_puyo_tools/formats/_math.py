@@ -15,10 +15,10 @@ def find_largest_proper_divisor_pair(
 ) -> tuple[int | None, int | None]:
     """Return the largest proper divisor pair of a number with an optional condition."""
     for i in range(isqrt(n), 1, -1):
-        if n % i != 0:
-            continue
+        d, r = divmod(n, i)
 
-        d = n // i
+        if r != 0:
+            continue
 
         if condition(i) or condition(d):
             return d, i

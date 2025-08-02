@@ -78,7 +78,7 @@ class Fmp(Format):
 
         :return: A fmp character graphics table.
         """
-        bytes_width = font_size * _BITS_PER_PIXEL // _BITS_PER_BYTE
+        bytes_width = font_size * (_BITS_PER_PIXEL // _BITS_PER_BYTE)
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
@@ -194,13 +194,16 @@ class Fmp(Format):
 
         graphic_size = font_size + (padding * 2)
 
-        if im.width % graphic_size != 0 or im.height % graphic_size != 0:
+        wd, wr = divmod(im.width, graphic_size)
+        hd, hr = divmod(im.height, graphic_size)
+
+        if wr != 0 or hr != 0:
             raise ValueError("The size of the character or padding is incorrect")
 
         graphics: list[FmpCharacter] = []
 
-        for row in range(im.width // graphic_size):
-            for col in range(im.height // graphic_size):
+        for row in range(wd):
+            for col in range(hd):
                 graphic = im.crop((
                     col * graphic_size + padding,
                     row * graphic_size + padding,
