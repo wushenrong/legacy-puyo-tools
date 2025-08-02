@@ -3,4 +3,7 @@
 # SPDX-License-Identifier: MIT-0
 
 *           text=auto
+sample.txt  text working-tree-encoding=UTF-16LE-BOM eol=lf
+*.fpd       binary
+
 Makefile    eol=lf
