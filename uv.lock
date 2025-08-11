@@ -288,15 +288,15 @@ wheels = [
 
 [[package]]
 name = "cloup"
-version = "3.0.7"
+version = "3.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/86/c9/3c621e0b7898403556e807244104095df1132a6094384f80c272bba4e4e4/cloup-3.0.7.tar.gz", hash = "sha256:c852e0a0541aa433c6ab31a9b8b503f63d9881e91ddaf0384d6927965f2b421c", size = 229613, upload-time = "2025-03-15T00:34:10.224Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/cf/09a31f0f51b5c8ef2343baf37c35a5feb4f6dfdcbd0592a014baf837f2e4/cloup-3.0.8.tar.gz", hash = "sha256:f91c080a725196ddf74feabd6250266f466e97fc16dfe21a762cf6bc6beb3ecb", size = 229657, upload-time = "2025-08-05T02:25:02.83Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/2e/ccd754e473b972155f7e8ca60af373a8bc13ae951a5cb76363c43363e69d/cloup-3.0.7-py2.py3-none-any.whl", hash = "sha256:d3a431cf1e14d8835fe85608e02cc6ff7216f0a39e30d5e28618aa938003ddb4", size = 54602, upload-time = "2025-03-15T00:34:09.165Z" },
+    { url = "https://files.pythonhosted.org/packages/45/0a/494a923f90cd97cdf4fb989cfd06ac0c6745f6dfb8adcef1b7f99d3c7834/cloup-3.0.8-py2.py3-none-any.whl", hash = "sha256:6fe9474dc44fa06f8870e9c797f005de1e3ef891ddc1a9612d9b58598a038323", size = 54647, upload-time = "2025-08-05T02:25:01.536Z" },
 ]
 
 [[package]]
