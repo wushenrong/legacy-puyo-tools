@@ -11,6 +11,7 @@ Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 from io import BytesIO, StringIO
+from struct import iter_unpack, pack, unpack
 from typing import BinaryIO
 
 import attrs
@@ -29,8 +30,6 @@ FPD_ENCODING = "utf-16-le"
 """The default character encoding that the fpd character table uses."""
 FPD_ENTRY_LENGTH = 3
 """The length of a fpd character entry."""
-FPD_WIDTH_OFFSET = 2
-"""The offset of the width in a fpd character entry."""
 
 
 @attrs.frozen
@@ -42,15 +41,15 @@ class FpdCharacter:
     is the width of the character.
     """
 
-    code_point: str
+    character: str
     """A string that stores a single character."""
     width: int = attrs.field(default=0x00, eq=False)
     """How wide should the character be, only used in the Nintendo DS versions of the
     games."""
 
     def __str__(self) -> str:
-        """Return the character as a single character string."""
-        return self.code_point
+        """Return the underlying character as a string."""
+        return self.character
 
     @classmethod
     def decode(cls, fpd_entry: bytes) -> FpdCharacter:
@@ -66,18 +65,16 @@ class FpdCharacter:
         if len(fpd_entry) != FPD_ENTRY_LENGTH:
             raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
 
-        code_point = fpd_entry[: FPD_ENTRY_LENGTH - 1].decode(FPD_ENCODING)
-        width = fpd_entry[FPD_WIDTH_OFFSET]
+        code_point, width = unpack("<HB", fpd_entry)
 
-        return cls(code_point, width)
+        return cls(chr(code_point), width)
 
     def encode(self) -> bytes:
-        """Encode the character back to a fpd character entry.
+        """Encode the character to a fpd character entry.
 
         :return: The character in UTF-16 LE format and its width.
         """
-        # TODO: When updating Python to 3.11, remove for to_bytes
-        return self.code_point.encode(FPD_ENCODING) + self.width.to_bytes(1, "little")
+        return pack("<HB", ord(self.character), self.width)
 
 
 @attrs.define
@@ -136,19 +133,21 @@ class Fpd(Format):
 
         :return: A fpd character table.
         """
+        if len(data) % FPD_ENTRY_LENGTH != 0:
+            raise FormatError("The given data is not a valid fpd character table")
+
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        for i in range(0, len(data), FPD_ENTRY_LENGTH):
-            fpd_index = i // FPD_ENTRY_LENGTH
-            character = FpdCharacter.decode(data[i : i + FPD_ENTRY_LENGTH])
+        for i, (code_point, width) in enumerate(iter_unpack("<HB", data)):
+            character = FpdCharacter(chr(code_point), width)
 
             if (character_index := character_table.inverse.get(character, -1)) != -1:
                 while character_table.inverse.get(character_index, -1) != -1:
                     character_index = character_table.inverse.get(character_index, -1)
 
-                character_table.put(fpd_index, character_index)
+                character_table.put(i, character_index)
             else:
-                character_table.put(fpd_index, character)
+                character_table.put(i, character)
 
         return cls(character_table)
 
