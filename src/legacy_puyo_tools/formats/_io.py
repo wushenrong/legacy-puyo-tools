@@ -9,43 +9,22 @@
 from __future__ import annotations
 
 import os
-from codecs import BOM_UTF16_LE
 from pathlib import Path
 from typing import BinaryIO
 
-from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.typing import StrPath
-
-UTF16_LENGTH = 2
 
 
 def read_file(path_or_buf: StrPath | BinaryIO) -> bytes:
-    """Return contents of a file from a path-like object or file-like object."""
+    """Read a file from a path-like object or file-like object."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         return Path(path_or_buf).read_bytes()
 
     return path_or_buf.read()
 
 
-def read_unicode_file(path_or_buf: StrPath | BinaryIO) -> bytes:
-    """Return the contents of a UTF-16 LE text file in bytes.
-
-    :raises FileFormatError: The file is not a UTF-16 little-endian encoded text file or
-        is missing the Byte Order Mark for UTF-16 little-endian.
-    """
-    data = read_file(path_or_buf)
-
-    if data[:UTF16_LENGTH] != BOM_UTF16_LE:
-        raise FileFormatError(
-            f"{get_file_name(path_or_buf)} is not a UTF-16 little-endian file"
-        )
-
-    # Reencode to strip newlines.
-    return data[UTF16_LENGTH:].decode("utf-16-le").strip().encode("utf-16-le")
-
-
 def write_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
-    """Write bytes to a file from a path-like object or file-like object."""
+    """Write to a file from a path-like object or file-like object."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         Path(path_or_buf).write_bytes(data)
         return
@@ -53,13 +32,8 @@ def write_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
     path_or_buf.write(data)
 
 
-def write_unicode_file(path_or_buf: StrPath | BinaryIO, data: bytes) -> None:
-    """Write UTF-16 LE encoded text to a file."""
-    write_file(path_or_buf, BOM_UTF16_LE + data + "\n".encode("utf-16-le"))
-
-
 def get_file_name(path_or_buf: StrPath | BinaryIO) -> str:
-    """Return the name of the file from a path or a file-like object in binary mode."""
+    """Return the name of the file from a path or a file-like object."""
     if isinstance(path_or_buf, (str, os.PathLike)):
         return Path(os.fspath(path_or_buf)).name
 

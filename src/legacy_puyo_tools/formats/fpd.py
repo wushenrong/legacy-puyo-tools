@@ -10,26 +10,23 @@ Anniversary and Puyo Puyo 7.
 
 from __future__ import annotations
 
+import csv
 from io import BytesIO, StringIO
-from struct import iter_unpack, pack, unpack
-from typing import BinaryIO
+from struct import iter_unpack, pack
+from typing import Any, BinaryIO
 
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools.formats._io import (
-    UTF16_LENGTH,
-    read_unicode_file,
-    write_file,
-    write_unicode_file,
-)
+from legacy_puyo_tools.exceptions import FileFormatError
+from legacy_puyo_tools.formats._io import get_file_name, read_file, write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.typing import StrPath
 
-FPD_ENCODING = "utf-16-le"
-"""The default character encoding that the fpd character table uses."""
 FPD_ENTRY_LENGTH = 3
 """The length of a fpd character entry."""
+
+FPD_CSV_HEADER = ["character", "width"]
 
 
 @attrs.frozen
@@ -43,31 +40,13 @@ class FpdCharacter:
 
     character: str
     """A string that stores a single character."""
-    width: int = attrs.field(default=0x00, eq=False)
+    width: int = attrs.field(default=0x0, eq=False)
     """How wide should the character be, only used in the Nintendo DS versions of the
     games."""
 
     def __str__(self) -> str:
         """Return the underlying character as a string."""
         return self.character
-
-    @classmethod
-    def decode(cls, fpd_entry: bytes) -> FpdCharacter:
-        """Decode a fpd character into its code point and width.
-
-        :param fpd_entry: A fpd character entry that is 3 bytes long.
-
-        :raises FormatError: The entry given does not conform to the fpd character
-            format.
-
-        :return: A fpd character entry containing its code point and width.
-        """
-        if len(fpd_entry) != FPD_ENTRY_LENGTH:
-            raise FormatError(f"{fpd_entry} does not matches size {FPD_ENTRY_LENGTH}")
-
-        code_point, width = unpack("<HB", fpd_entry)
-
-        return cls(chr(code_point), width)
 
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
@@ -174,55 +153,91 @@ class Fpd(Format):
         write_file(path_or_buf, self.encode())
 
     @classmethod
-    def read_unicode(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
-        """Read and decode characters from a UTF-16 little-endian text file.
+    def read_csv(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
+        """Read a fpd character table from a CSV file.
 
-        :param path_or_buf: A string path or file-like object to a UTF-16 LE text file.
+        :param path_or_buf: A string path or file-like object to a CSV file.
 
         :return: A fpd character table.
         """
-        return cls.from_unicode(read_unicode_file(path_or_buf))
+        try:
+            return cls.from_csv(read_file(path_or_buf))
+        except FormatError as e:
+            raise FileFormatError(
+                f"{get_file_name(path_or_buf)} is not in the correct format"
+            ) from e
 
-    # TODO: Find a way to get the width from another file
     @classmethod
-    def from_unicode(cls, unicode: bytes, *, width: int = 0x0) -> Fpd:
-        """Decode a UTF-16 LE stream into a fpd character table.
+    def from_csv(cls, csv_data: bytes) -> Fpd:
+        """Turn a CSV data stream to into a fpd character table.
 
-        :param unicode: A UTF-16 LE encoded character stream.
-        :param width: How wide is the character graphic in the fmp.
+        :param csv_data: A CSV data stream with a list of characters and widths.
+
+        :raises FormatError: The CSV data does not have FPD_CSV_HEADER as it's headers.
 
         :return: A fpd character table.
         """
-        # TODO: When updating Python to 3.11, remove arguments for to_bytes
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        for i in range(0, len(unicode), UTF16_LENGTH):
-            fpd_index = i // UTF16_LENGTH
-            character = FpdCharacter.decode(
-                unicode[i : i + UTF16_LENGTH] + width.to_bytes(1, "little")
-            )
+        with StringIO(csv_data.decode(), newline="") as string_buffer:
+            csv_reader = csv.DictReader(string_buffer)
 
-            if (character_index := character_table.inverse.get(character, -1)) != -1:
-                while character_table.inverse.get(character_index, -1) != -1:
-                    character_index = character_table.inverse.get(character_index, -1)
+            if csv_reader.fieldnames != FPD_CSV_HEADER:
+                raise FormatError(
+                    "The given csv does not match the following header: "
+                    + ",".join(FPD_CSV_HEADER)
+                )
 
-                character_table.put(fpd_index, character_index)
-            else:
-                character_table.put(fpd_index, character)
+            for i, entry in enumerate(csv_reader):
+                character, width = entry.values()
+
+                fpd_character = FpdCharacter(character, int(width, base=16))
+
+                if (
+                    character_index := character_table.inverse.get(fpd_character, -1)
+                ) != -1:
+                    while character_table.inverse.get(character_index, -1) != -1:
+                        character_index = character_table.inverse.get(
+                            character_index, -1
+                        )
+
+                    character_table.put(i, character_index)
+                else:
+                    character_table.put(i, fpd_character)
 
         return cls(character_table)
 
-    def to_unicode(self) -> bytes:
-        """Encode the fpd character table into a UTF-16 LE text stream.
+    def to_csv(self) -> bytes:
+        """Encode the fpd character table into a CSV data stream.
 
-        :return: A UTF-16 LE encoded text stream with characters from the fpd.
+        :return: A CSV data stream with characters and widths from a fpd character
+            table.
         """
-        return str(self).encode(FPD_ENCODING)
 
-    def write_unicode(self, path_or_buf: StrPath | BinaryIO) -> None:
-        """Write the fpd character table to a UTF-16 LE text file.
+        def fmp_serializer(_: type, __: attrs.Attribute[Any], value: str | int) -> str:
+            if isinstance(value, int):
+                return hex(value)
 
-        :param path_or_buf: A string path or file-like object in binary mode to store
-            the encoded UTF-16 LE text file.
+            return value
+
+        with StringIO(newline="") as string_buffer:
+            csv_writer = csv.DictWriter(string_buffer, FPD_CSV_HEADER)
+
+            csv_writer.writeheader()
+
+            for character in self.entries.inverse:
+                while isinstance(character, int):
+                    character = self.entries[character]
+
+                csv_writer.writerow(
+                    attrs.asdict(character, value_serializer=fmp_serializer)
+                )
+
+            return string_buffer.getvalue().encode()
+
+    def write_csv(self, path_or_buf: StrPath | BinaryIO) -> None:
+        """Write the fpd character table to a csv file.
+
+        :param path_or_buf: A string path or file-like object to a CSV file.
         """
-        write_unicode_file(path_or_buf, self.to_unicode())
+        write_file(path_or_buf, self.to_csv())

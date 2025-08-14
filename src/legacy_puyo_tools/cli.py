@@ -20,7 +20,7 @@ from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_PADDING,
     Fmp,
 )
-from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
 from legacy_puyo_tools.typing import FmpSize
 
@@ -32,8 +32,8 @@ mtx_options = option_group(
         type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
     ),
     option(
-        "--unicode",
-        help="Use a unicode text file as the character table.",
+        "--csv",
+        help="Use a CSV file as the character table.",
         type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
     ),
     constraint=require_one.rephrased(
@@ -118,10 +118,10 @@ def convert_fmp(
 )
 @output_option
 def convert_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
-    """Convert a fpd file to a UTF-16 little-endian unicode text file."""
-    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".txt")
+    """Convert a fpd file to a CSV file."""
+    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".csv")
 
-    Fpd.read_fpd(input_file).write_unicode(out_path)
+    Fpd.read_fpd(input_file).write_csv(out_path)
 
 
 @convert.command(name="mtx", show_constraints=True)
@@ -131,15 +131,15 @@ def convert_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
 @output_option
 @mtx_options
 def convert_mtx(
-    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, unicode: Path
+    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, csv: Path
 ) -> None:
     """Convert a mtx file to a XML file."""
     # pylint: disable=possibly-used-before-assignment
     if fpd:
         fpd_data = Fpd.read_fpd(fpd)
 
-    if unicode:
-        fpd_data = Fpd.read_unicode(unicode)
+    if csv:
+        fpd_data = Fpd.read_csv(csv)
 
     out_path = output_file or Path(get_file_name(input_file)).with_suffix(".xml")
 
@@ -174,15 +174,15 @@ def create_fmp(
 @create.command(name="fpd")
 @cloup.argument(
     "input_file",
-    help="Unicode text file encoded in UTF-16 little-endian.",
+    help=f"CSV file with the following header: {','.join(FPD_CSV_HEADER)}",
     type=cloup.File("rb"),
 )
 @output_option
 def create_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
-    """Create a fpd file from a unicode text file."""
+    """Create a fpd file from a CSV file."""
     path = output_file or Path(get_file_name(input_file)).with_suffix(".fpd")
 
-    Fpd.read_unicode(input_file).write_fpd(path)
+    Fpd.read_csv(input_file).write_fpd(path)
 
 
 @create.command(name="mtx", show_constraints=True)
@@ -194,7 +194,7 @@ def create_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
 @output_option
 @mtx_options
 def create_mtx(
-    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, unicode: Path
+    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, csv: Path
 ) -> None:
     """Create a mtx file from a XML file."""
     raise NotImplementedError("Creating MTX files is currently not implemented yet.")

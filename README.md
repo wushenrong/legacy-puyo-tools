@@ -3,6 +3,9 @@
 A command line tool for modding older Puyo Puyo games (Yes, the name is using a
 [reversed naming scheme](https://github.com/microsoft/WSL)).
 
+This project is still in development, expect **major breaking changes** over its
+lifetime.
+
 ## Why
 
 [Puyo Text Editor](https://github.com/nickworonekin/puyo-text-editor),

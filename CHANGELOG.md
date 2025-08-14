@@ -7,7 +7,14 @@ and this project adheres to [Calendar Versioning](https://calver.org/) as of
 July 23, 2025 (2025-07-23) where each number is the year, month, and day
 respectively.
 
-This project is still in development, expect breaking changes over its lifetime.
+This project is still in development, expect **major breaking changes** over its
+lifetime.
+
+## Unreleased
+
+### Changed
+
+- Use a CSV file instead of a Unicode text file for a human editable format.
 
 ## 2025.8.2
 
