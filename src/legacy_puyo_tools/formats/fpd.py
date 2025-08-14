@@ -212,10 +212,8 @@ class Fpd(Format):
 
         return cls(character_table)
 
-    def to_csv(self, *, encoding: str = "utf-8") -> bytes:
+    def to_csv(self) -> bytes:
         """Encode the fpd character table into a CSV data stream.
-
-        :param encoding: The character encoding of the CSV data, defaults to "utf-8".
 
         :return: A CSV data stream with characters and widths from a fpd character
             table.
@@ -232,7 +230,7 @@ class Fpd(Format):
         with (
             BytesIO() as bytes_buf,
             TextIOWrapper(
-                bytes_buf, encoding=encoding, newline="", write_through=True
+                bytes_buf, encoding="utf-8", newline="", write_through=True
             ) as str_buf,
         ):
             csv_writer = csv.DictWriter(str_buf, FPD_CSV_HEADER)
