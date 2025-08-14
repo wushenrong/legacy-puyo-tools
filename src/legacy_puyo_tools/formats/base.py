@@ -12,8 +12,8 @@ from typing import BinaryIO
 # TODO: Remove typing extensions when migrating to Python 3.11.
 from typing_extensions import Self
 
+from legacy_puyo_tools._io import get_file_name, read_file
 from legacy_puyo_tools.exceptions import FileFormatError, FormatError
-from legacy_puyo_tools.formats._io import get_file_name, read_file
 from legacy_puyo_tools.typing import StrPath
 
 

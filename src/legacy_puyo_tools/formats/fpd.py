@@ -18,8 +18,8 @@ from typing import Any, BinaryIO
 import attrs
 from bidict import OrderedBidict
 
+from legacy_puyo_tools._io import get_file_name, read_file, write_file
 from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.formats._io import get_file_name, read_file, write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.typing import StrPath
 

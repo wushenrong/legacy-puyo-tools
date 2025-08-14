@@ -17,8 +17,8 @@ import attrs
 import numpy as np
 from PIL import Image
 
-from legacy_puyo_tools.formats._io import get_file_name, write_file
-from legacy_puyo_tools.formats._math import find_largest_proper_divisor_pair
+from legacy_puyo_tools._io import get_file_name, write_file
+from legacy_puyo_tools._math import find_largest_proper_divisor_pair
 from legacy_puyo_tools.formats.base import FileFormatError, Format, FormatError
 from legacy_puyo_tools.typing import FmpCharacter, FmpSize, StrPath
 
