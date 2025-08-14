@@ -31,6 +31,7 @@ FMP_DEFAULT_MAX_TABLE_WIDTH = 32
 
 _BITS_PER_PIXEL = 4
 _BITS_PER_BYTE = 8
+_PIXELS_PER_BYTE = _BITS_PER_BYTE // _BITS_PER_PIXEL
 
 
 @attrs.define
@@ -78,19 +79,21 @@ class Fmp(Format):
 
         :return: A fmp character graphics table.
         """
-        bytes_width = font_size * (_BITS_PER_PIXEL // _BITS_PER_BYTE)
+        bytes_width = font_size * (_PIXELS_PER_BYTE)
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
 
-        if len(data) % character_size != 0:
+        graphics_length = len(data)
+
+        if graphics_length % character_size != 0:
             raise FormatError(
                 "The size of the fmp does not match the given character graphics size"
             )
 
         graphics: list[FmpCharacter] = []
 
-        for i in range(0, len(data), character_size):
+        for i in range(0, graphics_length, character_size):
             graphic: list[list[int]] = []
 
             for j in range(i, i + character_size, bytes_width):
@@ -112,21 +115,21 @@ class Fmp(Format):
 
         :return: A fmp character graphics table encoded into a byte stream.
         """
-        with BytesIO() as bytes_buffer:
+        with BytesIO() as bytes_buf:
             for graphics in self.font:
                 graphic = graphics.reshape(-1)
 
-                for i in range(0, graphic.size, _BITS_PER_BYTE // _BITS_PER_PIXEL):
-                    pixels = graphic[i : i + _BITS_PER_BYTE // _BITS_PER_PIXEL]
+                for i in range(0, graphic.size, _PIXELS_PER_BYTE):
+                    pixels = graphic[i : i + _PIXELS_PER_BYTE]
 
                     # Swap byte order as fmp is little endian
                     lower_nubble, upper_nibble = pixels.tolist()
                     byte: int = (upper_nibble << _BITS_PER_PIXEL) | lower_nubble
 
                     # TODO: When updating Python to 3.11, remove for to_bytes
-                    bytes_buffer.write(byte.to_bytes(1, "little"))
+                    bytes_buf.write(byte.to_bytes(1, "little"))
 
-            return bytes_buffer.getvalue()
+            return bytes_buf.getvalue()
 
     def write_fmp(self, path_or_buf: StrPath | BinaryIO) -> None:
         """Write the fmp character graphics table to a fmp encoded file.
