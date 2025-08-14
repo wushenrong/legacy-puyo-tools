@@ -26,7 +26,7 @@ def test_fpd_conversion(lazy_datadir: Path, custom_output: str) -> None:
     default_output = "sample.csv"
 
     sample_fpd = lazy_datadir / "sample.fpd"
-    expected_csv = (lazy_datadir / default_output).read_text()
+    expected_csv = (lazy_datadir / default_output).read_text(encoding="utf-8")
 
     with cli_runner.isolated_filesystem():
         input_arguments = [str(sample_fpd)]
