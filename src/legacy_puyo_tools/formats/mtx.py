@@ -111,23 +111,23 @@ class Mtx(Format):
             string_offsets.append(mtx_length)
             mtx_length += string_length
 
-        with BytesIO() as bytes_buffer:
-            write_bytes(bytes_buffer, mtx_length, MTX_SIZE_WIDTH)
-            write_bytes(bytes_buffer, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
+        with BytesIO() as bytes_buf:
+            write_bytes(bytes_buf, mtx_length, MTX_SIZE_WIDTH)
+            write_bytes(bytes_buf, MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
             write_bytes(
-                bytes_buffer,
+                bytes_buf,
                 MTX_SIZE_WIDTH + MTX_IDENTIFIER_WIDTH + MTX_OFFSET_WIDTH,
                 MTX_OFFSET_WIDTH,
             )
 
             for offset in string_offsets:
-                write_bytes(bytes_buffer, offset, MTX_SECTION_WIDTH)
+                write_bytes(bytes_buf, offset, MTX_SECTION_WIDTH)
 
             for string in self.strings:
                 for character in string:
-                    write_bytes(bytes_buffer, character, MTX_CHARACTER_WIDTH)
+                    write_bytes(bytes_buf, character, MTX_CHARACTER_WIDTH)
 
-            return bytes_buffer.getvalue()
+            return bytes_buf.getvalue()
 
     def write_mtx(self, path_or_buf: StrPath | BinaryIO) -> None:
         write_file(path_or_buf, self.encode())
@@ -139,22 +139,22 @@ class Mtx(Format):
         for string in self.strings:
             dialog = etree.SubElement(sheet, "text")
 
-            with StringIO() as string_buffer:
+            with StringIO() as str_buf:
                 for character in string:
                     match character:
                         case 0xF813:
                             dialog.append(etree.Element("arrow"))
                         # TODO: Figure out what this control character does
                         case 0xF883:
-                            string_buffer.write("0xF883")
+                            str_buf.write("0xF883")
                         case 0xFFFD:
-                            string_buffer.write("\n")
+                            str_buf.write("\n")
                         case 0xFFFF:
                             break
                         case _:
-                            string_buffer.write(fpd[character])
+                            str_buf.write(fpd[character])
 
-                dialog.text = string_buffer.getvalue()
+                dialog.text = str_buf.getvalue()
 
         return etree.tostring(root, encoding="utf-8", xml_declaration=True)
 
