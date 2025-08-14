@@ -24,7 +24,7 @@ from typing import BinaryIO
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats._io import write_file
+from legacy_puyo_tools._io import write_file
 from legacy_puyo_tools.formats.base import Format, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 from legacy_puyo_tools.typing import MtxString, StrPath

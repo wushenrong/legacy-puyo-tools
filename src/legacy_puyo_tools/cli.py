@@ -13,7 +13,7 @@ import cloup
 from cloup import option, option_group
 from cloup.constraints import require_one
 
-from legacy_puyo_tools.formats._io import get_file_name
+from legacy_puyo_tools._io import get_file_name
 from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_FONT_SIZE,
     FMP_DEFAULT_MAX_TABLE_WIDTH,
