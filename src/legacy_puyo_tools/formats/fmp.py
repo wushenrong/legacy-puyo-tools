@@ -19,7 +19,7 @@ import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools._math import find_largest_proper_divisor_pair
-from legacy_puyo_tools.exceptions import FormatError
+from legacy_puyo_tools.formats.base import BaseFormat, FormatError
 
 FMP_DEFAULT_FONT_SIZE = 14
 """The default character graphics size used by manzais in pixels."""
@@ -50,7 +50,7 @@ library to not have a performance detriment.
 
 
 @attrs.define
-class Fmp:
+class Fmp(BaseFormat):
     """A fmp character graphics table.
 
     The fmp stores a bitmap graphic table in which each graphic correspond to a

@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2021 Nick Woronekin
 # SPDX-FileCopyrightText: 2025 Samuel Wu
 #
 # SPDX-License-Identifier: MIT
@@ -14,7 +15,7 @@ import pytest
 from click.testing import CliRunner
 
 from legacy_puyo_tools.cli import convert_fpd, create_fpd
-from legacy_puyo_tools.exceptions import FormatError
+from legacy_puyo_tools.formats.base import FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 

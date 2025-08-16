@@ -20,10 +20,10 @@ from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_MAX_TABLE_WIDTH,
     FMP_DEFAULT_PADDING,
     Fmp,
+    FmpSize,
 )
 from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
-from legacy_puyo_tools.typing import FmpSize
 
 _T = TypeVar("_T", bound=Callable[..., Any])
 

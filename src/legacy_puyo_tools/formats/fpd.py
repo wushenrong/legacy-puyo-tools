@@ -19,7 +19,7 @@ from typing import Any, BinaryIO, TextIO, TypeAlias
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools.exceptions import FormatError
+from legacy_puyo_tools.formats.base import BaseFormat, FormatError
 
 FPD_ENTRY_LENGTH = 3
 """The length of a fpd character entry in bytes."""
@@ -62,7 +62,7 @@ FpdCharacterTable: TypeAlias = OrderedBidict[int, int | FpdCharacter]
 
 
 @attrs.define
-class Fpd:
+class Fpd(BaseFormat):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each

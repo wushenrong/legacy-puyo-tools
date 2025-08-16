@@ -24,7 +24,7 @@ from typing import BinaryIO, TypeAlias
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.exceptions import FormatError
+from legacy_puyo_tools.formats.base import BaseFormat, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 MTX_ENDIAN = "little"
@@ -42,7 +42,7 @@ MtxString: TypeAlias = list[int]
 
 
 @attrs.define
-class Mtx:
+class Mtx(BaseFormat):
     strings: list[MtxString]
 
     @classmethod
