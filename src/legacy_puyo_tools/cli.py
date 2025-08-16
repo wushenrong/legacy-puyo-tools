@@ -6,23 +6,41 @@
 
 # pyright: reportPossiblyUnboundVariable=false
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import BinaryIO
+from typing import Any, TypeVar
 
 import cloup
 from cloup import option, option_group
 from cloup.constraints import require_one
+from PIL import Image
 
-from legacy_puyo_tools._io import get_file_name
 from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_FONT_SIZE,
     FMP_DEFAULT_MAX_TABLE_WIDTH,
     FMP_DEFAULT_PADDING,
     Fmp,
+    FmpSize,
 )
 from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
-from legacy_puyo_tools.typing import FmpSize
+
+_T = TypeVar("_T", bound=Callable[..., Any])
+
+
+def input_argument(help_text: str) -> Callable[[_T], _T]:
+    return cloup.argument(
+        "input_file", help=help_text, type=cloup.Path(path_type=Path, dir_okay=False)
+    )
+
+
+output_option = option(
+    "--output",
+    "-o",
+    "output_file",
+    help="Output file. Defaults to an appropriate filename and extension.",
+    type=cloup.Path(path_type=Path, dir_okay=False, writable=True),
+)
 
 mtx_options = option_group(
     "Character table options",
@@ -40,7 +58,6 @@ mtx_options = option_group(
         "exactly 1 character table required for mtx files",
     ),
 )
-
 
 fmp_option = option_group(
     "Font options",
@@ -61,15 +78,6 @@ fmp_option = option_group(
 )
 
 
-output_option = option(
-    "--output",
-    "-o",
-    "output_file",
-    help="Output file. Defaults to an appropriate filename and extension.",
-    type=cloup.File("wb"),
-)
-
-
 @cloup.group()
 @cloup.version_option()
 def app() -> None:
@@ -82,9 +90,7 @@ def convert() -> None:
 
 
 @convert.command(name="fmp")
-@cloup.argument(
-    "input_file", help="Fmp file containing font data.", type=cloup.File("rb")
-)
+@input_argument("Fmp file containing font data.")
 @output_option
 @fmp_option
 @option_group(
@@ -98,52 +104,56 @@ def convert() -> None:
     ),
 )
 def convert_fmp(
-    input_file: BinaryIO,
-    output_file: BinaryIO,
+    input_file: Path,
+    output_file: Path | None,
     size: FmpSize,
     padding: int,
     max_width: int,
 ) -> None:
     """Convert a fmp file to an editable image file (Default is BMP)."""
-    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".bmp")
+    out_path = output_file or Path(input_file.name).with_suffix(".bmp")
 
-    Fmp.read_fmp(input_file, font_size=size).write_image(
-        out_path, max_width=max_width, padding=padding
-    )
+    with input_file.open("rb") as in_fp:
+        Fmp.decode(in_fp, font_size=size).write_image(
+            max_width=max_width, padding=padding
+        ).save(out_path)
 
 
 @convert.command(name="fpd")
-@cloup.argument(
-    "input_file", help="Fpd file containing character data.", type=cloup.File("rb")
-)
+@input_argument("Fpd file containing character data.")
 @output_option
-def convert_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
+def convert_fpd(input_file: Path, output_file: Path | None) -> None:
     """Convert a fpd file to a CSV file."""
-    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".csv")
+    out_path = output_file or Path(input_file.name).with_suffix(".csv")
 
-    Fpd.read_fpd(input_file).write_csv(out_path)
+    with (
+        input_file.open("rb") as in_fp,
+        out_path.open("w", encoding="utf-8", newline="") as out_fp,
+    ):
+        Fpd.decode(in_fp).write_csv(out_fp)
 
 
 @convert.command(name="mtx", show_constraints=True)
-@cloup.argument(
-    "input_file", help="Mtx file containing Manzai text.", type=cloup.File("rb")
-)
+@input_argument("Mtx file containing Manzai text.")
 @output_option
 @mtx_options
 def convert_mtx(
-    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, csv: Path
+    input_file: Path, output_file: Path | None, fpd: Path, csv: Path
 ) -> None:
     """Convert a mtx file to a XML file."""
     # pylint: disable=possibly-used-before-assignment
     if fpd:
-        fpd_data = Fpd.read_fpd(fpd)
+        with fpd.open("rb") as fp:
+            fpd_data = Fpd.decode(fp)
 
     if csv:
-        fpd_data = Fpd.read_csv(csv)
+        with csv.open("r", encoding="utf-8", newline="") as fp:
+            fpd_data = Fpd.read_csv(fp)
 
-    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".xml")
+    out_path = output_file or Path(input_file.name).with_suffix(".xml")
 
-    Mtx.read_mtx(input_file).write_xml(out_path, fpd_data)
+    with input_file.open("rb") as in_fp, out_path.open("wb") as out_fp:
+        out_fp.write(Mtx.decode(in_fp).write_xml(fpd_data))
 
 
 @app.group()
@@ -152,49 +162,42 @@ def create() -> None:
 
 
 @create.command(name="fmp")
-@cloup.argument(
-    "input_file",
-    help="Image file that contains graphical font/character data.",
-    type=cloup.File("rb"),
-)
+@input_argument("Image file that contains graphical font/character data.")
 @output_option
 @fmp_option
 def create_fmp(
-    input_file: BinaryIO,
-    output_file: BinaryIO,
+    input_file: Path,
+    output_file: Path | None,
     size: FmpSize,
     padding: int,
 ) -> None:
     """Create a fmp file from a image file, preferably from BMP or PNG."""
-    out_path = output_file or Path(get_file_name(input_file)).with_suffix(".fmp")
+    out_path = output_file or Path(input_file.name).with_suffix(".fmp")
 
-    Fmp.read_image(input_file, font_size=size, padding=padding).write_fmp(out_path)
+    with Image.open(input_file) as im, out_path.open("wb") as out_fp:
+        Fmp.read_image(im, font_size=size, padding=padding).encode(out_fp)
 
 
 @create.command(name="fpd")
-@cloup.argument(
-    "input_file",
-    help=f"CSV file with the following header: {','.join(FPD_CSV_HEADER)}",
-    type=cloup.File("rb"),
-)
+@input_argument(f"CSV file with the following header: {','.join(FPD_CSV_HEADER)}")
 @output_option
-def create_fpd(input_file: BinaryIO, output_file: BinaryIO) -> None:
+def create_fpd(input_file: Path, output_file: Path | None) -> None:
     """Create a fpd file from a CSV file."""
-    path = output_file or Path(get_file_name(input_file)).with_suffix(".fpd")
+    out_path = output_file or Path(input_file.name).with_suffix(".fpd")
 
-    Fpd.read_csv(input_file).write_fpd(path)
+    with (
+        input_file.open("r", encoding="utf-8", newline="") as in_fp,
+        out_path.open("wb") as out_fp,
+    ):
+        Fpd.read_csv(in_fp).encode(out_fp)
 
 
 @create.command(name="mtx", show_constraints=True)
-@cloup.argument(
-    "input_file",
-    help="XML file that contains markup text or dialog.",
-    type=cloup.File("rb"),
-)
+@input_argument("XML file that contains markup text or dialog.")
 @output_option
 @mtx_options
 def create_mtx(
-    input_file: BinaryIO, output_file: BinaryIO, fpd: Path, csv: Path
+    input_file: Path, output_file: Path | None, fpd: Path, csv: Path
 ) -> None:
     """Create a mtx file from a XML file."""
     raise NotImplementedError("Creating MTX files is currently not implemented yet.")

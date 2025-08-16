@@ -11,17 +11,15 @@ Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 import csv
-from io import BytesIO, StringIO, TextIOWrapper
-from struct import iter_unpack, pack
-from typing import Any, BinaryIO
+from collections.abc import Generator
+from io import StringIO
+from struct import pack, unpack
+from typing import Any, BinaryIO, TextIO, TypeAlias
 
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools._io import get_file_name, read_file, write_file
-from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.formats.base import Format, FormatError
-from legacy_puyo_tools.typing import StrPath
+from legacy_puyo_tools.formats.base import BaseFormat, FormatError
 
 FPD_ENTRY_LENGTH = 3
 """The length of a fpd character entry in bytes."""
@@ -60,8 +58,11 @@ class FpdCharacter:
         return pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
 
 
+FpdCharacterTable: TypeAlias = OrderedBidict[int, int | FpdCharacter]
+
+
 @attrs.define
-class Fpd(Format):
+class Fpd(BaseFormat):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each
@@ -98,30 +99,27 @@ class Fpd(Format):
         return self.entries.inverse[FpdCharacter(character)]
 
     @classmethod
-    def read_fpd(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
-        """Read and decode the fpd character table from a fpd file.
+    def decode(cls, fp: BinaryIO) -> Fpd:
+        """Decode fpd character table from a file-like object.
 
-        :param path_or_buf: A string path or file-like object in binary mode to
-            a fpd encoded file that contains a fpd character table.
+        :param fp: A file-like object in binary mode containing a fpd character table.
 
-        :return: A fpd character table.
-        """
-        return super()._decode_file(path_or_buf)
-
-    @classmethod
-    def decode(cls, data: bytes) -> Fpd:
-        """Decode the fpd character table from a fpd encoded stream.
-
-        :param data: A fpd encoded stream that contains a fpd character table.
+        :raises FormatError: The given fpd character table contains entries that does
+            not conform to the fpd character format.
 
         :return: A fpd character table.
         """
-        if len(data) % FPD_ENTRY_LENGTH != 0:
-            raise FormatError("The given data is not a valid fpd character table")
+
+        def read_fpd_entries() -> Generator[tuple[int, int]]:
+            while entry := fp.read(FPD_ENTRY_LENGTH):
+                if len(entry) != FPD_ENTRY_LENGTH:
+                    raise FormatError("The given fpd character table is invalid.")
+
+                yield unpack(FPD_ENTRY_FORMAT, entry)
 
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        for i, (code_point, width) in enumerate(iter_unpack("<HB", data)):
+        for i, (code_point, width) in enumerate(read_fpd_entries()):
             character = FpdCharacter(chr(code_point), width)
 
             if (character_index := character_table.inverse.get(character, -1)) != -1:
@@ -134,49 +132,24 @@ class Fpd(Format):
 
         return cls(character_table)
 
-    def encode(self) -> bytes:
-        """Encode the fpd character table into a fpd encoded stream.
+    def encode(self, fp: BinaryIO) -> None:
+        """Encode the fpd character table to a file-like object.
 
-        :return: A fpd character table encoded into a byte stream.
+        :param fp: The file-like object in binary mode that fpd character table will be
+            encoded to.
         """
-        with BytesIO() as bytes_buf:
-            for character in self.entries.inverse:
-                while isinstance(character, int):
-                    character = self.entries[character]
+        for character in self.entries.inverse:
+            while isinstance(character, int):
+                character = self.entries[character]
 
-                bytes_buf.write(character.encode())
-
-            return bytes_buf.getvalue()
-
-    def write_fpd(self, path_or_buf: StrPath | BinaryIO) -> None:
-        """Write the fpd character table to a fpd encoded file.
-
-        :param path_or_buf: A string path or file-like object in binary mode to write
-            the fpd character table.
-        """
-        write_file(path_or_buf, self.encode())
+            fp.write(character.encode())
 
     @classmethod
-    def read_csv(cls, path_or_buf: StrPath | BinaryIO) -> Fpd:
-        """Read a fpd character table from a CSV file.
+    def read_csv(cls, fp: TextIO) -> Fpd:
+        """Read a formatted fpd character table from a CSV file.
 
-        :param path_or_buf: A string path or file-like object to a CSV file.
-
-        :return: A fpd character table.
-        """
-        try:
-            return cls.from_csv(read_file(path_or_buf))
-        except FormatError as e:
-            raise FileFormatError(
-                f"{get_file_name(path_or_buf)} does not have the correct headers for "
-                "it to be considered a fmp character table"
-            ) from e
-
-    @classmethod
-    def from_csv(cls, csv_data: bytes) -> Fpd:
-        """Turn a CSV data stream to into a fpd character table.
-
-        :param csv_data: A CSV data stream with a list of characters and widths.
+        :param fp: A file-like object in text mode to a CSV file that has a list of
+            characters and widths.
 
         :raises FormatError: The CSV data does not have FPD_CSV_HEADER as it's headers.
 
@@ -184,39 +157,35 @@ class Fpd(Format):
         """
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        with TextIOWrapper(BytesIO(csv_data), encoding="utf-8", newline="") as str_buf:
-            csv_reader = csv.DictReader(str_buf)
+        csv_reader = csv.DictReader(fp)
 
-            if csv_reader.fieldnames != FPD_CSV_HEADER:
-                raise FormatError(
-                    "The given csv does not match the following header: "
-                    + ",".join(FPD_CSV_HEADER)
-                )
+        if csv_reader.fieldnames != FPD_CSV_HEADER:
+            raise FormatError(
+                "The given csv does not match the following header: "
+                + ",".join(FPD_CSV_HEADER)
+            )
 
-            for i, entry in enumerate(csv_reader):
-                character, width = entry.values()
+        for i, entry in enumerate(csv_reader):
+            character, width = entry.values()
 
-                fpd_character = FpdCharacter(character, int(width, base=16))
+            fpd_character = FpdCharacter(character, int(width, base=16))
 
-                if (
-                    character_index := character_table.inverse.get(fpd_character, -1)
-                ) != -1:
-                    while character_table.inverse.get(character_index, -1) != -1:
-                        character_index = character_table.inverse.get(
-                            character_index, -1
-                        )
+            if (
+                character_index := character_table.inverse.get(fpd_character, -1)
+            ) != -1:
+                while character_table.inverse.get(character_index, -1) != -1:
+                    character_index = character_table.inverse.get(character_index, -1)
 
-                    character_table.put(i, character_index)
-                else:
-                    character_table.put(i, fpd_character)
+                character_table.put(i, character_index)
+            else:
+                character_table.put(i, fpd_character)
 
         return cls(character_table)
 
-    def to_csv(self) -> bytes:
-        """Encode the fpd character table into a CSV data stream.
+    def write_csv(self, fp: TextIO) -> None:
+        """Write the fpd character table to a file-like object.
 
-        :return: A CSV data stream with characters and widths from a fpd character
-            table.
+        :param fp: The file-like object to write the character table as a CSV file.
         """
 
         def fmp_serializer(
@@ -227,29 +196,14 @@ class Fpd(Format):
 
             return value
 
-        with (
-            BytesIO() as bytes_buf,
-            TextIOWrapper(
-                bytes_buf, encoding="utf-8", newline="", write_through=True
-            ) as str_buf,
-        ):
-            csv_writer = csv.DictWriter(str_buf, FPD_CSV_HEADER)
+        csv_writer = csv.DictWriter(fp, FPD_CSV_HEADER)
 
-            csv_writer.writeheader()
+        csv_writer.writeheader()
 
-            for character in self.entries.inverse:
-                while isinstance(character, int):
-                    character = self.entries[character]
+        for character in self.entries.inverse:
+            while isinstance(character, int):
+                character = self.entries[character]
 
-                csv_writer.writerow(
-                    attrs.asdict(character, value_serializer=fmp_serializer)
-                )
-
-            return bytes_buf.getvalue()
-
-    def write_csv(self, path_or_buf: StrPath | BinaryIO) -> None:
-        """Write the fpd character table to a csv file.
-
-        :param path_or_buf: A string path or file-like object to a CSV file.
-        """
-        write_file(path_or_buf, self.to_csv())
+            csv_writer.writerow(
+                attrs.asdict(character, value_serializer=fmp_serializer)
+            )
