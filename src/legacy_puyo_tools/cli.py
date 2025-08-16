@@ -21,6 +21,7 @@ from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_PADDING,
     Fmp,
     FmpSize,
+    FmpTableOrientation,
 )
 from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
@@ -42,23 +43,6 @@ output_option = option(
     type=cloup.Path(path_type=Path, dir_okay=False, writable=True),
 )
 
-mtx_options = option_group(
-    "Character table options",
-    option(
-        "--fpd",
-        help="Use a fpd file as the character table.",
-        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
-    ),
-    option(
-        "--csv",
-        help="Use a CSV file as the character table.",
-        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
-    ),
-    constraint=require_one.rephrased(
-        "exactly 1 character table required for mtx files",
-    ),
-)
-
 fmp_option = option_group(
     "Font options",
     option(
@@ -74,6 +58,41 @@ fmp_option = option_group(
         default=FMP_DEFAULT_PADDING,
         type=cloup.IntRange(0, 4),
         show_default=True,
+    ),
+)
+
+table_options = option_group(
+    "Table options",
+    option(
+        "--max-width",
+        help="Maximum number of characters per column in the image.",
+        default=FMP_DEFAULT_MAX_TABLE_WIDTH,
+        type=cloup.IntRange(2, 64),
+        show_default=True,
+    ),
+    option(
+        "--orientation",
+        help="The orientation of the character table.",
+        default="portrait",
+        type=cloup.Choice(["portrait", "landscape"], case_sensitive=False),
+        show_default=True,
+    ),
+)
+
+mtx_options = option_group(
+    "Character table options",
+    option(
+        "--fpd",
+        help="Use a fpd file as the character table.",
+        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
+    ),
+    option(
+        "--csv",
+        help="Use a CSV file as the character table.",
+        type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
+    ),
+    constraint=require_one.rephrased(
+        "exactly 1 character table required for mtx files",
     ),
 )
 
@@ -93,29 +112,21 @@ def convert() -> None:
 @input_argument("Fmp file containing font data.")
 @output_option
 @fmp_option
-@option_group(
-    "Image options",
-    option(
-        "--max-width",
-        help="Maximum number of characters per column in the image.",
-        default=FMP_DEFAULT_MAX_TABLE_WIDTH,
-        type=cloup.IntRange(0, 64, min_open=True),
-        show_default=True,
-    ),
-)
-def convert_fmp(
+@table_options
+def convert_fmp(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     input_file: Path,
     output_file: Path | None,
     size: FmpSize,
     padding: int,
     max_width: int,
+    orientation: FmpTableOrientation,
 ) -> None:
-    """Convert a fmp file to an editable image file (Default is BMP)."""
-    out_path = output_file or Path(input_file.name).with_suffix(".bmp")
+    """Convert a fmp file to an editable image file (Default is PNG)."""
+    out_path = output_file or Path(input_file.name).with_suffix(".png")
 
     with input_file.open("rb") as in_fp:
         Fmp.decode(in_fp, font_size=size).write_image(
-            max_width=max_width, padding=padding
+            padding=padding, max_width=max_width, orientation=orientation
         ).save(out_path)
 
 

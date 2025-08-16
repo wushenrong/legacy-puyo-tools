@@ -19,7 +19,7 @@ import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools._math import find_largest_proper_divisor_pair
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.base import BaseFormat
 
 FMP_DEFAULT_FONT_SIZE = 14
 """The default character graphics size used by manzais in pixels."""
@@ -48,6 +48,9 @@ conversion using Pillow. Remember to use the numpy library instead of the standa
 library to not have a performance detriment.
 """
 
+FmpTableOrientation: TypeAlias = Literal["portrait", "landscape"]
+"""How the fmp character table can be orientated."""
+
 
 @attrs.define
 class Fmp(BaseFormat):
@@ -74,7 +77,7 @@ class Fmp(BaseFormat):
 
         :return: A fmp character graphics table.
         """
-        bytes_width = font_size * (_PIXELS_PER_BYTE)
+        bytes_width = font_size // (_PIXELS_PER_BYTE)
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
@@ -97,6 +100,8 @@ class Fmp(BaseFormat):
                     graphic_row.extend((upper_nibble, lower_nibble))
 
                 graphic.append(graphic_row)
+
+            graphics.append(np.array(graphic, np.bool))
 
         return cls(graphics, font_size)
 
@@ -130,21 +135,20 @@ class Fmp(BaseFormat):
     ) -> Fmp:
         """Write the fmp character graphics table from a Pillow Image to fmp.
 
-        :param im: An image object from the Pillow library, must be in black and white
-            mode.
+        :param im: An image object from the Pillow library, non-black and white images
+            will be converted using Pillow's default dithering options.
         :param font_size: The size of the character graphics in pixels, defaults to
             FMP_DEFAULT_FONT_SIZE.
         :param padding: The amount of padding around the characters in pixels, defaults
             to FMP_DEFAULT_PADDING.
 
-        :raises FormatError: The image is not using a black and white palette.
         :raises ValueError: The image does not align to the given size of the character
             graphics and padding padding.
 
         :return: A fmp character graphics table.
         """
         if im.mode != "1":
-            raise FormatError("The image is not in black and white")
+            im = im.convert("1")
 
         graphic_size = font_size + (padding * 2)
 
@@ -156,8 +160,8 @@ class Fmp(BaseFormat):
 
         graphics: list[FmpCharacter] = []
 
-        for row in range(wd):
-            for col in range(hd):
+        for row in range(hd):
+            for col in range(wd):
                 graphic = im.crop((
                     col * graphic_size + padding,
                     row * graphic_size + padding,
@@ -172,8 +176,9 @@ class Fmp(BaseFormat):
     def write_image(
         self,
         *,
-        max_width: int = FMP_DEFAULT_MAX_TABLE_WIDTH,
         padding: int = FMP_DEFAULT_PADDING,
+        max_width: int = FMP_DEFAULT_MAX_TABLE_WIDTH,
+        orientation: FmpTableOrientation = "portrait",
     ) -> Image.Image:
         """Write the fmp character graphics table to a Pillow Image.
 
@@ -182,6 +187,7 @@ class Fmp(BaseFormat):
             FMP_DEFAULT_MAX_TABLE_WIDTH.
         :param padding: The amount of padding around the characters in pixels, defaults
             to FMP_DEFAULT_PADDING.
+        :param orientation: Orientation of the character table, defaults to "portrait".
 
         :raises ValueError: There is no good width to height ratio below the given max
             width.
@@ -196,12 +202,13 @@ class Fmp(BaseFormat):
 
         if not width or not height:
             raise ValueError(
-                "There is no good width to height ratio below the given max width, "
-                "increase the max width or pad the fmp with empty characters."
+                "There is no good width to height ratio the given max width, increase "
+                "the max width or pad the fmp with empty character graphics."
             )
 
-        # Scrolling down is easier than scrolling right
-        if width > height:
+        if (orientation == "portrait" and width > height) or (
+            orientation == "landscape" and width < height
+        ):
             width, height = height, width
 
         graphic_size = self.font_size + (padding * 2)
@@ -209,15 +216,15 @@ class Fmp(BaseFormat):
         buf = Image.new("1", (graphic_size, graphic_size))
         img = Image.new("1", (graphic_size * width, graphic_size * height))
 
-        for col in range(height):
-            for row in range(width):
+        for row in range(height):
+            for col in range(width):
                 # TODO: Remove ignore once python-pillow/Pillow#8029 and
-                # python-pillow/Pillow#8362 gets resolved and merged
+                #       python-pillow/Pillow#8362 gets resolved and merged
                 buf.putdata(  # pyright: ignore[reportUnknownMemberType]
                     # A way that tries to flatten multidimensional arrays without making
                     # additional copies
-                    np.pad(self.font[(col * width) + row], padding).reshape(-1)
+                    np.pad(self.font[(row * width) + col], padding).reshape(-1)
                 )
-                img.paste(buf, (row * graphic_size, col * graphic_size))
+                img.paste(buf, (col * graphic_size, row * graphic_size))
 
         return img

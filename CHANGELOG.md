@@ -17,6 +17,10 @@ lifetime.
 - Use a CSV file instead of a Unicode text file for a human editable format.
 - Rewrite decoders to take in file-like objects instead of the entire file.
 - Moved types back into formats instead being in a typing module.
+- The converted character graphics table can be oriented portrait or landscape.
+- Convert non-black and white images instead of raising an exception.
+- Use PNG as the default image format instead of BMP.
+- Adjusted the range of maximum columns the fmp character table can have.
 
 ### Removed
 

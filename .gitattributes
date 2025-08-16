@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MIT-0
 
 *           text=auto
+
+*.fmp       binary
 *.fpd       binary
 
 Makefile    eol=lf
