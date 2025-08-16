@@ -15,6 +15,12 @@ lifetime.
 ### Changed
 
 - Use a CSV file instead of a Unicode text file for a human editable format.
+- Rewrite decoders to take in file-like objects instead of the entire file.
+- Moved types back into formats instead being in a typing module.
+
+### Removed
+
+- Methods that take in string paths to read and write files.
 
 ## 2025.8.2
 

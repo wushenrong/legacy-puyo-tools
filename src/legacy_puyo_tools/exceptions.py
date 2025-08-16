@@ -8,7 +8,3 @@
 
 class FormatError(Exception):
     """The current input data does not conform to an expected format."""
-
-
-class FileFormatError(FormatError):
-    """The file does not conform to a file format or is malformed."""
