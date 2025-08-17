@@ -25,8 +25,6 @@ FMP_DEFAULT_FONT_SIZE = 14
 """The default character graphics size used by manzais in pixels."""
 FMP_DEFAULT_PADDING = 1
 """The default padding around character graphics during conversion in pixels."""
-FMP_DEFAULT_MAX_TABLE_WIDTH = 32
-"""The default maximum number of characters per row in an image."""
 
 _BITS_PER_PIXEL = 4
 _BITS_PER_BYTE = 8
@@ -36,9 +34,7 @@ FmpSize: TypeAlias = Literal[8, 14]
 """The available font sizes for the fmp format in pixels."""
 
 FmpCharacter: TypeAlias = npt.NDArray[np.bool]
-"""A fmp character graphic.
-
-A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
+"""A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
 bitmap that stores the graphical data of a character in the fpd character table. A `0x0`
 and `0x1` encoding an off and on pixel respectively. Pixels are stored row by row, in
 top-to-bottom and left-to-right order.
@@ -71,11 +67,15 @@ class Fmp(BaseFormat):
     def decode(cls, fp: BinaryIO, *, font_size: FmpSize = FMP_DEFAULT_FONT_SIZE) -> Fmp:
         """Decode fmp character graphics table from a file-like object.
 
-        :param fp: A file-like object in binary mode containing a fpd character table.
-        :param font_size: The size of the character graphics in pixels, defaults to
-            FMP_DEFAULT_FONT_SIZE.
+        Arguments:
+            fp:
+                A file-like object in binary mode containing a fpd character table.
+            font_size:
+                The size of the character graphics in pixels, defaults to
+                FMP_DEFAULT_FONT_SIZE.
 
-        :return: A fmp character graphics table.
+        Returns:
+            A fmp character graphics table.
         """
         bytes_width = font_size // (_PIXELS_PER_BYTE)
 
@@ -108,10 +108,10 @@ class Fmp(BaseFormat):
     def encode(self, fp: BinaryIO) -> None:
         """Encode the fmp character graphics table to a file-like object.
 
-        :param fp: The file-like object in binary mode that fmp character graphics table
-            will be encoded to.
+        Arguments:
+            fp: The file-like object in binary mode that fmp character graphics table
+                will be encoded to.
         """
-
         for graphics in self.font:
             graphic = graphics.reshape(-1)
 
@@ -135,17 +135,23 @@ class Fmp(BaseFormat):
     ) -> Fmp:
         """Write the fmp character graphics table from a Pillow Image to fmp.
 
-        :param im: An image object from the Pillow library, non-black and white images
-            will be converted using Pillow's default dithering options.
-        :param font_size: The size of the character graphics in pixels, defaults to
-            FMP_DEFAULT_FONT_SIZE.
-        :param padding: The amount of padding around the characters in pixels, defaults
-            to FMP_DEFAULT_PADDING.
+        Arguments:
+            im: An image object from the Pillow library, non-black and white images
+                will be converted using Pillow's default dithering options.
+            font_size:
+                The size of the character graphics in pixels, defaults to
+                :py:const:`FMP_DEFAULT_FONT_SIZE`.
+            padding:
+                The amount of padding around the characters in pixels, defaults to
+                :py:const:`FMP_DEFAULT_PADDING`.
 
-        :raises ValueError: The image does not align to the given size of the character
-            graphics or padding.
+        Raises:
+            ValueError:
+                The image does not align to the given size of the character graphics or
+                padding.
 
-        :return: A fmp character graphics table.
+        Returns:
+            A fmp character graphics table.
         """
         if im.mode != "1":
             im = im.convert("1", dither=Image.Dither.NONE)
@@ -181,12 +187,15 @@ class Fmp(BaseFormat):
     ) -> Image.Image:
         """Write the fmp character graphics table to a Pillow Image.
 
-        :param padding: The amount of padding around the characters in pixels, defaults
-            to FMP_DEFAULT_PADDING.
-        :param orientation: Orientation of the character table, defaults to
-            "portrait".
+        Arguments:
+            padding:
+                The amount of padding around the characters in pixels, defaults to
+                :py:const:`FMP_DEFAULT_PADDING`.
+            orientation:
+                Orientation of the character table, defaults to "portrait".
 
-        :return: An image object that contains the fmp character graphics table.
+        Returns:
+            An image object that contains the fmp character graphics table.
         """
         # Find the optimal width and height of the character table by calculating the
         # first factors whose ratio is equal to or close to 1

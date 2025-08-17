@@ -39,6 +39,7 @@ MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
 
 MtxString: TypeAlias = list[int]
+"""A list of indexes that points to a character in the fpd character table."""
 
 
 @attrs.define
