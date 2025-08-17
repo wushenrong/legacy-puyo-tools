@@ -6,21 +6,18 @@
 
 """Functions to deal with math operations."""
 
-from collections.abc import Callable
 from math import isqrt
 
 
-def find_largest_proper_divisor_pair(
-    n: int, condition: Callable[[int], bool] = lambda _: True
-) -> tuple[int | None, int | None]:
-    """Return the largest proper divisor pair of a number with an optional condition."""
-    for i in range(isqrt(n), 1, -1):
+def find_best_ratio_divisor_pair(n: int) -> tuple[int, int]:
+    """Return the best ratio divisor pair of a number."""
+    if n < 0:
+        return (1, n)
+
+    for i in range(isqrt(n), 0, -1):
         d, r = divmod(n, i)
 
-        if r != 0:
-            continue
+        if r == 0:
+            return (i, d)
 
-        if condition(i) or condition(d):
-            return d, i
-
-    return None, None
+    return (0, 0)

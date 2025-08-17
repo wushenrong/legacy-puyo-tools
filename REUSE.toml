@@ -28,3 +28,9 @@ path = [
 SPDX-FileCopyrightText = "2014 Coraline Ada Ehmke"
 SPDX-License-Identifier = "CC-BY-4.0"
 path = ["CODE_OF_CONDUCT.md"]
+
+[[annotations]]
+SPDX-FileCopyrightText = "2021 TakWolf"
+SPDX-License-Identifier = "OFL-1.1"
+path = ["tests/fmp_test/**"]
+precedence = "override"

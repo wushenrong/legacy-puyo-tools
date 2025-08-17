@@ -12,19 +12,22 @@ lifetime.
 
 ## Unreleased
 
+### Added
+
+- Option to orient the fmp character graphics table in portrait or landscape.
+
 ### Changed
 
 - Use a CSV file instead of a Unicode text file for a human editable format.
 - Rewrite decoders to take in file-like objects instead of the entire file.
 - Moved types back into formats instead being in a typing module.
-- The converted character graphics table can be oriented portrait or landscape.
 - Convert non-black and white images instead of raising an exception.
 - Use PNG as the default image format instead of BMP.
-- Adjusted the range of maximum columns the fmp character table can have.
 
 ### Removed
 
 - Methods that take in string paths to read and write files.
+- Option to specify the maximum width for fmp character graphics table.
 
 ## 2025.8.2
 

@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2021 Nick Woronekin
 # SPDX-FileCopyrightText: 2025 Samuel Wu
 #
 # SPDX-License-Identifier: MIT

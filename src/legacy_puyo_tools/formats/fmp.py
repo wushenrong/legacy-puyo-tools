@@ -18,7 +18,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 
-from legacy_puyo_tools._math import find_largest_proper_divisor_pair
+from legacy_puyo_tools._math import find_best_ratio_divisor_pair
 from legacy_puyo_tools.formats.base import BaseFormat
 
 FMP_DEFAULT_FONT_SIZE = 14
@@ -143,12 +143,12 @@ class Fmp(BaseFormat):
             to FMP_DEFAULT_PADDING.
 
         :raises ValueError: The image does not align to the given size of the character
-            graphics and padding padding.
+            graphics or padding.
 
         :return: A fmp character graphics table.
         """
         if im.mode != "1":
-            im = im.convert("1")
+            im = im.convert("1", dither=Image.Dither.NONE)
 
         graphic_size = font_size + (padding * 2)
 
@@ -177,34 +177,21 @@ class Fmp(BaseFormat):
         self,
         *,
         padding: int = FMP_DEFAULT_PADDING,
-        max_width: int = FMP_DEFAULT_MAX_TABLE_WIDTH,
         orientation: FmpTableOrientation = "portrait",
     ) -> Image.Image:
         """Write the fmp character graphics table to a Pillow Image.
 
-        :param max_width: The maximum amount of characters per columns in the image.
-            Tries to find the best width to height ratio, defaults to
-            FMP_DEFAULT_MAX_TABLE_WIDTH.
         :param padding: The amount of padding around the characters in pixels, defaults
             to FMP_DEFAULT_PADDING.
-        :param orientation: Orientation of the character table, defaults to "portrait".
-
-        :raises ValueError: There is no good width to height ratio below the given max
-            width.
+        :param orientation: Orientation of the character table, defaults to
+            "portrait".
 
         :return: An image object that contains the fmp character graphics table.
         """
-        # Find the optimal width and height of the character table by
-        # calculating factors to put them into a rectangle or square.
-        width, height = find_largest_proper_divisor_pair(
-            len(self.font), lambda x: x <= max_width
-        )
-
-        if not width or not height:
-            raise ValueError(
-                "There is no good width to height ratio the given max width, increase "
-                "the max width or pad the fmp with empty character graphics."
-            )
+        # Find the optimal width and height of the character table by calculating the
+        # first factors whose ratio is equal to or close to 1
+        # So the character table is arranged into a square or rectangle.
+        width, height = find_best_ratio_divisor_pair(len(self.font))
 
         if (orientation == "portrait" and width > height) or (
             orientation == "landscape" and width < height

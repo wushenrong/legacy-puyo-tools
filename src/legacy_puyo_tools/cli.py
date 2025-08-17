@@ -17,7 +17,6 @@ from PIL import Image
 
 from legacy_puyo_tools.formats.fmp import (
     FMP_DEFAULT_FONT_SIZE,
-    FMP_DEFAULT_MAX_TABLE_WIDTH,
     FMP_DEFAULT_PADDING,
     Fmp,
     FmpSize,
@@ -63,13 +62,6 @@ fmp_option = option_group(
 
 table_options = option_group(
     "Table options",
-    option(
-        "--max-width",
-        help="Maximum number of characters per column in the image.",
-        default=FMP_DEFAULT_MAX_TABLE_WIDTH,
-        type=cloup.IntRange(2, 64),
-        show_default=True,
-    ),
     option(
         "--orientation",
         help="The orientation of the character table.",
@@ -118,7 +110,6 @@ def convert_fmp(  # pylint: disable=too-many-arguments,too-many-positional-argum
     output_file: Path | None,
     size: FmpSize,
     padding: int,
-    max_width: int,
     orientation: FmpTableOrientation,
 ) -> None:
     """Convert a fmp file to an editable image file (Default is PNG)."""
@@ -126,7 +117,7 @@ def convert_fmp(  # pylint: disable=too-many-arguments,too-many-positional-argum
 
     with input_file.open("rb") as in_fp:
         Fmp.decode(in_fp, font_size=size).write_image(
-            padding=padding, max_width=max_width, orientation=orientation
+            padding=padding, orientation=orientation
         ).save(out_path)
 
 

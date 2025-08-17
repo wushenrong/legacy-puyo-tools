@@ -1,4 +1,3 @@
-# SPDX-FileCopyrightText: 2021 Nick Woronekin
 # SPDX-FileCopyrightText: 2025 Samuel Wu
 #
 # SPDX-License-Identifier: MIT
@@ -19,54 +18,58 @@ from legacy_puyo_tools.formats.base import FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 
-@pytest.mark.parametrize(("custom_output"), [(None), ("custom_output.csv")])
-def test_fpd_conversion(lazy_datadir: Path, custom_output: str | None) -> None:
+@pytest.mark.parametrize(("output_file"), [(None), ("custom.csv")])
+def test_fpd_conversion(lazy_datadir: Path, output_file: str | None) -> None:
     """Test converting a fpd file."""
     cli_runner = CliRunner()
 
-    default_output = "sample.csv"
+    fpd_file = "sample.fpd"
 
-    sample_fpd = lazy_datadir / "sample.fpd"
-    expected_csv = (lazy_datadir / default_output).read_text(encoding="utf-8")
+    expected_csv_path = Path(fpd_file).with_suffix(".csv")
+    expected_csv = (lazy_datadir / expected_csv_path).read_text(encoding="utf-8")
 
     with cli_runner.isolated_filesystem():
-        input_arguments = [str(sample_fpd)]
+        input_arguments = [str(lazy_datadir / fpd_file)]
 
-        if custom_output:
-            input_arguments.extend(("--output", custom_output))
+        if output_file:
+            output_path = Path(output_file)
+            input_arguments.extend(("--output", output_file))
+        else:
+            output_path = expected_csv_path
 
         result = cli_runner.invoke(convert_fpd, input_arguments)
 
         assert result.exit_code == 0
 
-        converted_csv = Path(custom_output or default_output).read_text(
-            encoding="utf-8"
-        )
+        converted_csv = output_path.read_text(encoding="utf-8")
 
         assert converted_csv == expected_csv
 
 
-@pytest.mark.parametrize(("custom_output"), [(None), ("custom_output.fpd")])
-def test_fpd_creation(lazy_datadir: Path, custom_output: str) -> None:
+@pytest.mark.parametrize(("output_file"), [(None), ("custom.fpd")])
+def test_fpd_creation(lazy_datadir: Path, output_file: str) -> None:
     """Test creating a fpd file."""
     cli_runner = CliRunner()
 
-    default_output = "sample.fpd"
+    csv_file = "sample.csv"
 
-    sample_csv = lazy_datadir / "sample.csv"
-    expected_fpd = (lazy_datadir / default_output).read_bytes()
+    expected_fpd_path = Path(csv_file).with_suffix(".fpd")
+    expected_fpd = (lazy_datadir / expected_fpd_path).read_bytes()
 
     with cli_runner.isolated_filesystem():
-        input_arguments = [str(sample_csv)]
+        input_arguments = [str(lazy_datadir / csv_file)]
 
-        if custom_output:
-            input_arguments.extend(("--output", custom_output))
+        if output_file:
+            output_path = Path(output_file)
+            input_arguments.extend(("--output", output_file))
+        else:
+            output_path = expected_fpd_path
 
         result = cli_runner.invoke(create_fpd, input_arguments)
 
         assert result.exit_code == 0
 
-        converted_fpd = Path(custom_output or default_output).read_bytes()
+        converted_fpd = output_path.read_bytes()
 
         assert converted_fpd == expected_fpd
 
@@ -74,11 +77,10 @@ def test_fpd_creation(lazy_datadir: Path, custom_output: str) -> None:
 def test_fpd_to_string(lazy_datadir: Path) -> None:
     """Test converting to a string from a fpd character table."""
     fpd_file = lazy_datadir / "sample.fpd"
+    sample_string = "ABC123波泼摸佛一二三A らりるれろラリルレロA"
 
     with fpd_file.open("rb") as fp:
-        fpd_data = Fpd.decode(fp)
-
-    assert str(fpd_data) == "ABC123波泼摸佛一二三A らりるれろラリルレロA"
+        assert str(Fpd.decode(fp)) == sample_string
 
 
 def test_fpd_lookup(lazy_datadir: Path) -> None:
@@ -98,8 +100,8 @@ def test_fpd_lookup(lazy_datadir: Path) -> None:
     assert fpd_data[13] == "A"
 
 
-def test_fpd_format_error(lazy_datadir: Path) -> None:
-    """Test rasing an error when the input files are in the invalid format."""
+def test_fpd_exceptions(lazy_datadir: Path) -> None:
+    """Test rasing exceptions when the input files are in the invalid format."""
     invalid_fpd = lazy_datadir / "invalid.fpd"
     invalid_csv = lazy_datadir / "invalid.csv"
 
