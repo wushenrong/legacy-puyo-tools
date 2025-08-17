@@ -105,7 +105,7 @@ def convert() -> None:
 @output_option
 @fmp_option
 @table_options
-def convert_fmp(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def convert_fmp(
     input_file: Path,
     output_file: Path | None,
     size: FmpSize,
