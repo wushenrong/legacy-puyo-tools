@@ -15,11 +15,11 @@ an index that can be used by the `mtx` for text. Each character entry in the
 character's Unicode code point in little-endian and `YY` is the width of the
 character.
 
-:::{note} This character encoding can be considered to be UTF-16 little-endian.
-However, `fpd` only can only store characters from the Basic Multilingual Plane
-or `U+0000` to `U+FFFF` due to the format having a fixed width of 16 bits per
-code point. So this encoding is more accurately the older UCS-2, the predecessor
-to UTF-16.
+:::{note} The character encoding can be considered to be UTF-16 little-endian.
+However, the `fpd` only can only store characters from the Basic Multilingual
+Plane or `U+0000` to `U+FFFF` due to the format having a fixed width of 16 bits
+per code point. So it is more accurately to say the encoding is the older UCS-2,
+the predecessor to UTF-16.
 :::
 
 The entries are placed next to each other, creating a zero-based index that is

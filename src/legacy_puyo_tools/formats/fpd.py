@@ -28,7 +28,7 @@ FPD_ENTRY_FORMAT = "<HB"
 one byte for character width."""
 
 FPD_CSV_HEADER = ["character", "width"]
-"""The required header for a CSV file to be considered a fmp character table."""
+"""The required header for a CSV file to be considered a fpd character table."""
 
 
 @attrs.frozen
@@ -38,6 +38,12 @@ class FpdCharacter:
     A fpd character is a binary entry that is 3 bytes long and formatted as follows:
     `XX XX YY`. Where `XX XX` is the character's Unicode code point in little-endian and
     `YY` is the width of the character.
+
+    The character encoding can be considered to be UTF-16 little-endian. However, the
+    `fpd` only can only store characters from the Basic Multilingual Plane or `U+0000`
+    to `U+FFFF` due to the format having a fixed width of 16 bits per code point. So it
+    is more accurately to say the encoding is the older UCS-2, the predecessor to
+    UTF-16.
     """
 
     character: str
@@ -53,10 +59,24 @@ class FpdCharacter:
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
 
+        Raises:
+            UnicodeEncodeError:
+                The character is not able to encode to UCS-2 because it is not in the
+                Basic Multilingual Plane, or a code point from `U+0000` to `U+FFFF`.
+
         Returns:
             The character's Unicode code point in little-endian and its width.
         """
-        return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
+        try:
+            return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
+        except struct.error as e:
+            raise UnicodeEncodeError(
+                "UCS-2",
+                self.character,
+                -1,
+                -1,
+                "Character is not in the BMP or a code point from U+0000 to U+FFFF",
+            ) from e
 
 
 FpdCharacterTable: TypeAlias = OrderedBidict[int, int | FpdCharacter]
@@ -114,31 +134,27 @@ class Fpd(BaseFormat):
 
         Returns:
             A fpd character table.
-        """
+        """  # noqa: DOC502
 
         def read_fpd_entries() -> Generator[tuple[int, int]]:
             while entry := fp.read(FPD_ENTRY_LENGTH):
+                if len(entry) != FPD_ENTRY_LENGTH:
+                    raise FormatError("The given fpd character table is invalid.")
+
                 yield struct.unpack(FPD_ENTRY_FORMAT, entry)
 
         character_table: FpdCharacterTable = OrderedBidict()
 
-        try:
-            for i, (code_point, width) in enumerate(read_fpd_entries()):
-                character = FpdCharacter(chr(code_point), width)
+        for i, (code_point, width) in enumerate(read_fpd_entries()):
+            character = FpdCharacter(chr(code_point), width)
 
-                if (
-                    character_index := character_table.inverse.get(character, -1)
-                ) != -1:
-                    while character_table.inverse.get(character_index, -1) != -1:
-                        character_index = character_table.inverse.get(
-                            character_index, -1
-                        )
+            if (character_index := character_table.inverse.get(character, -1)) != -1:
+                while character_table.inverse.get(character_index, -1) != -1:
+                    character_index = character_table.inverse.get(character_index, -1)
 
-                    character_table.put(i, character_index)
-                else:
-                    character_table.put(i, character)
-        except struct.error as e:
-            raise FormatError("The given fpd character table is invalid.") from e
+                character_table.put(i, character_index)
+            else:
+                character_table.put(i, character)
 
         return cls(character_table)
 
@@ -149,12 +165,22 @@ class Fpd(BaseFormat):
             fp:
                 The file-like object in binary mode that fpd character table will be
                 encoded to.
+
+        Raises:
+            FormatError:
+                A character in the fpd character table cannot be encoded to fmp because
+                the character is not in the Basic Multilingual Plane.
         """
         for character in self.entries.inverse:
             while isinstance(character, int):
                 character = self.entries[character]
 
-            fp.write(character.encode())
+            try:
+                fp.write(character.encode())
+            except UnicodeEncodeError as e:
+                raise FormatError(
+                    f"Character '{character}' cannot be encoded to fpd"
+                ) from e
 
     @classmethod
     def read_csv(cls, fp: TextIO) -> Fpd:
@@ -167,7 +193,7 @@ class Fpd(BaseFormat):
 
         Raises:
             FormatError:
-                The CSV data does not have FPD_CSV_HEADER as it's headers.
+                The CSV data does not have `FPD_CSV_HEADER` as it's headers.
 
         Returns:
             A fpd character table.
@@ -207,7 +233,7 @@ class Fpd(BaseFormat):
                 The file-like object to write the character table as a CSV file.
         """
 
-        def fmp_serializer(
+        def fpd_serializer(
             __: type, ___: attrs.Attribute[Any], value: str | int
         ) -> str:
             if isinstance(value, int):
@@ -224,5 +250,5 @@ class Fpd(BaseFormat):
                 character = self.entries[character]
 
             csv_writer.writerow(
-                attrs.asdict(character, value_serializer=fmp_serializer)
+                attrs.asdict(character, value_serializer=fpd_serializer)
             )

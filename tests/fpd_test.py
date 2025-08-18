@@ -104,12 +104,23 @@ def test_fpd_exceptions(lazy_datadir: Path) -> None:
     """Test rasing exceptions when the input files are in the invalid format."""
     invalid_fpd = lazy_datadir / "invalid.fpd"
     invalid_csv = lazy_datadir / "invalid.csv"
+    surrogate_csv = lazy_datadir / "surrogate.csv"
+    surrogate_fpd = lazy_datadir / "surrogate.fpd"
 
     with invalid_fpd.open("rb") as fpd_fp, pytest.raises(FormatError):
         Fpd.decode(fpd_fp)
 
     with (
-        invalid_csv.open("r", encoding="utf-8", newline="") as csv_fp,
+        invalid_csv.open("r", encoding="utf-8", newline="") as invalid_csv_fp,
         pytest.raises(FormatError),
     ):
-        Fpd.read_csv(csv_fp)
+        Fpd.read_csv(invalid_csv_fp)
+
+    with (
+        surrogate_csv.open("r", encoding="utf-8", newline="") as surrogate_csv_fp,
+        surrogate_fpd.open("wb") as surrogate_fpd_fp,
+        pytest.raises(FormatError) as exc_info,
+    ):
+        Fpd.read_csv(surrogate_csv_fp).encode(surrogate_fpd_fp)
+
+    assert isinstance(exc_info.value.__cause__, UnicodeEncodeError)
