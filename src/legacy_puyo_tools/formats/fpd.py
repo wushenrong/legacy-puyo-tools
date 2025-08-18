@@ -11,9 +11,9 @@ Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 import csv
+import struct
 from collections.abc import Generator
 from io import StringIO
-from struct import pack, unpack
 from typing import Any, BinaryIO, TextIO, TypeAlias
 
 import attrs
@@ -53,9 +53,10 @@ class FpdCharacter:
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
 
-        :return: The character's Unicode code point in little-endian and its width.
+        Returns:
+            The character's Unicode code point in little-endian and its width.
         """
-        return pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
+        return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
 
 
 FpdCharacterTable: TypeAlias = OrderedBidict[int, int | FpdCharacter]
@@ -71,7 +72,7 @@ class Fpd(BaseFormat):
     `0x06`, etc.
     """
 
-    entries: OrderedBidict[int, int | FpdCharacter]
+    entries: FpdCharacterTable
     """A ordered bidirectional dictionary of fpd character entries."""
 
     def __getitem__(self, index: int) -> str:
@@ -102,41 +103,52 @@ class Fpd(BaseFormat):
     def decode(cls, fp: BinaryIO) -> Fpd:
         """Decode fpd character table from a file-like object.
 
-        :param fp: A file-like object in binary mode containing a fpd character table.
+        Arguments:
+            fp:
+                A file-like object in binary mode containing a fpd character table.
 
-        :raises FormatError: The given fpd character table contains entries that does
-            not conform to the fpd character format.
+        Raises:
+            FormatError:
+                The given fpd character table contains entries that does not conform to
+                the fpd character format.
 
-        :return: A fpd character table.
+        Returns:
+            A fpd character table.
         """
 
         def read_fpd_entries() -> Generator[tuple[int, int]]:
             while entry := fp.read(FPD_ENTRY_LENGTH):
-                if len(entry) != FPD_ENTRY_LENGTH:
-                    raise FormatError("The given fpd character table is invalid.")
+                yield struct.unpack(FPD_ENTRY_FORMAT, entry)
 
-                yield unpack(FPD_ENTRY_FORMAT, entry)
+        character_table: FpdCharacterTable = OrderedBidict()
 
-        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
+        try:
+            for i, (code_point, width) in enumerate(read_fpd_entries()):
+                character = FpdCharacter(chr(code_point), width)
 
-        for i, (code_point, width) in enumerate(read_fpd_entries()):
-            character = FpdCharacter(chr(code_point), width)
+                if (
+                    character_index := character_table.inverse.get(character, -1)
+                ) != -1:
+                    while character_table.inverse.get(character_index, -1) != -1:
+                        character_index = character_table.inverse.get(
+                            character_index, -1
+                        )
 
-            if (character_index := character_table.inverse.get(character, -1)) != -1:
-                while character_table.inverse.get(character_index, -1) != -1:
-                    character_index = character_table.inverse.get(character_index, -1)
-
-                character_table.put(i, character_index)
-            else:
-                character_table.put(i, character)
+                    character_table.put(i, character_index)
+                else:
+                    character_table.put(i, character)
+        except struct.error as e:
+            raise FormatError("The given fpd character table is invalid.") from e
 
         return cls(character_table)
 
     def encode(self, fp: BinaryIO) -> None:
         """Encode the fpd character table to a file-like object.
 
-        :param fp: The file-like object in binary mode that fpd character table will be
-            encoded to.
+        Arguments:
+            fp:
+                The file-like object in binary mode that fpd character table will be
+                encoded to.
         """
         for character in self.entries.inverse:
             while isinstance(character, int):
@@ -148,14 +160,19 @@ class Fpd(BaseFormat):
     def read_csv(cls, fp: TextIO) -> Fpd:
         """Read a formatted fpd character table from a CSV file.
 
-        :param fp: A file-like object in text mode to a CSV file that has a list of
-            characters and widths.
+        Arguments:
+            fp:
+                A file-like object in text mode to a CSV file that has a list of
+                characters and widths.
 
-        :raises FormatError: The CSV data does not have FPD_CSV_HEADER as it's headers.
+        Raises:
+            FormatError:
+                The CSV data does not have FPD_CSV_HEADER as it's headers.
 
-        :return: A fpd character table.
+        Returns:
+            A fpd character table.
         """
-        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
+        character_table: FpdCharacterTable = OrderedBidict()
 
         csv_reader = csv.DictReader(fp)
 
@@ -185,7 +202,9 @@ class Fpd(BaseFormat):
     def write_csv(self, fp: TextIO) -> None:
         """Write the fpd character table to a file-like object.
 
-        :param fp: The file-like object to write the character table as a CSV file.
+        Arguments:
+            fp:
+                The file-like object to write the character table as a CSV file.
         """
 
         def fmp_serializer(

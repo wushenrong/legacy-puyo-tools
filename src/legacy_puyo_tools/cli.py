@@ -29,6 +29,7 @@ _T = TypeVar("_T", bound=Callable[..., Any])
 
 
 def input_argument(help_text: str) -> Callable[[_T], _T]:
+    """Return an argument that gets file from a path."""
     return cloup.argument(
         "input_file", help=help_text, type=cloup.Path(path_type=Path, dir_okay=False)
     )

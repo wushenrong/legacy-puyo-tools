@@ -18,20 +18,6 @@ project = config.name
 author = config.author
 release = version = config.version
 
-# TODO: Remove typing extensions when migrating to Python 3.11.
-autodoc2_replace_annotations = [
-    ("typing_extensions.Self", "typing.Self"),
-    ("legacy_puyo_tools.typing.StrPath", "StrPath"),
-    ("legacy_puyo_tools.typing.FmpSize", "FmpSize"),
-    ("legacy_puyo_tools.typing.FmpCharacter", "FmpCharacter"),
-    ("legacy_puyo_tools.typing.MtxString", "MtxString"),
-    ("legacy_puyo_tools.formats.base.Format", "Format"),
-    ("legacy_puyo_tools.formats.fmp.Fmp", "Fmp"),
-    ("legacy_puyo_tools.formats.fpd.FpdCharacter", "FpdCharacter"),
-    ("legacy_puyo_tools.formats.fpd.Fpd", "Fpd"),
-    ("legacy_puyo_tools.formats.mtx.Mtx", "Mtx"),
-]
-
 # Links to other documentation
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),

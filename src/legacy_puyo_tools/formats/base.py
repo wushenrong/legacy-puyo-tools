@@ -23,10 +23,12 @@ class BaseFormat(Protocol):
     def decode(cls, fp: BinaryIO) -> BaseFormat:
         """Decode the implemented format from a file-like object.
 
-        :param fp: A file-like object in binary mode containing data that follows the
-            implemented format.
+        Arguments:
+            fp: A file-like object in binary mode containing data that follows the
+                implemented format.
 
-        :return: The object representation of the implemented format.
+        Returns:
+            The object representation of the implemented format.
         """
         raise NotImplementedError
 
@@ -34,7 +36,9 @@ class BaseFormat(Protocol):
     def encode(self, fp: BinaryIO) -> None:
         """Encode the implemented format to to a file-like object.
 
-        :param fp: A file-like object in binary mode that the implemented will be
-            encoded to.
+        Arguments:
+            fp:
+                A file-like object in binary mode that the implemented will be
+                encoded to.
         """
         raise NotImplementedError
