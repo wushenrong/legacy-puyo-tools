@@ -15,6 +15,7 @@ lifetime.
 ### Added
 
 - Option to orient the fmp character graphics table in portrait or landscape.
+- Exceptions when Unicode characters is unable to encode to fpd.
 
 ### Changed
 
