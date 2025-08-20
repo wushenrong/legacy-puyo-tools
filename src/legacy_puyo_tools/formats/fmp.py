@@ -72,7 +72,7 @@ class Fmp(BaseFormat):
                 A file-like object in binary mode containing a fpd character table.
             font_size:
                 The size of the character graphics in pixels, defaults to
-                FMP_DEFAULT_FONT_SIZE.
+                `FMP_DEFAULT_FONT_SIZE`.
 
         Returns:
             A fmp character graphics table.
@@ -133,17 +133,18 @@ class Fmp(BaseFormat):
         font_size: FmpSize = FMP_DEFAULT_FONT_SIZE,
         padding: int = FMP_DEFAULT_PADDING,
     ) -> Fmp:
-        """Write the fmp character graphics table from a Pillow Image to fmp.
+        """Write the fmp character graphics table from a Pillow `Image` to fmp.
 
         Arguments:
-            im: An image object from the Pillow library, non-black and white images
+            im:
+                An `Image` object from the Pillow library, non-black and white images
                 will be converted using Pillow's default dithering options.
             font_size:
                 The size of the character graphics in pixels, defaults to
-                :py:const:`FMP_DEFAULT_FONT_SIZE`.
+                `FMP_DEFAULT_FONT_SIZE`.
             padding:
                 The amount of padding around the characters in pixels, defaults to
-                :py:const:`FMP_DEFAULT_PADDING`.
+                `FMP_DEFAULT_PADDING`.
 
         Raises:
             ValueError:
@@ -190,9 +191,9 @@ class Fmp(BaseFormat):
         Arguments:
             padding:
                 The amount of padding around the characters in pixels, defaults to
-                :py:const:`FMP_DEFAULT_PADDING`.
+                `FMP_DEFAULT_PADDING`.
             orientation:
-                Orientation of the character table, defaults to "portrait".
+                Orientation of the character table, defaults to `"portrait"`.
 
         Returns:
             An image object that contains the fmp character graphics table.

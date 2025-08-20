@@ -34,7 +34,7 @@ other Puyo Puyo games.
 
 | Format | Conversion | Creation | Testing | Documentation |
 | ------ | ---------- | -------- | ------- | ------------- |
-| `fmp`  | ✅        | ✅       | ❌      | ✅           |
+| `fmp`  | ✅        | ✅       | ✅      | ✅           |
 | `fnt`  | ❌        | ❌       | ❌      | ❌           |
 | `fpd`  | ✅        | ✅       | ✅      | ✅           |
 | `mtx`  | ⚠️        | ❌       | ❌      | ❌           |
