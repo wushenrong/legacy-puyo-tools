@@ -29,6 +29,7 @@ lifetime.
 
 - Methods that take in string paths to read and write files.
 - Option to specify the maximum width for fmp character graphics table.
+- Support for Python 3.10 and 3.11.
 
 ## 2025.8.2
 

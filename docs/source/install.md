@@ -1,7 +1,7 @@
 # Installation
 
-Install [Python](https://www.python.org/) 3.10 or later, preferably the latest
-version.
+Install [Python](https://www.python.org/), we support the last three current
+versions of Python, but the latest version is preferred.
 
 `legacy-puyo-tools` is published on PyPI. It is recommended to install external
 Python packages into a virtual environment so they do not conflict with each
