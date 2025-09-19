@@ -16,6 +16,7 @@ lifetime.
 
 - Option to orient the fmp character graphics table in portrait or landscape.
 - Exceptions when Unicode characters is unable to encode to fpd.
+- Support for 3.14.
 
 ### Changed
 
@@ -24,12 +25,14 @@ lifetime.
 - Moved types back into formats instead being in a typing module.
 - Convert non-black and white images instead of raising an exception.
 - Use PNG as the default image format instead of BMP.
+- Split the cli into create and convert commands.
 
 ### Removed
 
 - Methods that take in string paths to read and write files.
 - Option to specify the maximum width for fmp character graphics table.
 - Support for Python 3.10 and 3.11.
+- The ability to run the tools using runpy or `python -m`.
 
 ## 2025.8.2
 

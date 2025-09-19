@@ -11,7 +11,7 @@ format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import BinaryIO, Literal, TypeAlias
+from typing import BinaryIO, Literal
 
 import attrs
 import numpy as np
@@ -30,10 +30,10 @@ _BITS_PER_PIXEL = 4
 _BITS_PER_BYTE = 8
 _PIXELS_PER_BYTE = _BITS_PER_BYTE // _BITS_PER_PIXEL
 
-FmpSize: TypeAlias = Literal[8, 14]
+type FmpSize = Literal[8, 14]
 """The available font sizes for the fmp format in pixels."""
 
-FmpCharacter: TypeAlias = npt.NDArray[np.bool]
+type FmpCharacter = npt.NDArray[np.bool]
 """A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
 bitmap that stores the graphical data of a character in the fpd character table. A `0x0`
 and `0x1` encoding an off and on pixel respectively. Pixels are stored row by row, in
@@ -44,7 +44,7 @@ conversion using Pillow. Remember to use the numpy library instead of the standa
 library to not have a performance detriment.
 """
 
-FmpTableOrientation: TypeAlias = Literal["portrait", "landscape"]
+type FmpTableOrientation = Literal["portrait", "landscape"]
 """How the fmp character table can be orientated."""
 
 

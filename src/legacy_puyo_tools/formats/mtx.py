@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from io import StringIO
 from itertools import pairwise
-from typing import BinaryIO, TypeAlias
+from typing import BinaryIO
 
 import attrs
 from lxml import etree
@@ -38,7 +38,7 @@ MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
 MTX_SECTION_WIDTH = MTX_INT32_WIDTH
 
 
-MtxString: TypeAlias = list[int]
+type MtxString = list[int]
 """A list of indexes that points to a character in the fpd character table."""
 
 
