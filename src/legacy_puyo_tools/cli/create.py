@@ -21,11 +21,11 @@ from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 
 @cloup.group()
 @cloup.version_option()
-def create() -> None:
+def app() -> None:
     """A tool to create files used by older Puyo Puyo games."""
 
 
-@create.command(name="fmp")
+@app.command(name="fmp")
 @input_argument("Image file that contains graphical font/character data.")
 @output_option
 @fmp_option
@@ -42,7 +42,7 @@ def create_fmp(
         Fmp.read_image(im, font_size=size, padding=padding).encode(out_fp)
 
 
-@create.command(name="fpd")
+@app.command(name="fpd")
 @input_argument(f"CSV file with the following header: {','.join(FPD_CSV_HEADER)}")
 @output_option
 def create_fpd(input_file: Path, output_file: Path | None) -> None:
@@ -56,7 +56,7 @@ def create_fpd(input_file: Path, output_file: Path | None) -> None:
         Fpd.read_csv(in_fp).encode(out_fp)
 
 
-@create.command(name="mtx", show_constraints=True)
+@app.command(name="mtx", show_constraints=True)
 @input_argument("XML file that contains markup text or dialog.")
 @output_option
 @mtx_options
@@ -68,4 +68,4 @@ def create_mtx(
 
 
 if __name__ == "__main__":
-    create()
+    app()

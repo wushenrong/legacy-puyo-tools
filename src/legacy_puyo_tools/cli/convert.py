@@ -34,11 +34,11 @@ table_options = cloup.option_group(
 
 @cloup.group()
 @cloup.version_option()
-def convert() -> None:
+def app() -> None:
     """A tool to convert files used by older Puyo games to an editable format."""
 
 
-@convert.command(name="fmp")
+@app.command(name="fmp")
 @input_argument("Fmp file containing font data.")
 @output_option
 @fmp_option
@@ -59,7 +59,7 @@ def convert_fmp(
         ).save(out_path)
 
 
-@convert.command(name="fpd")
+@app.command(name="fpd")
 @input_argument("Fpd file containing character data.")
 @output_option
 def convert_fpd(input_file: Path, output_file: Path | None) -> None:
@@ -73,7 +73,7 @@ def convert_fpd(input_file: Path, output_file: Path | None) -> None:
         Fpd.decode(in_fp).write_csv(out_fp)
 
 
-@convert.command(name="mtx", show_constraints=True)
+@app.command(name="mtx", show_constraints=True)
 @input_argument("Mtx file containing Manzai text.")
 @output_option
 @mtx_options
