@@ -14,7 +14,7 @@ import csv
 import struct
 from collections.abc import Generator
 from io import StringIO
-from typing import Any, BinaryIO, TextIO, TypeAlias
+from typing import Any, BinaryIO, TextIO
 
 import attrs
 from bidict import OrderedBidict
@@ -79,7 +79,7 @@ class FpdCharacter:
             ) from e
 
 
-FpdCharacterTable: TypeAlias = OrderedBidict[int, int | FpdCharacter]
+type FpdCharacterTable = OrderedBidict[int, int | FpdCharacter]
 
 
 @attrs.define

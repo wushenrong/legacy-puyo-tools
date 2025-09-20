@@ -14,7 +14,8 @@ import pytest
 from click.testing import CliRunner
 from PIL import Image, ImageChops
 
-from legacy_puyo_tools.cli import convert_fmp, create_fmp
+from legacy_puyo_tools.cli.convert import convert_fmp
+from legacy_puyo_tools.cli.create import create_fmp
 from legacy_puyo_tools.formats.fmp import Fmp, FmpTableOrientation
 
 

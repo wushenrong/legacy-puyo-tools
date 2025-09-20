@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from legacy_puyo_tools.cli import convert_fpd, create_fpd
+from legacy_puyo_tools.cli.convert import convert_fpd
+from legacy_puyo_tools.cli.create import create_fpd
 from legacy_puyo_tools.formats.base import FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
