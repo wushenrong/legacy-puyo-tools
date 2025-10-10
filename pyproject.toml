@@ -8,7 +8,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "legacy-puyo-tools"
-version = "2025.9.19"
+version = "2025.10.10"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
@@ -28,6 +28,7 @@ classifiers = [
 
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: File Formats",
     "Topic :: Games/Entertainment :: Puzzle Games",
     "Topic :: Utilities",
