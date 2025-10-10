@@ -10,7 +10,7 @@ respectively.
 This project is still in development, expect **major breaking changes** over its
 lifetime.
 
-## Unreleased
+## 2025-10-10
 
 ### Added
 
