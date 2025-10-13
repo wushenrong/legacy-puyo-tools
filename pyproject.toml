@@ -8,7 +8,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "legacy-puyo-tools"
-version = "2025.10.10"
+version = "2025.10.10.1"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
