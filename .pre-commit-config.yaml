@@ -19,7 +19,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.11.0"
+    rev: "v2.11.1"
     hooks:
       - id: pyproject-fmt
 
@@ -32,7 +32,7 @@ repos:
           - "pylint,lint,type"
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.8
     hooks:
       - id: ruff-check
         args:
@@ -41,14 +41,14 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.18.1
+    rev: v0.20.0
     hooks:
       - id: markdownlint-cli2
         args:
           - --fix
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
 
