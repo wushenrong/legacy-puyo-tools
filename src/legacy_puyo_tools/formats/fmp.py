@@ -18,7 +18,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 
-from legacy_puyo_tools._math import find_best_ratio_divisor_pair
+from legacy_puyo_tools._math import find_medium_divisors
 from legacy_puyo_tools.formats.base import BaseFormat
 
 FMP_DEFAULT_FONT_SIZE = 14
@@ -122,8 +122,7 @@ class Fmp(BaseFormat):
                 lower_nubble, upper_nibble = pixels.tolist()
                 byte: int = (upper_nibble << _BITS_PER_PIXEL) | lower_nubble
 
-                # TODO: When updating Python to 3.11, remove for to_bytes
-                fp.write(byte.to_bytes(1, "little"))
+                fp.write(byte.to_bytes(1))
 
     @classmethod
     def read_image(
@@ -201,7 +200,7 @@ class Fmp(BaseFormat):
         # Find the optimal width and height of the character table by calculating the
         # first factors whose ratio is equal to or close to 1
         # So the character table is arranged into a square or rectangle.
-        width, height = find_best_ratio_divisor_pair(len(self.font))
+        width, height = find_medium_divisors(len(self.font))
 
         if (orientation == "portrait" and width > height) or (
             orientation == "landscape" and width < height
@@ -215,13 +214,9 @@ class Fmp(BaseFormat):
 
         for row in range(height):
             for col in range(width):
-                # TODO: Remove ignore once python-pillow/Pillow#8029 and
-                #       python-pillow/Pillow#8362 gets resolved and merged
-                buf.putdata(  # pyright: ignore[reportUnknownMemberType]
-                    # A way that tries to flatten multidimensional arrays without making
-                    # additional copies
-                    np.pad(self.font[(row * width) + col], padding).reshape(-1)
-                )
+                # A way that tries to flatten multidimensional arrays without making
+                # additional copies
+                buf.putdata(np.pad(self.font[(row * width) + col], padding).reshape(-1))
                 img.paste(buf, (col * graphic_size, row * graphic_size))
 
         return img

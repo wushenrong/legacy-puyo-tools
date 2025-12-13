@@ -9,15 +9,23 @@
 from math import isqrt
 
 
-def find_best_ratio_divisor_pair(n: int) -> tuple[int, int]:
-    """Return the best ratio divisor pair of a number."""
-    if n < 0:
-        return (1, n)
+def find_medium_divisors(n: int) -> tuple[int, int]:
+    """Return the medium divisors of an integer.
+
+    Raises:
+        ValueError: The input is not a positive integer.
+        AssertionError: Unreachable due to the identity property.
+    """
+    if n <= 0:
+        raise ValueError(f"{n} is not a natural number.")
 
     for i in range(isqrt(n), 0, -1):
         d, r = divmod(n, i)
 
         if r == 0:
-            return (i, d)
+            return i, d
 
-    return (0, 0)
+    raise AssertionError(
+        "This should not throw due to the following: All natural numbers will "
+        "have a factor of 1 and itself by the identity property."
+    )

@@ -20,7 +20,7 @@ rewrite them in Python:
 This project also aims to document how these formats work, so others can
 reimplement them if needed.
 
-## Progress Report
+## Support Progress
 
 Current progress on implementing conversion and creation support for formats
 that are used by the older Puyo Puyo games. Includes regression testing and
@@ -28,13 +28,48 @@ documentation. Additional formats may be added if there is a need to modify
 other Puyo Puyo games.
 
 -   Legend:
-    - ✅ Fully Complete
-    - ⚠️ Partially Complete
-    - ❌ Incomplete
+    - ✅ Fully Supported
+    - ⚠️ Partially Supported
+    - ❌ Unsupported
 
-| Format | Conversion | Creation | Testing | Documentation |
-| ------ | ---------- | -------- | ------- | ------------- |
-| `fmp`  | ✅        | ✅       | ✅      | ✅           |
-| `fnt`  | ❌        | ❌       | ❌      | ❌           |
-| `fpd`  | ✅        | ✅       | ✅      | ✅           |
-| `mtx`  | ⚠️        | ❌       | ❌      | ❌           |
+<table>
+    <thead>
+        <tr>
+            <th scope="col">Format</th>
+            <th scope="col">Conversion</th>
+            <th scope="col">Creation</th>
+            <th scope="col">Testing</th>
+            <th scope="col">Documentation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row"><code>fmp</code></th>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+        </tr>
+        <tr>
+            <th scope="row"><code>fnt</code></th>
+            <td>❌</td>
+            <td>❌</td>
+            <td>❌</td>
+            <td>❌</td>
+        </tr>
+        <tr>
+            <th scope="row"><code>fpd</code></th>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+        </tr>
+        <tr>
+            <th scope="row"><code>mtx</code></th>
+            <td>⚠️</td>
+            <td>❌</td>
+            <td>❌</td>
+            <td>❌</td>
+        </tr>
+    </tbody>
+</table>

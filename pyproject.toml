@@ -40,7 +40,7 @@ dependencies = [
     "cloup>=3.0.7",
     "lxml>=6",
     "numpy>=2.0.2",
-    "pillow>=11.3",
+    "pillow>=12",
 ]
 urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHANGELOG.md"
 urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"

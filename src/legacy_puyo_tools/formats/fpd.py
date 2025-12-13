@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import csv
 import struct
-from collections.abc import Generator
 from io import StringIO
 from typing import Any, BinaryIO, TextIO
 
@@ -35,9 +34,16 @@ FPD_CSV_HEADER = ["character", "width"]
 class FpdCharacter:
     """A fpd character entry.
 
-    A fpd character is a binary entry that is 3 bytes long and formatted as follows:
+    A fpd character is a binary entry that is 3 bytes long and formatted as follows
     `XX XX YY`. Where `XX XX` is the character's Unicode code point in little-endian and
-    `YY` is the width of the character.
+    `YY` is the width of the character. Or the following struct:
+
+    ```
+    {
+        char16_t character;
+        uint8_t width;
+    }
+    ```
 
     The character encoding can be considered to be UTF-16 little-endian. However, the
     `fpd` only can only store characters from the Basic Multilingual Plane or `U+0000`
@@ -134,18 +140,18 @@ class Fpd(BaseFormat):
 
         Returns:
             A fpd character table.
-        """  # noqa: DOC502
-
-        def read_fpd_entries() -> Generator[tuple[int, int]]:
-            while entry := fp.read(FPD_ENTRY_LENGTH):
-                if len(entry) != FPD_ENTRY_LENGTH:
-                    raise FormatError("The given fpd character table is invalid.")
-
-                yield struct.unpack(FPD_ENTRY_FORMAT, entry)
-
+        """
         character_table: FpdCharacterTable = OrderedBidict()
 
-        for i, (code_point, width) in enumerate(read_fpd_entries()):
+        try:
+            fpd_characters = struct.iter_unpack(FPD_ENTRY_FORMAT, fp.read())
+        except struct.error as e:
+            raise FormatError(
+                "The given fpd character table contains entries that does not "
+                "conform to the fpd character format."
+            ) from e
+
+        for i, (code_point, width) in enumerate(fpd_characters):
             character = FpdCharacter(chr(code_point), width)
 
             if (character_index := character_table.inverse.get(character, -1)) != -1:

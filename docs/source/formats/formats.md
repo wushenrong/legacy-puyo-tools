@@ -13,7 +13,14 @@ Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to convert Unicode characters into
 an index that can be used by the `mtx` for text. Each character entry in the
 `fpd` is 3 bytes long and formatted as follows: `XX XX YY`. Where `XX XX` is the
 character's Unicode code point in little-endian and `YY` is the width of the
-character.
+character. Or the following struct:
+
+```c
+{
+    char16_t character;
+    uint8_t width;
+}
+```
 
 :::{note} The character encoding can be considered to be UTF-16 little-endian.
 However, the `fpd` only can only store characters from the Basic Multilingual

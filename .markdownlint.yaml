@@ -36,6 +36,16 @@ list-marker-space:
   ul_multi: 3
   ol_multi: 2
 
+no-inline-html:
+  allowed_elements:
+    - code
+    - table
+    - tbody
+    - thead
+    - td
+    - th
+    - tr
+
 hr-style:
   style: ---
 
