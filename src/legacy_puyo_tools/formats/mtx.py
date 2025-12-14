@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from io import StringIO
 from itertools import pairwise
-from typing import BinaryIO
+from typing import BinaryIO, Literal
 
 import attrs
 from lxml import etree
@@ -28,18 +28,22 @@ from legacy_puyo_tools.formats.base import BaseFormat, FormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 MTX_ENDIAN = "little"
-MTX_IDENTIFIER = 8
-MTX_INT32_WIDTH = 4
-MTX_CHARACTER_WIDTH = 2
+MTX_LENGTH_WORD_SIZE = 4
+MTX_CHARACTER_WORD_SIZE = 2
 
-MTX_SIZE_WIDTH = MTX_INT32_WIDTH
-MTX_IDENTIFIER_WIDTH = MTX_INT32_WIDTH
-MTX_OFFSET_WIDTH = MTX_INT32_WIDTH
-MTX_SECTION_WIDTH = MTX_INT32_WIDTH
+MTX32_IDENTIFIER = 8
+MTX32_IDENTIFIER_WORD_SIZE = 4
+MTX32_OFFSET_WORD_SIZE = 4
 
+MTX64_IDENTIFIER = 16
+MTX64_IDENTIFIER_WORD_SIZE = 8
+MTX64_OFFSET_WORD_SIZE = 8
 
 type MtxString = list[int]
 """A list of indexes that points to a character in the fpd character table."""
+
+type MtxOffsetSize = Literal[32, 64]
+"""The size of the section and string offsets. Either 32 or 64 bits."""
 
 
 @attrs.define
@@ -48,67 +52,97 @@ class Mtx(BaseFormat):
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Mtx:
-        def read_bytes(size: int) -> int:
-            return int.from_bytes(fp.read(size), MTX_ENDIAN)
+        def read_bytes(word_size: int) -> int:
+            return int.from_bytes(fp.read(word_size), MTX_ENDIAN)
 
-        length = read_bytes(MTX_SIZE_WIDTH)
+        mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)
 
-        if read_bytes(MTX_OFFSET_WIDTH) != MTX_IDENTIFIER:
-            raise FormatError(
-                "The given data is not in a valid mtx format, it might be a 64bit mtx"
+        identifier_word = fp.read(MTX32_IDENTIFIER_WORD_SIZE)
+        identifier = int.from_bytes(identifier_word, MTX_ENDIAN)
+
+        # Check if the mtx uses 32 bit offsets or 64 bit offsets. Since the format is
+        # little endian and the known values are 8 or 16 for 32 and 64 respectively,
+        # we can check that the identifier is still 16 if the offset is 64 bits.
+        if identifier == MTX32_IDENTIFIER:
+            offset_word_size = MTX32_OFFSET_WORD_SIZE
+        elif (
+            identifier
+            == int.from_bytes(
+                identifier_word
+                + fp.read(MTX64_IDENTIFIER_WORD_SIZE - MTX32_IDENTIFIER_WORD_SIZE),
+                MTX_ENDIAN,
             )
+            == MTX64_IDENTIFIER
+        ):
+            offset_word_size = MTX64_OFFSET_WORD_SIZE
+        else:
+            raise FormatError("The given data is not in a valid mtx format.")
 
-        section_table_offset = read_bytes(MTX_IDENTIFIER_WIDTH)
-        string_table_offset = read_bytes(MTX_OFFSET_WIDTH)
+        section_table_offset = read_bytes(offset_word_size)
+        string_table_offset = read_bytes(offset_word_size)
 
-        sections = [
-            read_bytes(i * MTX_INT32_WIDTH)
-            for i in range(
-                (string_table_offset - section_table_offset) // MTX_INT32_WIDTH
+        sections: list[int] = [string_table_offset]
+
+        sections.extend(
+            read_bytes(offset_word_size)
+            for _ in range(
+                ((string_table_offset - section_table_offset) // offset_word_size) - 1
             )
-        ]
+        )
 
-        # Add the length to the sections so we can read to end of stream
-        sections.append(length)
+        # Add the mtx length to the sections so we can read to end of stream
+        sections.append(mtx_length)
 
         strings: list[MtxString] = []
 
         for current_string_offset, next_string_offset in pairwise(sections):
             strings.append([
-                read_bytes(MTX_CHARACTER_WIDTH)
+                read_bytes(MTX_CHARACTER_WORD_SIZE)
                 for _ in range(
-                    (next_string_offset - current_string_offset) // MTX_CHARACTER_WIDTH
+                    (next_string_offset - current_string_offset)
+                    // MTX_CHARACTER_WORD_SIZE
                 )
             ])
 
         return cls(strings)
 
-    def encode(self, fp: BinaryIO) -> None:
+    def encode(self, fp: BinaryIO, *, offset_size: MtxOffsetSize = 32) -> None:
         def write_bytes(data: int, length: int) -> None:
             fp.write(data.to_bytes(length, MTX_ENDIAN))
 
-        header_widths = [MTX_SIZE_WIDTH, MTX_IDENTIFIER_WIDTH, MTX_OFFSET_WIDTH]
+        if offset_size == 64:
+            offset_word_size = MTX64_OFFSET_WORD_SIZE
+            offset_identifier = MTX64_IDENTIFIER
+        else:
+            offset_word_size = MTX32_OFFSET_WORD_SIZE
+            offset_identifier = MTX32_IDENTIFIER
+
+        # mtx_length, mtx_identifier, mtx_section_offset
+        header_widths = [MTX_LENGTH_WORD_SIZE, offset_word_size, offset_word_size]
         header_length = sum(header_widths)
 
-        mtx_length = header_length + MTX_SECTION_WIDTH * (len(self.strings))
+        # mtx_string_offsets
+        mtx_length = header_length + (offset_word_size * len(self.strings))
 
         string_offsets: list[int] = []
-        string_lengths = [len(string) * MTX_CHARACTER_WIDTH for string in self.strings]
+        string_lengths = [
+            len(string) * MTX_CHARACTER_WORD_SIZE for string in self.strings
+        ]
 
         for string_length in string_lengths:
             string_offsets.append(mtx_length)
             mtx_length += string_length
 
-        write_bytes(mtx_length, MTX_SIZE_WIDTH)
-        write_bytes(MTX_IDENTIFIER, MTX_IDENTIFIER_WIDTH)
-        write_bytes(header_length, MTX_OFFSET_WIDTH)
+        write_bytes(mtx_length, MTX_LENGTH_WORD_SIZE)
+        write_bytes(offset_identifier, offset_word_size)
+        write_bytes(header_length, offset_word_size)
 
         for offset in string_offsets:
-            write_bytes(offset, MTX_SECTION_WIDTH)
+            write_bytes(offset, offset_word_size)
 
         for string in self.strings:
             for character in string:
-                write_bytes(character, MTX_CHARACTER_WIDTH)
+                write_bytes(character, MTX_CHARACTER_WORD_SIZE)
 
     def write_xml(self, fpd: Fpd) -> bytes:
         root = etree.Element("mtx")

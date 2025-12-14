@@ -10,12 +10,26 @@ respectively.
 This project is still in development, expect **major breaking changes** over its
 lifetime.
 
+## Unreleased
+
+### Added
+
+- Support for 64 bit offsets for `mtx`.
+
+### Changed
+
+- Internal functions to raise exceptions if our expectations are somehow wrong.
+
+### Removed
+
+- Unneeded arguments that is leftover from Python 3.11.
+
 ## 2025-10-10
 
 ### Added
 
-- Option to orient the fmp character graphics table in portrait or landscape.
-- Exceptions when Unicode characters is unable to encode to fpd.
+- Option to orient the `fmp` character graphics table in portrait or landscape.
+- Exceptions when Unicode characters is unable to encode to `fpd`.
 - Support for 3.14.
 
 ### Changed
@@ -30,7 +44,7 @@ lifetime.
 ### Removed
 
 - Methods that take in string paths to read and write files.
-- Option to specify the maximum width for fmp character graphics table.
+- Option to specify the maximum width for `fmp` character graphics table.
 - Support for Python 3.10 and 3.11.
 - The ability to run the tools using runpy or `python -m`.
 
