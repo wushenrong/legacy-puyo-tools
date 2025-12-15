@@ -5,4 +5,4 @@ Thanks to the following people and projects who helped to contribute to
 
 -   @nickworonekin for creating
     [Puyo Text Editor](https://github.com/nickworonekin/puyo-text-editor).
--   @52871299hzy for contributing information about the `fmp` format.
+-   @52871299hzy for contributing information about the `fmp` file format.

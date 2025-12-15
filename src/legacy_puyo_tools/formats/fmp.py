@@ -4,13 +4,15 @@
 
 """Fmp conversion tool for older Puyo games.
 
-This module supports the encoding and decoding of the fmp format in tandem with the fpd
-format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
+This module supports the encoding and decoding of the fmp file format in tandem with the
+fpd file format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 7.
 """
 
 from __future__ import annotations
 
+import io
 from collections.abc import Generator
+from os import SEEK_END
 from typing import BinaryIO, Literal
 
 import attrs
@@ -19,7 +21,7 @@ import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools._math import find_medium_divisors
-from legacy_puyo_tools.formats.base import BaseFormat
+from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
 FMP_DEFAULT_FONT_SIZE = 14
 """The default character graphics size used by manzais in pixels."""
@@ -49,7 +51,7 @@ type FmpTableOrientation = Literal["portrait", "landscape"]
 
 
 @attrs.define
-class Fmp(BaseFormat):
+class Fmp(BaseFileFormat):
     """A fmp character graphics table.
 
     The fmp stores a bitmap graphic table in which each graphic correspond to a
@@ -74,13 +76,31 @@ class Fmp(BaseFormat):
                 The size of the character graphics in pixels, defaults to
                 `FMP_DEFAULT_FONT_SIZE`.
 
+        Raises:
+            io.UnsupportedOperation:
+                The file handler does not support seek operations.
+            FileFormatError:
+                The size of the fmp is not correct for the given font size.
+
         Returns:
             A fmp character graphics table.
         """
+        if not fp.seekable():
+            raise io.UnsupportedOperation(
+                "Unable to perform seek operations on file handler."
+            )
+
         bytes_width = font_size // (_PIXELS_PER_BYTE)
 
         # Accounting for the upper and lower half of the font
         character_size = (bytes_width**2) * 2
+
+        if fp.seek(0, SEEK_END) % character_size != 0:
+            raise FileFormatError(
+                "The size of the fmp is incorrect for the given font size."
+            )
+
+        fp.seek(0)
 
         def read_graphic() -> Generator[bytes]:
             while graphic := fp.read(character_size):

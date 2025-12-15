@@ -16,6 +16,7 @@ from PIL import Image, ImageChops
 
 from legacy_puyo_tools.cli.convert import convert_fmp
 from legacy_puyo_tools.cli.create import create_fmp
+from legacy_puyo_tools.formats.base import FileFormatError
 from legacy_puyo_tools.formats.fmp import Fmp, FmpTableOrientation
 
 
@@ -107,6 +108,7 @@ def test_fmp_creation(
 
 def test_fmp_exceptions(lazy_datadir: Path) -> None:
     """Test rasing exceptions when the inputs are incorrect."""
+    test_fmp = lazy_datadir / "colored_ark.fmp"
     test_image = lazy_datadir / "colored_ark.png"
 
     with (
@@ -116,3 +118,6 @@ def test_fmp_exceptions(lazy_datadir: Path) -> None:
         Image.open(test_image) as im,
     ):
         Fmp.read_image(im, font_size=8)
+
+    with pytest.raises(FileFormatError), test_fmp.open(mode="rb") as fp:
+        Fmp.decode(fp, font_size=8)

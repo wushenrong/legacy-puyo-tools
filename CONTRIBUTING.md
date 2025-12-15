@@ -52,7 +52,7 @@ The use of AI is acceptable as it follows guidelines:
     generated code does.
 4.  You have reviewed and modified the generated code.
 5.  All tests are run and passes regressions for both conversion and creation of
-    formats.
+    file formats.
 
 Failure to follow this guideline will result in a warning and requires a
 comprehensive understanding of the code submitted. If the comprehensive check

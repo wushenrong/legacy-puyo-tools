@@ -15,7 +15,7 @@ from click.testing import CliRunner
 
 from legacy_puyo_tools.cli.convert import convert_fpd
 from legacy_puyo_tools.cli.create import create_fpd
-from legacy_puyo_tools.formats.base import FormatError
+from legacy_puyo_tools.formats.base import FileFormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 
@@ -108,19 +108,19 @@ def test_fpd_exceptions(lazy_datadir: Path) -> None:
     surrogate_csv = lazy_datadir / "surrogate.csv"
     surrogate_fpd = lazy_datadir / "surrogate.fpd"
 
-    with invalid_fpd.open("rb") as fpd_fp, pytest.raises(FormatError):
+    with invalid_fpd.open("rb") as fpd_fp, pytest.raises(FileFormatError):
         Fpd.decode(fpd_fp)
 
     with (
         invalid_csv.open("r", encoding="utf-8", newline="") as invalid_csv_fp,
-        pytest.raises(FormatError),
+        pytest.raises(FileFormatError),
     ):
         Fpd.read_csv(invalid_csv_fp)
 
     with (
         surrogate_csv.open("r", encoding="utf-8", newline="") as surrogate_csv_fp,
         surrogate_fpd.open("wb") as surrogate_fpd_fp,
-        pytest.raises(FormatError) as exc_info,
+        pytest.raises(FileFormatError) as exc_info,
     ):
         Fpd.read_csv(surrogate_csv_fp).encode(surrogate_fpd_fp)
 

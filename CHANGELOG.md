@@ -34,7 +34,7 @@ lifetime.
 
 ### Changed
 
-- Use a CSV file instead of a Unicode text file for a human editable format.
+- Use a CSV file instead of a Unicode text file for a human editable file format.
 - Rewrite decoders to take in file-like objects instead of the entire file.
 - Moved types back into formats instead being in a typing module.
 - Convert non-black and white images instead of raising an exception.

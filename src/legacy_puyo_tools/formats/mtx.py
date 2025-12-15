@@ -17,14 +17,16 @@ supports Puyo Puyo 7 and might support Puyo Puyo! 15th Anniversary.
 
 from __future__ import annotations
 
+import io
 from io import StringIO
 from itertools import pairwise
+from os import SEEK_END
 from typing import BinaryIO, Literal
 
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 MTX_ENDIAN = "little"
@@ -47,15 +49,22 @@ type MtxOffsetSize = Literal[32, 64]
 
 
 @attrs.define
-class Mtx(BaseFormat):
+class Mtx(BaseFileFormat):
     strings: list[MtxString]
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Mtx:
-        def read_bytes(word_size: int) -> int:
-            return int.from_bytes(fp.read(word_size), MTX_ENDIAN)
+        if not fp.seekable():
+            raise io.UnsupportedOperation(
+                "Unable to perform seek operations on file handler."
+            )
 
         mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)
+
+        if fp.seek(0, SEEK_END) % mtx_length != 0:
+            raise FileFormatError("The size of the mtx is incorrect.")
+
+        fp.seek(MTX_LENGTH_WORD_SIZE)
 
         identifier_word = fp.read(MTX32_IDENTIFIER_WORD_SIZE)
         identifier = int.from_bytes(identifier_word, MTX_ENDIAN)
@@ -76,7 +85,10 @@ class Mtx(BaseFormat):
         ):
             offset_word_size = MTX64_OFFSET_WORD_SIZE
         else:
-            raise FormatError("The given data is not in a valid mtx format.")
+            raise FileFormatError("The given data is not in a valid mtx format.")
+
+        def read_bytes(word_size: int) -> int:
+            return int.from_bytes(fp.read(word_size), MTX_ENDIAN)
 
         section_table_offset = read_bytes(offset_word_size)
         string_table_offset = read_bytes(offset_word_size)
@@ -107,9 +119,6 @@ class Mtx(BaseFormat):
         return cls(strings)
 
     def encode(self, fp: BinaryIO, *, offset_size: MtxOffsetSize = 32) -> None:
-        def write_bytes(data: int, length: int) -> None:
-            fp.write(data.to_bytes(length, MTX_ENDIAN))
-
         if offset_size == 64:
             offset_word_size = MTX64_OFFSET_WORD_SIZE
             offset_identifier = MTX64_IDENTIFIER
@@ -132,6 +141,9 @@ class Mtx(BaseFormat):
         for string_length in string_lengths:
             string_offsets.append(mtx_length)
             mtx_length += string_length
+
+        def write_bytes(data: int, length: int) -> None:
+            fp.write(data.to_bytes(length, MTX_ENDIAN))
 
         write_bytes(mtx_length, MTX_LENGTH_WORD_SIZE)
         write_bytes(offset_identifier, offset_word_size)

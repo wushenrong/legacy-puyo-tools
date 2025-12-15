@@ -4,8 +4,8 @@
 
 """Fpd conversion tool for older Puyo games.
 
-This module supports the encoding and decoding of the fpd format used by Puyo Puyo! 15th
-Anniversary and Puyo Puyo 7.
+This module supports the encoding and decoding of the fpd file format used by Puyo Puyo!
+15th Anniversary and Puyo Puyo 7.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import Any, BinaryIO, TextIO
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
 FPD_ENTRY_LENGTH = 3
 """The length of a fpd character entry in bytes."""
@@ -67,8 +67,8 @@ class FpdCharacter:
 
         Raises:
             UnicodeEncodeError:
-                The character is not able to encode to UCS-2 because it is not in the
-                Basic Multilingual Plane, or a code point from `U+0000` to `U+FFFF`.
+                The character is not in the Basic Multilingual Plane, or a code point
+                from `U+0000` to `U+FFFF`.
 
         Returns:
             The character's Unicode code point in little-endian and its width.
@@ -77,10 +77,10 @@ class FpdCharacter:
             return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
         except struct.error as e:
             raise UnicodeEncodeError(
-                "UCS-2",
+                "UTF-16",
                 self.character,
-                -1,
-                -1,
+                0,
+                1,
                 "Character is not in the BMP or a code point from U+0000 to U+FFFF",
             ) from e
 
@@ -89,7 +89,7 @@ type FpdCharacterTable = OrderedBidict[int, int | FpdCharacter]
 
 
 @attrs.define
-class Fpd(BaseFormat):
+class Fpd(BaseFileFormat):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each
@@ -134,7 +134,7 @@ class Fpd(BaseFormat):
                 A file-like object in binary mode containing a fpd character table.
 
         Raises:
-            FormatError:
+            FileFormatError:
                 The given fpd character table contains entries that does not conform to
                 the fpd character format.
 
@@ -146,7 +146,7 @@ class Fpd(BaseFormat):
         try:
             fpd_characters = struct.iter_unpack(FPD_ENTRY_FORMAT, fp.read())
         except struct.error as e:
-            raise FormatError(
+            raise FileFormatError(
                 "The given fpd character table contains entries that does not "
                 "conform to the fpd character format."
             ) from e
@@ -173,7 +173,7 @@ class Fpd(BaseFormat):
                 encoded to.
 
         Raises:
-            FormatError:
+            FileFormatError:
                 A character in the fpd character table cannot be encoded to fmp because
                 the character is not in the Basic Multilingual Plane.
         """
@@ -184,7 +184,7 @@ class Fpd(BaseFormat):
             try:
                 fp.write(character.encode())
             except UnicodeEncodeError as e:
-                raise FormatError(
+                raise FileFormatError(
                     f"Character '{character}' cannot be encoded to fpd"
                 ) from e
 
@@ -198,7 +198,7 @@ class Fpd(BaseFormat):
                 characters and widths.
 
         Raises:
-            FormatError:
+            FileFormatError:
                 The CSV data does not have `FPD_CSV_HEADER` as it's headers.
 
         Returns:
@@ -209,7 +209,7 @@ class Fpd(BaseFormat):
         csv_reader = csv.DictReader(fp)
 
         if csv_reader.fieldnames != FPD_CSV_HEADER:
-            raise FormatError(
+            raise FileFormatError(
                 "The given csv does not match the following header: "
                 + ",".join(FPD_CSV_HEADER)
             )

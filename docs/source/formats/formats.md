@@ -1,4 +1,4 @@
-# Formats
+# File Formats
 
 Below are the formats that are used by the older Puyo Puyo games and how they
 are structured.
