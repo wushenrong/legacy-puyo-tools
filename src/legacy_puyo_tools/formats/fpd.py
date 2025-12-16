@@ -20,14 +20,12 @@ from bidict import OrderedBidict
 
 from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
-FPD_ENTRY_LENGTH = 3
-"""The length of a fpd character entry in bytes."""
-FPD_ENTRY_FORMAT = "<HB"
-"""The format of a fpd character entry. Two bytes for character's Unicode code point and
-one byte for character width."""
-
 FPD_CSV_HEADER = ["character", "width"]
 """The required header for a CSV file to be considered a fpd character table."""
+
+FPD_CHARACTER_ENTRY_FORMAT = "<HB"
+"""The format of a fpd character entry. Two bytes for character's Unicode code point and
+one byte for character width."""
 
 
 @attrs.frozen
@@ -74,7 +72,9 @@ class FpdCharacter:
             The character's Unicode code point in little-endian and its width.
         """
         try:
-            return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
+            return struct.pack(
+                FPD_CHARACTER_ENTRY_FORMAT, ord(self.character), self.width
+            )
         except struct.error as e:
             raise UnicodeEncodeError(
                 "UTF-16",
@@ -144,7 +144,7 @@ class Fpd(BaseFileFormat):
         character_table: FpdCharacterTable = OrderedBidict()
 
         try:
-            fpd_characters = struct.iter_unpack(FPD_ENTRY_FORMAT, fp.read())
+            fpd_characters = struct.iter_unpack(FPD_CHARACTER_ENTRY_FORMAT, fp.read())
         except struct.error as e:
             raise FileFormatError(
                 "The given fpd character table contains entries that does not "

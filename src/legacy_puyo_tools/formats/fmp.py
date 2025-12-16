@@ -11,7 +11,6 @@ fpd file format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 
 from __future__ import annotations
 
 import io
-from collections.abc import Generator
 from os import SEEK_END
 from typing import BinaryIO, Literal
 
@@ -21,6 +20,12 @@ import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools._math import find_medium_divisors
+from legacy_puyo_tools.formats._graphic import (
+    PIXELS_PER_BYTE,
+    parse_4bpp_graphic,
+    read_graphic,
+    write_4bpp_graphic,
+)
 from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
 FMP_DEFAULT_FONT_SIZE = 14
@@ -28,14 +33,10 @@ FMP_DEFAULT_FONT_SIZE = 14
 FMP_DEFAULT_PADDING = 1
 """The default padding around character graphics during conversion in pixels."""
 
-_BITS_PER_PIXEL = 4
-_BITS_PER_BYTE = 8
-_PIXELS_PER_BYTE = _BITS_PER_BYTE // _BITS_PER_PIXEL
-
 type FmpSize = Literal[8, 14]
 """The available font sizes for the fmp format in pixels."""
 
-type FmpCharacter = npt.NDArray[np.bool]
+type FmpCharacterGraphic = npt.NDArray[np.bool]
 """A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
 bitmap that stores the graphical data of a character in the fpd character table. A `0x0`
 and `0x1` encoding an off and on pixel respectively. Pixels are stored row by row, in
@@ -59,7 +60,7 @@ class Fmp(BaseFileFormat):
     in the file.
     """
 
-    font: list[FmpCharacter]
+    font: list[FmpCharacterGraphic]
     """List of character graphics whose indices matches the character it represents in
     the fpd."""
     font_size: FmpSize
@@ -90,38 +91,22 @@ class Fmp(BaseFileFormat):
                 "Unable to perform seek operations on file handler."
             )
 
-        bytes_width = font_size // (_PIXELS_PER_BYTE)
+        graphic_width = font_size // PIXELS_PER_BYTE
 
         # Accounting for the upper and lower half of the font
-        character_size = (bytes_width**2) * 2
+        graphic_size = graphic_width**2 * 2
 
-        if fp.seek(0, SEEK_END) % character_size != 0:
+        if fp.seek(0, SEEK_END) % graphic_size != 0:
             raise FileFormatError(
                 "The size of the fmp is incorrect for the given font size."
             )
 
         fp.seek(0)
 
-        def read_graphic() -> Generator[bytes]:
-            while graphic := fp.read(character_size):
-                yield graphic
-
-        graphics: list[FmpCharacter] = []
-
-        for graphic_data in read_graphic():
-            graphic: list[list[int]] = []
-
-            for row in range(0, len(graphic_data), bytes_width):
-                graphic_row: list[int] = []
-
-                for byte in graphic_data[row : row + bytes_width]:
-                    # Swap byte order as fmp is little endian
-                    lower_nibble, upper_nibble = (byte >> _BITS_PER_PIXEL), byte & 0xF
-                    graphic_row.extend((upper_nibble, lower_nibble))
-
-                graphic.append(graphic_row)
-
-            graphics.append(np.array(graphic, np.bool))
+        graphics: list[FmpCharacterGraphic] = [
+            parse_4bpp_graphic(graphic_data, graphic_width)
+            for graphic_data in read_graphic(fp, graphic_size)
+        ]
 
         return cls(graphics, font_size)
 
@@ -132,17 +117,8 @@ class Fmp(BaseFileFormat):
             fp: The file-like object in binary mode that fmp character graphics table
                 will be encoded to.
         """
-        for graphics in self.font:
-            graphic = graphics.reshape(-1)
-
-            for i in range(0, graphic.size, _PIXELS_PER_BYTE):
-                pixels = graphic[i : i + _PIXELS_PER_BYTE]
-
-                # Swap byte order as fmp is little endian
-                lower_nubble, upper_nibble = pixels.tolist()
-                byte: int = (upper_nibble << _BITS_PER_PIXEL) | lower_nubble
-
-                fp.write(byte.to_bytes(1))
+        for graphic in self.font:
+            write_4bpp_graphic(fp, graphic.reshape(-1))
 
     @classmethod
     def read_image(
@@ -184,7 +160,7 @@ class Fmp(BaseFileFormat):
         if wr != 0 or hr != 0:
             raise ValueError("The size of the character or padding is incorrect")
 
-        graphics: list[FmpCharacter] = []
+        graphics: list[FmpCharacterGraphic] = []
 
         for row in range(hd):
             for col in range(wd):

@@ -62,7 +62,10 @@ class Mtx(BaseFileFormat):
         mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)
 
         if fp.seek(0, SEEK_END) % mtx_length != 0:
-            raise FileFormatError("The size of the mtx is incorrect.")
+            raise FileFormatError(
+                f"The size of the mtx is incorrect.\nExpected: {mtx_length}\nActual: "
+                f"{fp.tell()}"
+            )
 
         fp.seek(MTX_LENGTH_WORD_SIZE)
 
