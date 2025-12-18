@@ -15,14 +15,18 @@ import io
 import struct
 from collections import OrderedDict
 from os import SEEK_END
-from typing import BinaryIO
+from typing import BinaryIO, Literal, NewType
 
 import attrs
 import numpy as np
-import numpy.typing as npt
 
-from legacy_puyo_tools.formats._graphic import PIXELS_PER_BYTE, parse_4bpp_graphic
 from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
+from legacy_puyo_tools.formats.graphic import (
+    PIXELS_PER_BYTE,
+    BitmapGraphic,
+    parse_4bpp_graphic,
+    write_4bpp_graphic,
+)
 
 FNT_HEADER_FORMAT = "<4sLLLL"
 FNT_MAGIC_NUMBER = b"FNT\0"
@@ -54,10 +58,14 @@ FNT_WII_IDENTIFIER_LENGTH = 4
 FNT_PSP_IDENTIFIER = b"MIG.00.1PSP"
 FNT_PSP_IDENTIFIER_LENGTH = 11
 
+FntCharacterGraphic = NewType("FntCharacterGraphic", BitmapGraphic)
+
+type FntFormatVersion = Literal["PTE", "NDS", "GCIX", "GVRT", "PSP"]
+
 
 @attrs.define
 class FntCharacter:
-    image: npt.NDArray[np.bool] | None
+    graphic: FntCharacterGraphic | None
     width: int
 
 
@@ -74,7 +82,7 @@ class Fnt(BaseFileFormat):
     def decode(cls, fp: BinaryIO) -> Fnt:
         if not fp.seekable():
             raise io.UnsupportedOperation(
-                "Unable to perform seek operations on file handler."
+                "Unable to perform seek operations on the file handler."
             )
 
         magic_number, font_height, font_width, character_length = struct.unpack(
@@ -87,8 +95,8 @@ class Fnt(BaseFileFormat):
                 f"format.\nExpected: {FNT_MAGIC_NUMBER}\nActual: {magic_number}"
             )
 
-        graphic_size = font_height * font_width / PIXELS_PER_BYTE
-        parse_images = False
+        graphic_size = font_height * font_width // PIXELS_PER_BYTE
+        parse_graphics = False
 
         if fp.read(FNT_NDS_IDENTIFIER_LENGTH) != FNT_NDS_IDENTIFIER:
             fnt_length = fp.seek(FNT_WII_IDENTIFIER_LENGTH * -1, SEEK_END)
@@ -96,22 +104,28 @@ class Fnt(BaseFileFormat):
             if fp.read(FNT_WII_IDENTIFIER_LENGTH) not in FNT_WII_IDENTIFIER:
                 fnt_length = fp.seek(FNT_PSP_IDENTIFIER_LENGTH * -1, SEEK_END)
 
+                # The fnt might be created by Puyo Text Editor without an identifier
                 if fp.read(FNT_PSP_IDENTIFIER_LENGTH) != FNT_PSP_IDENTIFIER:
-                    raise FileFormatError()
+                    fnt_length = fp.seek(0, SEEK_END)
 
             if fnt_length != FNT_HEADER_LENGTH + (
                 character_length * (FNT_CHARACTER_ENTRY_FORMAT_LENGTH)
             ):
-                raise FileFormatError()
+                raise FileFormatError(
+                    "The size of the fnt is incorrect based on the fnt version"
+                )
 
             fp.seek(FNT_HEADER_LENGTH)
         else:
-            parse_images = True
+            parse_graphics = True
 
             if fp.seek(0, SEEK_END) != FNT_HEADER_LENGTH + FNT_NDS_HEADER_LENGTH + (
                 character_length * (FNT_CHARACTER_ENTRY_FORMAT_LENGTH + graphic_size)
             ):
-                raise FileFormatError()
+                raise FileFormatError(
+                    "The size of the fnt is incorrect based on the fnt version"
+                )
+
             fp.seek(FNT_HEADER_LENGTH + FNT_NDS_HEADER_LENGTH)
 
         character_table: FntCharacterTable = OrderedDict()
@@ -123,11 +137,54 @@ class Fnt(BaseFileFormat):
 
             graphic = None
 
-            if parse_images:
-                graphic = parse_4bpp_graphic(fp.read(graphic_size), font_width)
+            if parse_graphics:
+                graphic = FntCharacterGraphic(
+                    parse_4bpp_graphic(fp.read(graphic_size), font_width)
+                )
 
             character_table[chr(code_point)] = FntCharacter(graphic, width)
 
         return cls(character_table, font_height, font_width)
 
-    def encode(self, fp: BinaryIO) -> None: ...
+    def encode(self, fp: BinaryIO, *, version: FntFormatVersion = "PTE") -> None:
+        fp.write(
+            struct.pack(
+                FNT_HEADER_FORMAT,
+                FNT_MAGIC_NUMBER,
+                self.font_height,
+                self.font_width,
+                len(self.font),
+            )
+        )
+
+        graphic_size = self.font_height * self.font_width // PIXELS_PER_BYTE
+        write_graphics = False
+
+        if version == "NDS" or (
+            version == "PTE"
+            and any(character.graphic for character in self.font.values())
+        ):
+            write_graphics = True
+            fp.write(FNT_NDS_IDENTIFIER)
+
+            fp.writelines(
+                b"\0" for _ in range(FNT_NDS_HEADER_LENGTH - FNT_NDS_IDENTIFIER_LENGTH)
+            )
+
+        for code_point, character in self.font.items():
+            fp.write(
+                struct.pack(
+                    FNT_CHARACTER_ENTRY_FORMAT, ord(code_point), character.width
+                )
+            )
+
+            if write_graphics:
+                if character.graphic:
+                    write_4bpp_graphic(fp, character.graphic.reshape(-1))
+                else:
+                    write_4bpp_graphic(fp, np.array([0] * graphic_size, np.bool))
+
+        if version == "PSP":
+            fp.write(FNT_PSP_IDENTIFIER)
+        elif version.encode() in FNT_WII_IDENTIFIER:
+            fp.write(version.encode())

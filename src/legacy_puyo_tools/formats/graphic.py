@@ -1,4 +1,9 @@
-from collections.abc import Generator
+# SPDX-FileCopyrightText: 2025 Samuel Wu
+#
+# SPDX-License-Identifier: MIT
+
+"""Functions to convert font graphics used by the fmp and fnt formats."""
+
 from typing import BinaryIO
 
 import numpy as np
@@ -8,13 +13,10 @@ BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
 PIXELS_PER_BYTE = BITS_PER_BYTE // BITS_PER_PIXEL
 
-
-def read_graphic(fp: BinaryIO, character_size: int) -> Generator[bytes]:
-    while graphic := fp.read(character_size):
-        yield graphic
+type BitmapGraphic = npt.NDArray[np.bool]
 
 
-def parse_4bpp_graphic(graphic_data: bytes, graphic_width: int) -> npt.NDArray[np.bool]:
+def parse_4bpp_graphic(graphic_data: bytes, graphic_width: int) -> BitmapGraphic:
     graphic: list[list[int]] = []
 
     for row in range(0, len(graphic_data), graphic_width):
@@ -30,7 +32,7 @@ def parse_4bpp_graphic(graphic_data: bytes, graphic_width: int) -> npt.NDArray[n
     return np.array(graphic, np.bool)
 
 
-def write_4bpp_graphic(fp: BinaryIO, graphic: npt.NDArray[np.bool]) -> None:
+def write_4bpp_graphic(fp: BinaryIO, graphic: BitmapGraphic) -> None:
     for i in range(0, graphic.size, PIXELS_PER_BYTE):
         pixels = graphic[i : i + PIXELS_PER_BYTE]
 

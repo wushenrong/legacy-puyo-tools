@@ -56,7 +56,7 @@ class Mtx(BaseFileFormat):
     def decode(cls, fp: BinaryIO) -> Mtx:
         if not fp.seekable():
             raise io.UnsupportedOperation(
-                "Unable to perform seek operations on file handler."
+                "Unable to perform seek operations on the file handler."
             )
 
         mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)

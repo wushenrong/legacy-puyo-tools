@@ -12,21 +12,20 @@ from __future__ import annotations
 
 import io
 from os import SEEK_END
-from typing import BinaryIO, Literal
+from typing import BinaryIO, Literal, NewType
 
 import attrs
 import numpy as np
-import numpy.typing as npt
 from PIL import Image
 
 from legacy_puyo_tools._math import find_medium_divisors
-from legacy_puyo_tools.formats._graphic import (
+from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
+from legacy_puyo_tools.formats.graphic import (
     PIXELS_PER_BYTE,
+    BitmapGraphic,
     parse_4bpp_graphic,
-    read_graphic,
     write_4bpp_graphic,
 )
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
 FMP_DEFAULT_FONT_SIZE = 14
 """The default character graphics size used by manzais in pixels."""
@@ -36,15 +35,11 @@ FMP_DEFAULT_PADDING = 1
 type FmpSize = Literal[8, 14]
 """The available font sizes for the fmp format in pixels."""
 
-type FmpCharacterGraphic = npt.NDArray[np.bool]
+FmpCharacterGraphic = NewType("FmpCharacterGraphic", BitmapGraphic)
 """A fmp character graphic is a little-endian 4 bits per pixel (4bpp), black and white
 bitmap that stores the graphical data of a character in the fpd character table. A `0x0`
 and `0x1` encoding an off and on pixel respectively. Pixels are stored row by row, in
 top-to-bottom and left-to-right order.
-
-The graphic is stored in a multi-dimensional (usually 2D) numpy array for easier
-conversion using Pillow. Remember to use the numpy library instead of the standard
-library to not have a performance detriment.
 """
 
 type FmpTableOrientation = Literal["portrait", "landscape"]
@@ -88,7 +83,7 @@ class Fmp(BaseFileFormat):
         """
         if not fp.seekable():
             raise io.UnsupportedOperation(
-                "Unable to perform seek operations on file handler."
+                "Unable to perform seek operations on the file handler."
             )
 
         graphic_width = font_size // PIXELS_PER_BYTE
@@ -103,10 +98,10 @@ class Fmp(BaseFileFormat):
 
         fp.seek(0)
 
-        graphics: list[FmpCharacterGraphic] = [
-            parse_4bpp_graphic(graphic_data, graphic_width)
-            for graphic_data in read_graphic(fp, graphic_size)
-        ]
+        graphics: list[FmpCharacterGraphic] = []
+
+        while graphic := fp.read(graphic_size):
+            FmpCharacterGraphic(parse_4bpp_graphic(graphic, graphic_width))
 
         return cls(graphics, font_size)
 
@@ -171,7 +166,7 @@ class Fmp(BaseFileFormat):
                     (row + 1) * graphic_size - padding,
                 ))
 
-                graphics.append(np.array(graphic, np.bool))
+                graphics.append(FmpCharacterGraphic(np.array(graphic, np.bool)))
 
         return cls(graphics, font_size)
 
