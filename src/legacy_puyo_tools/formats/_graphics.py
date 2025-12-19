@@ -66,20 +66,21 @@ def parse_graphics_from_image[T: BitmapGraphic](
             "The size of the character or padding is incorrect for the given image."
         )
 
-    graphics: list[T] = []
-
-    for row in range(hd):
-        for col in range(wd):
-            graphic = im.crop((
-                col * graphic_width + padding,
-                row * graphic_height + padding,
-                (col + 1) * graphic_width - padding,
-                (row + 1) * graphic_height - padding,
-            ))
-
-            graphics.append(cast(np.array(graphic, np.bool)))
-
-    return graphics
+    return [
+        cast(
+            np.array(
+                im.crop((
+                    col * graphic_width + padding,
+                    row * graphic_height + padding,
+                    (col + 1) * graphic_width - padding,
+                    (row + 1) * graphic_height - padding,
+                )),
+                np.bool,
+            )
+        )
+        for row in range(hd)
+        for col in range(wd)
+    ]
 
 
 def write_graphics_to_image(

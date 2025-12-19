@@ -18,10 +18,11 @@ from typing import BinaryIO, TextIO
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
-
-FPD_CSV_HEADER = ["code_point", "width"]
-"""The required header for a CSV file to be considered a fpd character table."""
+from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
+from legacy_puyo_tools.formats.base import (
+    BaseCharacterTable,
+    FileFormatError,
+)
 
 FPD_CHARACTER_ENTRY_FORMAT = "<HB"
 """The format of a fpd character entry. Two bytes for character's Unicode code point and
@@ -86,7 +87,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd(BaseFileFormat):
+class Fpd(BaseCharacterTable):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each
@@ -108,7 +109,7 @@ class Fpd(BaseFileFormat):
         return str(character)
 
     def __str__(self) -> str:
-        """Return a string representation of the fpd character table."""
+        """Return all of the characters in the fpd character table as a string."""
         with StringIO() as str_buf:
             for character in self.entries.inverse:
                 while isinstance(character, int):
@@ -194,24 +195,12 @@ class Fpd(BaseFileFormat):
                 A file-like object in text mode to a CSV file that has a list of
                 characters and widths.
 
-        Raises:
-            FileFormatError:
-                The CSV data does not have `character,width` as it's headers.
-
         Returns:
             A fpd character table.
         """
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        csv_reader = csv.DictReader(fp)
-
-        if csv_reader.fieldnames != FPD_CSV_HEADER:
-            raise FileFormatError(
-                "The given csv does not match the following header: "
-                + ",".join(FPD_CSV_HEADER)
-            )
-
-        for i, entry in enumerate(csv_reader):
+        for i, entry in enumerate(get_csv_reader(fp)):
             code_point, width = entry.values()
 
             fpd_character = FpdCharacter(code_point, int(width, base=16))
@@ -235,7 +224,7 @@ class Fpd(BaseFileFormat):
             fp:
                 The file-like object to write the character table as a CSV file.
         """
-        csv_writer = csv.DictWriter(fp, FPD_CSV_HEADER)
+        csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
 
         csv_writer.writeheader()
 

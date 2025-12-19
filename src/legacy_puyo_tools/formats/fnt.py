@@ -22,6 +22,7 @@ import attrs
 import numpy as np
 from PIL import Image
 
+from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
 from legacy_puyo_tools.formats._graphics import (
     PIXELS_PER_BYTE,
     parse_4bpp_graphic,
@@ -29,17 +30,17 @@ from legacy_puyo_tools.formats._graphics import (
     write_4bpp_graphic,
     write_graphics_to_image,
 )
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
+from legacy_puyo_tools.formats.base import (
+    BaseCharacterTable,
+    FileFormatError,
+)
 from legacy_puyo_tools.typing import (
     FntCharacterGraphic,
     FntFormatVersion,
     ImageOrientation,
 )
 
-FNT_CSV_HEADER = ["code_point", "width"]
-"""The required header for a CSV file to be considered a fnt character table."""
-
-FNT_HEADER_FORMAT = "<4sLLLL"
+FNT_HEADER_FORMAT = "<4sLLL"
 FNT_MAGIC_NUMBER = b"FNT\0"
 FNT_MAGIC_NUMBER_LENGTH = 4
 FNT_FONT_WIDTH_WORD_SIZE = 4
@@ -70,6 +71,14 @@ FNT_PSP_IDENTIFIER = b"MIG.00.1PSP"
 FNT_PSP_IDENTIFIER_LENGTH = 11
 
 
+def _get_fnt_graphics(
+    character: FntCharacter, graphic_size: int
+) -> FntCharacterGraphic:
+    return character.graphic or FntCharacterGraphic(
+        np.array([0] * graphic_size, np.bool)
+    )
+
+
 @attrs.define
 class FntCharacter:
     graphic: FntCharacterGraphic | None
@@ -77,10 +86,28 @@ class FntCharacter:
 
 
 @attrs.define
-class Fnt(BaseFileFormat):
+class Fnt(BaseCharacterTable):
     font: OrderedDict[str, FntCharacter]
     font_height: int
     font_width: int
+    graphic_size: int = attrs.field(
+        default=attrs.Factory(
+            lambda self: self.font_height * self.font_width // PIXELS_PER_BYTE,
+            takes_self=True,
+        )
+    )
+
+    def __getitem__(self, index: int) -> str:
+        """Return a character from the fnt character table."""
+        return list(self.font)[index]
+
+    def __str__(self) -> str:
+        """Return all of the characters in the fnt character table as a string."""
+        with io.StringIO() as str_buf:
+            for character in self.font:
+                str_buf.write(character)
+
+            return str_buf.getvalue()
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Fnt:
@@ -161,13 +188,9 @@ class Fnt(BaseFileFormat):
             )
         )
 
-        graphic_size = self.font_height * self.font_width // PIXELS_PER_BYTE
         write_graphics = False
 
-        if version == "NDS" or (
-            version == "PTE"
-            and any(character.graphic for character in self.font.values())
-        ):
+        if version == "NDS" or (version == "PTE" and self.has_graphics()):
             write_graphics = True
             fp.write(FNT_NDS_IDENTIFIER)
 
@@ -185,15 +208,19 @@ class Fnt(BaseFileFormat):
             if write_graphics:
                 write_4bpp_graphic(
                     fp,
-                    (
-                        character.graphic or np.array([0] * graphic_size, np.bool)
-                    ).reshape(-1),
+                    _get_fnt_graphics(character, self.graphic_size).reshape(-1),
                 )
 
         if version == "PSP":
             fp.write(FNT_PSP_IDENTIFIER)
-        elif version.encode() in FNT_WII_IDENTIFIER:
-            fp.write(version.encode())
+            return
+
+        encoded_version = version.encode()
+        if encoded_version in FNT_WII_IDENTIFIER:
+            fp.write(encoded_version)
+
+    def has_graphics(self) -> bool:
+        return any(character.graphic for character in self.font.values())
 
     @classmethod
     def read_csv(
@@ -210,15 +237,7 @@ class Fnt(BaseFileFormat):
 
         character_table: OrderedDict[str, FntCharacter] = OrderedDict()
 
-        csv_reader = csv.DictReader(fp)
-
-        if csv_reader.fieldnames != FNT_CSV_HEADER:
-            raise FileFormatError(
-                "The given csv does not match the following header: "
-                + ",".join(FNT_CSV_HEADER)
-            )
-
-        for entry in csv_reader:
+        for entry in get_csv_reader(fp):
             code_point, width = entry.values()
 
             character_table[code_point] = FntCharacter(None, int(width, base=16))
@@ -226,7 +245,7 @@ class Fnt(BaseFileFormat):
         return cls(character_table, font_height, font_width)
 
     def write_csv(self, fp: TextIO) -> None:
-        csv_writer = csv.DictWriter(fp, FNT_CSV_HEADER)
+        csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
 
         csv_writer.writeheader()
 
@@ -245,8 +264,7 @@ class Fnt(BaseFileFormat):
         font_height: int = 11,
         font_width: int = 16,
         padding: int = 1,
-    ):
-
+    ) -> None:
         characters = list(self.font)
         graphics = parse_graphics_from_image(
             im, font_height, font_width, padding, FntCharacterGraphic
@@ -262,13 +280,7 @@ class Fnt(BaseFileFormat):
         orientation: ImageOrientation = "portrait",
     ) -> Image.Image:
         font = [
-            character.graphic
-            or FntCharacterGraphic(
-                np.array(
-                    [0] * (self.font_height * self.font_width // PIXELS_PER_BYTE),
-                    np.bool,
-                )
-            )
+            _get_fnt_graphics(character, self.graphic_size)
             for character in self.font.values()
         ]
 

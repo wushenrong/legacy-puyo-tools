@@ -34,21 +34,22 @@ struct Fmp {
 ## The `fnt` format
 
 The `fnt` format is a binary character table format used by Puyo Puyo!! 20th
-Anniversary to store a mapping of Unicode code points to graphics. This is
-essentially the [`fpd`](#the-fpd-format) and [`fmp`](#the-fmp-format) formats
-combined. This format has three separate versions for the NDS, Wii, and the
-PlayStation Portable (PSP). All three formats start with the `fnt` header,
-starting with a magic number for identification `FNT\0`, the height of the
-character graphics, the width of the character graphics, and the number of
-character entries as a 32-bit unsigned integer. The NDS version has a second
-header with a magic number `0xE0 0x03 0xFF 0x7F 0xC6 0x18` then 26 zeros. While
-the Wii and PSP only have their identification strings at the end of the file,
-`GCIX` or `GVRT` for the Wii and `MIG.00.1PSP` for the PSP. Each character entry
-is 4 bytes long and formatted as follows: `XX XX YY YY`. Where `XX XX` is the
-character's Unicode code point in little-endian and `YY YY` is the width of the
-character. Then the entry may have an optional character graphic, that is only
-used in the NDS version, whose width and height is from the `fnt` header and in
-the same bitmap format as the [`fmp` format](#the-fmp-format).
+Anniversary to map indexes used by the [`mtx` format](#the-mtx-format) to
+Unicode characters and graphic. This is essentially the [`fpd`](#the-fpd-format)
+and [`fmp`](#the-fmp-format) formats combined. This format has three separate
+versions for the NDS, Wii, and the PlayStation Portable (PSP). All three formats
+start with the `fnt` header, starting with a magic number for identification
+`FNT\0`, the height of the character graphics, the width of the character
+graphics, and the number of character entries as a 32-bit unsigned integer. The
+NDS version has a second header with a magic number
+`0xE0 0x03 0xFF 0x7F 0xC6 0x18` then 26 zeros. While the Wii and PSP only have
+their identification strings at the end of the file, `GCIX` or `GVRT` for the
+Wii and `MIG.00.1PSP` for the PSP. Each character entry is 4 bytes long and
+formatted as follows: `XX XX YY YY`. Where `XX XX` is the character's Unicode
+code point in little-endian and `YY YY` is the width of the character. Then the
+entry may have an optional character graphic, that is only used in the NDS
+version, whose width and height is from the `fnt` header and in the same bitmap
+format as the [`fmp` format](#the-fmp-format).
 
 It can be expressed in the following C structs:
 
@@ -90,13 +91,13 @@ struct FntPSP {
 ## The `fpd` format
 
 The `fpd` format is a binary character table format used by the developers of
-Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to convert Unicode characters into
-an index that can be used by the [`mtx` format](#the-mtx-format) for text. Each
-character entry in the `fpd` is 3 bytes long and formatted as follows:
-`XX XX YY`. Where `XX XX` is the character's Unicode code point in little-endian
-and `YY` is the width of the character. Due to only having two bytes to store
-the character, this format cannot store surrogate pairs and only encodes the
-Basic Multilingual Plane which goes from `U+0000` to `U+FFFF`.
+Puyo Puyo! 15th Anniversary and Puyo Puyo 7 to map indexes used by the
+[`mtx` format](#the-mtx-format) to Unicode characters. Each character entry in
+the `fpd` is 3 bytes long and formatted as follows: `XX XX YY`. Where `XX XX` is
+the character's Unicode code point in little-endian and `YY` is the width of the
+character. Due to only having two bytes to store the character, this format
+cannot store surrogate pairs and only encodes the Basic Multilingual Plane which
+goes from `U+0000` to `U+FFFF`.
 
 :::{note} The character encoding is UTF-16 little-endian. But pedantically it is
 the older UCS-2 encoding, which is deprecated.

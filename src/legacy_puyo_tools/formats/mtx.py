@@ -26,8 +26,11 @@ from typing import BinaryIO
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
-from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.formats.base import (
+    BaseCharacterTable,
+    BaseFileFormat,
+    FileFormatError,
+)
 from legacy_puyo_tools.typing import MtxOffsetSize, MtxString
 
 MTX_ENDIAN = "little"
@@ -154,7 +157,7 @@ class Mtx(BaseFileFormat):
             for character in string:
                 write_bytes(character, MTX_CHARACTER_WORD_SIZE)
 
-    def write_xml(self, fpd: Fpd) -> bytes:
+    def write_xml(self, font: BaseCharacterTable) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 
@@ -174,7 +177,7 @@ class Mtx(BaseFileFormat):
                         case 0xFFFF:
                             break
                         case _:
-                            str_buf.write(fpd[character])
+                            str_buf.write(font[character])
 
                 dialog.text = str_buf.getvalue()
 

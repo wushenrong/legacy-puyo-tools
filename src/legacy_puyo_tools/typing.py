@@ -21,6 +21,10 @@ This is a numpy type, so use numpy functions and operation to not have performan
 determinate.
 """
 
+type FontFormat = Literal["FNT", "FPD"]
+
+type TableFormat = Literal[FontFormat, "CSV"]
+
 # Fmp
 
 FmpCharacterGraphic = NewType("FmpCharacterGraphic", BitmapGraphic)

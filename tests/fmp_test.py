@@ -22,7 +22,7 @@ from legacy_puyo_tools.typing import ImageOrientation
 
 
 @pytest.mark.parametrize(
-    ("input_file", "output_file", "size", "orientation"),
+    ("input_file", "output_file", "font_size", "orientation"),
     [
         ("ark.fmp", None, 14, "portrait"),
         ("fusion.fmp", "custom_table.png", 8, "landscape"),
@@ -32,7 +32,7 @@ def test_fmp_conversion(
     lazy_datadir: Path,
     input_file: str,
     output_file: str | None,
-    size: int,
+    font_size: int,
     orientation: ImageOrientation,
 ) -> None:
     """Test converting a fmp file."""
@@ -46,8 +46,8 @@ def test_fmp_conversion(
     ):
         input_arguments = [
             str(lazy_datadir / input_file),
-            "--size",
-            str(size),
+            "--font-size",
+            str(font_size),
             "--orientation",
             orientation,
         ]
@@ -69,7 +69,7 @@ def test_fmp_conversion(
 
 
 @pytest.mark.parametrize(
-    ("input_file", "output_file", "size"),
+    ("input_file", "output_file", "font_size"),
     [
         ("ark.png", None, 14),
         ("fusion.png", "custom_table.fmp", 8),
@@ -77,7 +77,7 @@ def test_fmp_conversion(
     ],
 )
 def test_fmp_creation(
-    lazy_datadir: Path, input_file: str, output_file: str | None, size: int
+    lazy_datadir: Path, input_file: str, output_file: str | None, font_size: int
 ) -> None:
     """Test creating a fmp file."""
     cli_runner = CliRunner()
@@ -88,8 +88,8 @@ def test_fmp_creation(
     with cli_runner.isolated_filesystem():
         input_arguments = [
             str(lazy_datadir / input_file),
-            "--size",
-            str(size),
+            "--font-size",
+            str(font_size),
         ]
 
         if output_file:

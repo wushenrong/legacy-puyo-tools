@@ -42,3 +42,13 @@ class BaseFileFormat(Protocol):
                 format will be encoded to.
         """
         raise NotImplementedError
+
+
+class BaseCharacterTable(BaseFileFormat, Protocol):
+    def __getitem__(self, index: int) -> str:
+        """Return a character from the character table by index."""
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        """Return all of the characters in the character table as a string."""
+        raise NotImplementedError
