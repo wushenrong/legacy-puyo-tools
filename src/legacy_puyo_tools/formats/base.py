@@ -11,34 +11,44 @@ from abc import abstractmethod
 from typing import BinaryIO, Protocol
 
 
-class FormatError(Exception):
-    """The data being decoded does not conform to the implemented format."""
+class FileFormatError(Exception):
+    """The file being decoded does not conform to the implemented file format."""
 
 
-class BaseFormat(Protocol):
-    """A binary format with encoding and decoding support."""
+class BaseFileFormat(Protocol):
+    """A binary file format with encoding and decoding support."""
 
     @classmethod
     @abstractmethod
-    def decode(cls, fp: BinaryIO) -> BaseFormat:
-        """Decode the implemented format from a file-like object.
+    def decode(cls, fp: BinaryIO) -> BaseFileFormat:
+        """Decode the implemented file format from a file-like object.
 
         Arguments:
             fp: A file-like object in binary mode containing data that follows the
-                implemented format.
+                implemented file format.
 
         Returns:
-            The object representation of the implemented format.
+            The object representation of the implemented file format.
         """
         raise NotImplementedError
 
     @abstractmethod
     def encode(self, fp: BinaryIO) -> None:
-        """Encode the implemented format to to a file-like object.
+        """Encode the implemented file format to to a file-like object.
 
         Arguments:
             fp:
-                A file-like object in binary mode that the implemented will be
-                encoded to.
+                A file-like object in binary mode that the implemented file
+                format will be encoded to.
         """
+        raise NotImplementedError
+
+
+class BaseCharacterTable(BaseFileFormat, Protocol):
+    def __getitem__(self, index: int) -> str:
+        """Return a character from the character table by index."""
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        """Return all of the characters in the character table as a string."""
         raise NotImplementedError

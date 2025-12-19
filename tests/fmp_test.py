@@ -16,11 +16,13 @@ from PIL import Image, ImageChops
 
 from legacy_puyo_tools.cli.convert import convert_fmp
 from legacy_puyo_tools.cli.create import create_fmp
-from legacy_puyo_tools.formats.fmp import Fmp, FmpTableOrientation
+from legacy_puyo_tools.formats.base import FileFormatError
+from legacy_puyo_tools.formats.fmp import Fmp
+from legacy_puyo_tools.typing import ImageOrientation
 
 
 @pytest.mark.parametrize(
-    ("input_file", "output_file", "size", "orientation"),
+    ("input_file", "output_file", "font_size", "orientation"),
     [
         ("ark.fmp", None, 14, "portrait"),
         ("fusion.fmp", "custom_table.png", 8, "landscape"),
@@ -30,8 +32,8 @@ def test_fmp_conversion(
     lazy_datadir: Path,
     input_file: str,
     output_file: str | None,
-    size: int,
-    orientation: FmpTableOrientation,
+    font_size: int,
+    orientation: ImageOrientation,
 ) -> None:
     """Test converting a fmp file."""
     cli_runner = CliRunner()
@@ -44,8 +46,8 @@ def test_fmp_conversion(
     ):
         input_arguments = [
             str(lazy_datadir / input_file),
-            "--size",
-            str(size),
+            "--font-size",
+            str(font_size),
             "--orientation",
             orientation,
         ]
@@ -67,7 +69,7 @@ def test_fmp_conversion(
 
 
 @pytest.mark.parametrize(
-    ("input_file", "output_file", "size"),
+    ("input_file", "output_file", "font_size"),
     [
         ("ark.png", None, 14),
         ("fusion.png", "custom_table.fmp", 8),
@@ -75,7 +77,7 @@ def test_fmp_conversion(
     ],
 )
 def test_fmp_creation(
-    lazy_datadir: Path, input_file: str, output_file: str | None, size: int
+    lazy_datadir: Path, input_file: str, output_file: str | None, font_size: int
 ) -> None:
     """Test creating a fmp file."""
     cli_runner = CliRunner()
@@ -86,8 +88,8 @@ def test_fmp_creation(
     with cli_runner.isolated_filesystem():
         input_arguments = [
             str(lazy_datadir / input_file),
-            "--size",
-            str(size),
+            "--font-size",
+            str(font_size),
         ]
 
         if output_file:
@@ -107,6 +109,7 @@ def test_fmp_creation(
 
 def test_fmp_exceptions(lazy_datadir: Path) -> None:
     """Test rasing exceptions when the inputs are incorrect."""
+    test_fmp = lazy_datadir / "colored_ark.fmp"
     test_image = lazy_datadir / "colored_ark.png"
 
     with (
@@ -116,3 +119,6 @@ def test_fmp_exceptions(lazy_datadir: Path) -> None:
         Image.open(test_image) as im,
     ):
         Fmp.read_image(im, font_size=8)
+
+    with pytest.raises(FileFormatError), test_fmp.open(mode="rb") as fp:
+        Fmp.decode(fp, font_size=8)

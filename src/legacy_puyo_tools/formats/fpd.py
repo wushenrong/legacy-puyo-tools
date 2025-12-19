@@ -4,8 +4,8 @@
 
 """Fpd conversion tool for older Puyo games.
 
-This module supports the encoding and decoding of the fpd format used by Puyo Puyo! 15th
-Anniversary and Puyo Puyo 7.
+This module supports the encoding and decoding of the fpd file format used by Puyo Puyo!
+15th Anniversary and Puyo Puyo 7.
 """
 
 from __future__ import annotations
@@ -13,21 +13,20 @@ from __future__ import annotations
 import csv
 import struct
 from io import StringIO
-from typing import Any, BinaryIO, TextIO
+from typing import BinaryIO, TextIO
 
 import attrs
 from bidict import OrderedBidict
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
+from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
+from legacy_puyo_tools.formats.base import (
+    BaseCharacterTable,
+    FileFormatError,
+)
 
-FPD_ENTRY_LENGTH = 3
-"""The length of a fpd character entry in bytes."""
-FPD_ENTRY_FORMAT = "<HB"
+FPD_CHARACTER_ENTRY_FORMAT = "<HB"
 """The format of a fpd character entry. Two bytes for character's Unicode code point and
 one byte for character width."""
-
-FPD_CSV_HEADER = ["character", "width"]
-"""The required header for a CSV file to be considered a fpd character table."""
 
 
 @attrs.frozen
@@ -52,7 +51,7 @@ class FpdCharacter:
     UTF-16.
     """
 
-    character: str
+    code_point: str
     """A string that stores a single character."""
     width: int = attrs.field(default=0x0, eq=False)
     """How wide should the character be, only used in the Nintendo DS versions of the
@@ -60,36 +59,35 @@ class FpdCharacter:
 
     def __str__(self) -> str:
         """Return the underlying character as a string."""
-        return self.character
+        return self.code_point
 
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
 
         Raises:
             UnicodeEncodeError:
-                The character is not able to encode to UCS-2 because it is not in the
-                Basic Multilingual Plane, or a code point from `U+0000` to `U+FFFF`.
+                The character is not in the Basic Multilingual Plane, or a code point
+                from `U+0000` to `U+FFFF`.
 
         Returns:
             The character's Unicode code point in little-endian and its width.
         """
         try:
-            return struct.pack(FPD_ENTRY_FORMAT, ord(self.character), self.width)
+            return struct.pack(
+                FPD_CHARACTER_ENTRY_FORMAT, ord(self.code_point), self.width
+            )
         except struct.error as e:
             raise UnicodeEncodeError(
-                "UCS-2",
-                self.character,
-                -1,
-                -1,
+                "UTF-16",
+                self.code_point,
+                0,
+                1,
                 "Character is not in the BMP or a code point from U+0000 to U+FFFF",
             ) from e
 
 
-type FpdCharacterTable = OrderedBidict[int, int | FpdCharacter]
-
-
 @attrs.define
-class Fpd(BaseFormat):
+class Fpd(BaseCharacterTable):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each
@@ -98,7 +96,7 @@ class Fpd(BaseFormat):
     `0x06`, etc.
     """
 
-    entries: FpdCharacterTable
+    entries: OrderedBidict[int, int | FpdCharacter]
     """A ordered bidirectional dictionary of fpd character entries."""
 
     def __getitem__(self, index: int) -> str:
@@ -111,7 +109,7 @@ class Fpd(BaseFormat):
         return str(character)
 
     def __str__(self) -> str:
-        """Return a string representation of the fpd character table."""
+        """Return all of the characters in the fpd character table as a string."""
         with StringIO() as str_buf:
             for character in self.entries.inverse:
                 while isinstance(character, int):
@@ -134,33 +132,33 @@ class Fpd(BaseFormat):
                 A file-like object in binary mode containing a fpd character table.
 
         Raises:
-            FormatError:
+            FileFormatError:
                 The given fpd character table contains entries that does not conform to
                 the fpd character format.
 
         Returns:
             A fpd character table.
         """
-        character_table: FpdCharacterTable = OrderedBidict()
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
         try:
-            fpd_characters = struct.iter_unpack(FPD_ENTRY_FORMAT, fp.read())
+            fpd_characters = struct.iter_unpack(FPD_CHARACTER_ENTRY_FORMAT, fp.read())
         except struct.error as e:
-            raise FormatError(
+            raise FileFormatError(
                 "The given fpd character table contains entries that does not "
                 "conform to the fpd character format."
             ) from e
 
         for i, (code_point, width) in enumerate(fpd_characters):
-            character = FpdCharacter(chr(code_point), width)
+            code_point = FpdCharacter(chr(code_point), width)
 
-            if (character_index := character_table.inverse.get(character, -1)) != -1:
+            if (character_index := character_table.inverse.get(code_point, -1)) != -1:
                 while character_table.inverse.get(character_index, -1) != -1:
                     character_index = character_table.inverse.get(character_index, -1)
 
                 character_table.put(i, character_index)
             else:
-                character_table.put(i, character)
+                character_table.put(i, code_point)
 
         return cls(character_table)
 
@@ -173,7 +171,7 @@ class Fpd(BaseFormat):
                 encoded to.
 
         Raises:
-            FormatError:
+            FileFormatError:
                 A character in the fpd character table cannot be encoded to fmp because
                 the character is not in the Basic Multilingual Plane.
         """
@@ -184,7 +182,7 @@ class Fpd(BaseFormat):
             try:
                 fp.write(character.encode())
             except UnicodeEncodeError as e:
-                raise FormatError(
+                raise FileFormatError(
                     f"Character '{character}' cannot be encoded to fpd"
                 ) from e
 
@@ -197,27 +195,15 @@ class Fpd(BaseFormat):
                 A file-like object in text mode to a CSV file that has a list of
                 characters and widths.
 
-        Raises:
-            FormatError:
-                The CSV data does not have `FPD_CSV_HEADER` as it's headers.
-
         Returns:
             A fpd character table.
         """
-        character_table: FpdCharacterTable = OrderedBidict()
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
-        csv_reader = csv.DictReader(fp)
+        for i, entry in enumerate(get_csv_reader(fp)):
+            code_point, width = entry.values()
 
-        if csv_reader.fieldnames != FPD_CSV_HEADER:
-            raise FormatError(
-                "The given csv does not match the following header: "
-                + ",".join(FPD_CSV_HEADER)
-            )
-
-        for i, entry in enumerate(csv_reader):
-            character, width = entry.values()
-
-            fpd_character = FpdCharacter(character, int(width, base=16))
+            fpd_character = FpdCharacter(code_point, int(width, base=16))
 
             if (
                 character_index := character_table.inverse.get(fpd_character, -1)
@@ -238,16 +224,7 @@ class Fpd(BaseFormat):
             fp:
                 The file-like object to write the character table as a CSV file.
         """
-
-        def fpd_serializer(
-            __: type, ___: attrs.Attribute[Any], value: str | int
-        ) -> str:
-            if isinstance(value, int):
-                return hex(value)
-
-            return value
-
-        csv_writer = csv.DictWriter(fp, FPD_CSV_HEADER)
+        csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
 
         csv_writer.writeheader()
 
@@ -256,5 +233,10 @@ class Fpd(BaseFormat):
                 character = self.entries[character]
 
             csv_writer.writerow(
-                attrs.asdict(character, value_serializer=fpd_serializer)
+                attrs.asdict(
+                    character,
+                    value_serializer=lambda _, __, value: (
+                        hex(value) if isinstance(value, int) else value
+                    ),
+                )
             )

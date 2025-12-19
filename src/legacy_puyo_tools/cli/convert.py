@@ -8,27 +8,29 @@
 
 from pathlib import Path
 
+import click
 import cloup
 
-from legacy_puyo_tools.cli.confopts import (
-    fmp_option,
+from legacy_puyo_tools.cli._confopts import (
+    fmp_options,
+    get_output_path,
+    graphics_options,
     input_argument,
+    mtx_constraint,
     mtx_options,
     output_option,
+    padding_option,
+    table_options,
 )
-from legacy_puyo_tools.formats.fmp import Fmp, FmpSize, FmpTableOrientation
+from legacy_puyo_tools.formats.fmp import Fmp
+from legacy_puyo_tools.formats.fnt import Fnt
 from legacy_puyo_tools.formats.fpd import Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
-
-table_options = cloup.option_group(
-    "Table options",
-    cloup.option(
-        "--orientation",
-        help="The orientation of the character table.",
-        default="portrait",
-        type=cloup.Choice(["portrait", "landscape"], case_sensitive=False),
-        show_default=True,
-    ),
+from legacy_puyo_tools.typing import (
+    FmpFontSize,
+    FontFormat,
+    ImageOrientation,
+    TableFormat,
 )
 
 
@@ -39,58 +41,114 @@ def app() -> None:
 
 
 @app.command(name="fmp")
-@input_argument("Fmp file containing font data.")
+@input_argument("Path to the fmp file containing graphics data.")
 @output_option
-@fmp_option
+@fmp_options
+@padding_option
 @table_options
 def convert_fmp(
     input_file: Path,
     output_file: Path | None,
-    size: FmpSize,
+    font_size: FmpFontSize,
     padding: int,
-    orientation: FmpTableOrientation,
+    orientation: ImageOrientation,
 ) -> None:
-    """Convert a fmp file to an editable image file (Default is PNG)."""
-    out_path = output_file or Path(input_file.name).with_suffix(".png")
+    """Extract character graphics from a fmp file to an image.
 
+    Image format defaults to PNG.
+    """
     with input_file.open("rb") as in_fp:
-        Fmp.decode(in_fp, font_size=size).write_image(
+        Fmp.decode(in_fp, font_size=font_size).write_image(
             padding=padding, orientation=orientation
-        ).save(out_path)
+        ).save(get_output_path(input_file, output_file, ".png"))
+
+
+@app.command(name="fnt")
+@input_argument("Path to the fnt file containing character and graphics data.")
+@output_option
+@cloup.option(
+    "--extract-graphics",
+    help="Extract character graphics if they are available.",
+    default=False,
+    type=bool,
+    show_default=True,
+    group=graphics_options,
+)
+@padding_option
+@table_options
+def convert_fnt(
+    input_file: Path,
+    output_file: Path | None,
+    extract_graphics: bool,
+    padding: int,
+    orientation: ImageOrientation,
+) -> None:
+    """Extract characters from a fnt file to a CSV table.
+
+    Optionally character graphics can also be extract to an image if available.
+    Image format defaults to PNG.
+    """
+    with input_file.open("rb") as in_fp:
+        fnt = Fnt.decode(in_fp)
+
+    with get_output_path(input_file, output_file, ".csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as out_fp:
+        fnt.write_csv(out_fp)
+
+    if not extract_graphics:
+        return
+
+    if fnt.has_graphics():
+        fnt.write_image(padding=padding, orientation=orientation).save(
+            get_output_path(input_file, output_file, ".png")
+        )
+    else:
+        click.echo("No graphics found. Not extracting graphics.", err=True)
 
 
 @app.command(name="fpd")
-@input_argument("Fpd file containing character data.")
+@input_argument("Path to the fpd file containing character data.")
 @output_option
 def convert_fpd(input_file: Path, output_file: Path | None) -> None:
-    """Convert a fpd file to a CSV file."""
-    out_path = output_file or Path(input_file.name).with_suffix(".csv")
-
+    """Extract characters from a fpd file to a CSV table."""
     with (
         input_file.open("rb") as in_fp,
-        out_path.open("w", encoding="utf-8", newline="") as out_fp,
+        get_output_path(input_file, output_file, ".csv").open(
+            "w", encoding="utf-8", newline=""
+        ) as out_fp,
     ):
         Fpd.decode(in_fp).write_csv(out_fp)
 
 
 @app.command(name="mtx", show_constraints=True)
-@input_argument("Mtx file containing Manzai text.")
+@input_argument("Path to the mtx file.")
 @output_option
 @mtx_options
+@mtx_constraint
 def convert_mtx(
-    input_file: Path, output_file: Path | None, fpd: Path, csv: Path
+    input_file: Path,
+    output_file: Path | None,
+    table: Path,
+    table_format: TableFormat,
+    font_format: FontFormat,
 ) -> None:
-    """Convert a mtx file to a XML file."""
-    # pylint: disable=possibly-used-before-assignment
-    if fpd:
-        with fpd.open("rb") as fp:
-            fpd_data = Fpd.decode(fp)
+    """Extract text from a mtx file."""
+    if table_format == "CSV":
+        with table.open("r", encoding="utf-8", newline="") as table_fp:
+            if font_format == "FNT":
+                font = Fnt.read_csv(table_fp)
+            elif font_format == "FPD":
+                font = Fpd.read_csv(table_fp)
+    else:
+        with table.open("rb") as table_fp:
+            if table_format == "FNT":
+                font = Fnt.decode(table_fp)
+            elif table_format == "FPD":
+                font = Fpd.decode(table_fp)
 
-    if csv:
-        with csv.open("r", encoding="utf-8", newline="") as fp:
-            fpd_data = Fpd.read_csv(fp)
-
-    out_path = output_file or Path(input_file.name).with_suffix(".xml")
-
-    with input_file.open("rb") as in_fp, out_path.open("wb") as out_fp:
-        out_fp.write(Mtx.decode(in_fp).write_xml(fpd_data))
+    with (
+        input_file.open("rb") as in_fp,
+        get_output_path(input_file, output_file, ".xml").open("wb") as out_fp,
+    ):
+        out_fp.write(Mtx.decode(in_fp).write_xml(font))

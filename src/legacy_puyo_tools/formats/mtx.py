@@ -17,15 +17,21 @@ supports Puyo Puyo 7 and might support Puyo Puyo! 15th Anniversary.
 
 from __future__ import annotations
 
+import io
 from io import StringIO
 from itertools import pairwise
-from typing import BinaryIO, Literal
+from os import SEEK_END
+from typing import BinaryIO
 
 import attrs
 from lxml import etree
 
-from legacy_puyo_tools.formats.base import BaseFormat, FormatError
-from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.formats.base import (
+    BaseCharacterTable,
+    BaseFileFormat,
+    FileFormatError,
+)
+from legacy_puyo_tools.typing import MtxOffsetSize, MtxString
 
 MTX_ENDIAN = "little"
 MTX_LENGTH_WORD_SIZE = 4
@@ -39,23 +45,27 @@ MTX64_IDENTIFIER = 16
 MTX64_IDENTIFIER_WORD_SIZE = 8
 MTX64_OFFSET_WORD_SIZE = 8
 
-type MtxString = list[int]
-"""A list of indexes that points to a character in the fpd character table."""
-
-type MtxOffsetSize = Literal[32, 64]
-"""The size of the section and string offsets. Either 32 or 64 bits."""
-
 
 @attrs.define
-class Mtx(BaseFormat):
+class Mtx(BaseFileFormat):
     strings: list[MtxString]
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Mtx:
-        def read_bytes(word_size: int) -> int:
-            return int.from_bytes(fp.read(word_size), MTX_ENDIAN)
+        if not fp.seekable():
+            raise io.UnsupportedOperation(
+                "Unable to perform seek operations on the file handler."
+            )
 
         mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)
+
+        if fp.seek(0, SEEK_END) % mtx_length != 0:
+            raise FileFormatError(
+                f"The size of the mtx is incorrect.\nExpected: {mtx_length}\nActual: "
+                f"{fp.tell()}"
+            )
+
+        fp.seek(MTX_LENGTH_WORD_SIZE)
 
         identifier_word = fp.read(MTX32_IDENTIFIER_WORD_SIZE)
         identifier = int.from_bytes(identifier_word, MTX_ENDIAN)
@@ -76,7 +86,10 @@ class Mtx(BaseFormat):
         ):
             offset_word_size = MTX64_OFFSET_WORD_SIZE
         else:
-            raise FormatError("The given data is not in a valid mtx format.")
+            raise FileFormatError("The given data is not in a valid mtx format.")
+
+        def read_bytes(word_size: int) -> int:
+            return int.from_bytes(fp.read(word_size), MTX_ENDIAN)
 
         section_table_offset = read_bytes(offset_word_size)
         string_table_offset = read_bytes(offset_word_size)
@@ -107,9 +120,6 @@ class Mtx(BaseFormat):
         return cls(strings)
 
     def encode(self, fp: BinaryIO, *, offset_size: MtxOffsetSize = 32) -> None:
-        def write_bytes(data: int, length: int) -> None:
-            fp.write(data.to_bytes(length, MTX_ENDIAN))
-
         if offset_size == 64:
             offset_word_size = MTX64_OFFSET_WORD_SIZE
             offset_identifier = MTX64_IDENTIFIER
@@ -133,6 +143,9 @@ class Mtx(BaseFormat):
             string_offsets.append(mtx_length)
             mtx_length += string_length
 
+        def write_bytes(data: int, length: int) -> None:
+            fp.write(data.to_bytes(length, MTX_ENDIAN))
+
         write_bytes(mtx_length, MTX_LENGTH_WORD_SIZE)
         write_bytes(offset_identifier, offset_word_size)
         write_bytes(header_length, offset_word_size)
@@ -144,7 +157,7 @@ class Mtx(BaseFormat):
             for character in string:
                 write_bytes(character, MTX_CHARACTER_WORD_SIZE)
 
-    def write_xml(self, fpd: Fpd) -> bytes:
+    def write_xml(self, font: BaseCharacterTable) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 
@@ -164,7 +177,7 @@ class Mtx(BaseFormat):
                         case 0xFFFF:
                             break
                         case _:
-                            str_buf.write(fpd[character])
+                            str_buf.write(font[character])
 
                 dialog.text = str_buf.getvalue()
 

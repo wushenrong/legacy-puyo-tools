@@ -15,14 +15,21 @@ lifetime.
 ### Added
 
 - Support for 64 bit offsets for `mtx`.
+- Support for the `fnt` format.
 
 ### Changed
 
 - Internal functions to raise exceptions if our expectations are somehow wrong.
+- The encoding type for Unicode errors from USC-2 to UTF-16.
+- Type definitions for character graphics into their own type.
+- Graphics encode and decode methods into their own module.
+- Moved types back to `typing.py`.
 
 ### Removed
 
 - Unneeded arguments that is leftover from Python 3.11.
+- Types that hides the underlining dictionary type.
+- Constants that are not really needed based on context.
 
 ## 2025-10-10
 
@@ -34,7 +41,7 @@ lifetime.
 
 ### Changed
 
-- Use a CSV file instead of a Unicode text file for a human editable format.
+- Use a CSV file instead of a Unicode text file for a human editable file format.
 - Rewrite decoders to take in file-like objects instead of the entire file.
 - Moved types back into formats instead being in a typing module.
 - Convert non-black and white images instead of raising an exception.
