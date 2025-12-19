@@ -11,22 +11,33 @@ Puyo Puyo!! 20th Anniversary.
 
 from __future__ import annotations
 
+import csv
 import io
 import struct
 from collections import OrderedDict
 from os import SEEK_END
-from typing import BinaryIO, Literal, NewType
+from typing import BinaryIO, TextIO
 
 import attrs
 import numpy as np
+from PIL import Image
 
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
-from legacy_puyo_tools.formats.graphic import (
+from legacy_puyo_tools.formats._graphics import (
     PIXELS_PER_BYTE,
-    BitmapGraphic,
     parse_4bpp_graphic,
+    parse_graphics_from_image,
     write_4bpp_graphic,
+    write_graphics_to_image,
 )
+from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
+from legacy_puyo_tools.typing import (
+    FntCharacterGraphic,
+    FntFormatVersion,
+    ImageOrientation,
+)
+
+FNT_CSV_HEADER = ["code_point", "width"]
+"""The required header for a CSV file to be considered a fnt character table."""
 
 FNT_HEADER_FORMAT = "<4sLLLL"
 FNT_MAGIC_NUMBER = b"FNT\0"
@@ -58,10 +69,6 @@ FNT_WII_IDENTIFIER_LENGTH = 4
 FNT_PSP_IDENTIFIER = b"MIG.00.1PSP"
 FNT_PSP_IDENTIFIER_LENGTH = 11
 
-FntCharacterGraphic = NewType("FntCharacterGraphic", BitmapGraphic)
-
-type FntFormatVersion = Literal["PTE", "NDS", "GCIX", "GVRT", "PSP"]
-
 
 @attrs.define
 class FntCharacter:
@@ -69,12 +76,9 @@ class FntCharacter:
     width: int
 
 
-type FntCharacterTable = OrderedDict[str, FntCharacter]
-
-
 @attrs.define
 class Fnt(BaseFileFormat):
-    font: FntCharacterTable
+    font: OrderedDict[str, FntCharacter]
     font_height: int
     font_width: int
 
@@ -128,7 +132,7 @@ class Fnt(BaseFileFormat):
 
             fp.seek(FNT_HEADER_LENGTH + FNT_NDS_HEADER_LENGTH)
 
-        character_table: FntCharacterTable = OrderedDict()
+        character_table: OrderedDict[str, FntCharacter] = OrderedDict()
 
         for _ in range(character_length):
             code_point, width = struct.unpack(
@@ -179,12 +183,95 @@ class Fnt(BaseFileFormat):
             )
 
             if write_graphics:
-                if character.graphic:
-                    write_4bpp_graphic(fp, character.graphic.reshape(-1))
-                else:
-                    write_4bpp_graphic(fp, np.array([0] * graphic_size, np.bool))
+                write_4bpp_graphic(
+                    fp,
+                    (
+                        character.graphic or np.array([0] * graphic_size, np.bool)
+                    ).reshape(-1),
+                )
 
         if version == "PSP":
             fp.write(FNT_PSP_IDENTIFIER)
         elif version.encode() in FNT_WII_IDENTIFIER:
             fp.write(version.encode())
+
+    @classmethod
+    def read_csv(
+        cls,
+        fp: TextIO,
+        *,
+        font_height: int = 11,
+        font_width: int = 16,
+    ) -> Fnt:
+        if font_width % 2 != 0:
+            raise ValueError(
+                "The font width of the external font needs to be a multiples of 2."
+            )
+
+        character_table: OrderedDict[str, FntCharacter] = OrderedDict()
+
+        csv_reader = csv.DictReader(fp)
+
+        if csv_reader.fieldnames != FNT_CSV_HEADER:
+            raise FileFormatError(
+                "The given csv does not match the following header: "
+                + ",".join(FNT_CSV_HEADER)
+            )
+
+        for entry in csv_reader:
+            code_point, width = entry.values()
+
+            character_table[code_point] = FntCharacter(None, int(width, base=16))
+
+        return cls(character_table, font_height, font_width)
+
+    def write_csv(self, fp: TextIO) -> None:
+        csv_writer = csv.DictWriter(fp, FNT_CSV_HEADER)
+
+        csv_writer.writeheader()
+
+        csv_writer.writerows([
+            {
+                "code_point": code_point,
+                "width": hex(character.width),
+            }
+            for code_point, character in self.font.items()
+        ])
+
+    def add_graphics(
+        self,
+        im: Image.Image,
+        *,
+        font_height: int = 11,
+        font_width: int = 16,
+        padding: int = 1,
+    ):
+
+        characters = list(self.font)
+        graphics = parse_graphics_from_image(
+            im, font_height, font_width, padding, FntCharacterGraphic
+        )
+
+        for character, graphic in zip(characters, graphics, strict=True):
+            self.font[character].graphic = graphic
+
+    def write_image(
+        self,
+        *,
+        padding: int = 1,
+        orientation: ImageOrientation = "portrait",
+    ) -> Image.Image:
+        font = [
+            character.graphic
+            or FntCharacterGraphic(
+                np.array(
+                    [0] * (self.font_height * self.font_width // PIXELS_PER_BYTE),
+                    np.bool,
+                )
+            )
+            for character in self.font.values()
+        ]
+
+        return write_graphics_to_image(
+            font, self.font_height, self.font_width, padding, orientation
+        )

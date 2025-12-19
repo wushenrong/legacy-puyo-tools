@@ -16,9 +16,10 @@ from legacy_puyo_tools.cli.confopts import (
     mtx_options,
     output_option,
 )
-from legacy_puyo_tools.formats.fmp import Fmp, FmpSize, FmpTableOrientation
+from legacy_puyo_tools.formats.fmp import Fmp, FmpFontSize
 from legacy_puyo_tools.formats.fpd import Fpd
 from legacy_puyo_tools.formats.mtx import Mtx
+from legacy_puyo_tools.typing import ImageOrientation
 
 table_options = cloup.option_group(
     "Table options",
@@ -46,9 +47,9 @@ def app() -> None:
 def convert_fmp(
     input_file: Path,
     output_file: Path | None,
-    size: FmpSize,
+    size: FmpFontSize,
     padding: int,
-    orientation: FmpTableOrientation,
+    orientation: ImageOrientation,
 ) -> None:
     """Convert a fmp file to an editable image file (Default is PNG)."""
     out_path = output_file or Path(input_file.name).with_suffix(".png")

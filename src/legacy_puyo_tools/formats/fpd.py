@@ -13,14 +13,14 @@ from __future__ import annotations
 import csv
 import struct
 from io import StringIO
-from typing import Any, BinaryIO, TextIO
+from typing import BinaryIO, TextIO
 
 import attrs
 from bidict import OrderedBidict
 
 from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 
-FPD_CSV_HEADER = ["character", "width"]
+FPD_CSV_HEADER = ["code_point", "width"]
 """The required header for a CSV file to be considered a fpd character table."""
 
 FPD_CHARACTER_ENTRY_FORMAT = "<HB"
@@ -50,7 +50,7 @@ class FpdCharacter:
     UTF-16.
     """
 
-    character: str
+    code_point: str
     """A string that stores a single character."""
     width: int = attrs.field(default=0x0, eq=False)
     """How wide should the character be, only used in the Nintendo DS versions of the
@@ -58,7 +58,7 @@ class FpdCharacter:
 
     def __str__(self) -> str:
         """Return the underlying character as a string."""
-        return self.character
+        return self.code_point
 
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
@@ -73,19 +73,16 @@ class FpdCharacter:
         """
         try:
             return struct.pack(
-                FPD_CHARACTER_ENTRY_FORMAT, ord(self.character), self.width
+                FPD_CHARACTER_ENTRY_FORMAT, ord(self.code_point), self.width
             )
         except struct.error as e:
             raise UnicodeEncodeError(
                 "UTF-16",
-                self.character,
+                self.code_point,
                 0,
                 1,
                 "Character is not in the BMP or a code point from U+0000 to U+FFFF",
             ) from e
-
-
-type FpdCharacterTable = OrderedBidict[int, int | FpdCharacter]
 
 
 @attrs.define
@@ -98,7 +95,7 @@ class Fpd(BaseFileFormat):
     `0x06`, etc.
     """
 
-    entries: FpdCharacterTable
+    entries: OrderedBidict[int, int | FpdCharacter]
     """A ordered bidirectional dictionary of fpd character entries."""
 
     def __getitem__(self, index: int) -> str:
@@ -141,7 +138,7 @@ class Fpd(BaseFileFormat):
         Returns:
             A fpd character table.
         """
-        character_table: FpdCharacterTable = OrderedBidict()
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
         try:
             fpd_characters = struct.iter_unpack(FPD_CHARACTER_ENTRY_FORMAT, fp.read())
@@ -152,15 +149,15 @@ class Fpd(BaseFileFormat):
             ) from e
 
         for i, (code_point, width) in enumerate(fpd_characters):
-            character = FpdCharacter(chr(code_point), width)
+            code_point = FpdCharacter(chr(code_point), width)
 
-            if (character_index := character_table.inverse.get(character, -1)) != -1:
+            if (character_index := character_table.inverse.get(code_point, -1)) != -1:
                 while character_table.inverse.get(character_index, -1) != -1:
                     character_index = character_table.inverse.get(character_index, -1)
 
                 character_table.put(i, character_index)
             else:
-                character_table.put(i, character)
+                character_table.put(i, code_point)
 
         return cls(character_table)
 
@@ -199,12 +196,12 @@ class Fpd(BaseFileFormat):
 
         Raises:
             FileFormatError:
-                The CSV data does not have `FPD_CSV_HEADER` as it's headers.
+                The CSV data does not have `character,width` as it's headers.
 
         Returns:
             A fpd character table.
         """
-        character_table: FpdCharacterTable = OrderedBidict()
+        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 
         csv_reader = csv.DictReader(fp)
 
@@ -215,9 +212,9 @@ class Fpd(BaseFileFormat):
             )
 
         for i, entry in enumerate(csv_reader):
-            character, width = entry.values()
+            code_point, width = entry.values()
 
-            fpd_character = FpdCharacter(character, int(width, base=16))
+            fpd_character = FpdCharacter(code_point, int(width, base=16))
 
             if (
                 character_index := character_table.inverse.get(fpd_character, -1)
@@ -238,15 +235,6 @@ class Fpd(BaseFileFormat):
             fp:
                 The file-like object to write the character table as a CSV file.
         """
-
-        def fpd_serializer(
-            __: type, ___: attrs.Attribute[Any], value: str | int
-        ) -> str:
-            if isinstance(value, int):
-                return hex(value)
-
-            return value
-
         csv_writer = csv.DictWriter(fp, FPD_CSV_HEADER)
 
         csv_writer.writeheader()
@@ -256,5 +244,10 @@ class Fpd(BaseFileFormat):
                 character = self.entries[character]
 
             csv_writer.writerow(
-                attrs.asdict(character, value_serializer=fpd_serializer)
+                attrs.asdict(
+                    character,
+                    value_serializer=lambda _, __, value: (
+                        hex(value) if isinstance(value, int) else value
+                    ),
+                )
             )

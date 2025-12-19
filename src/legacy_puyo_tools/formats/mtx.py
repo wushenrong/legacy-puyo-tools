@@ -21,13 +21,14 @@ import io
 from io import StringIO
 from itertools import pairwise
 from os import SEEK_END
-from typing import BinaryIO, Literal
+from typing import BinaryIO
 
 import attrs
 from lxml import etree
 
 from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
 from legacy_puyo_tools.formats.fpd import Fpd
+from legacy_puyo_tools.typing import MtxOffsetSize, MtxString
 
 MTX_ENDIAN = "little"
 MTX_LENGTH_WORD_SIZE = 4
@@ -40,12 +41,6 @@ MTX32_OFFSET_WORD_SIZE = 4
 MTX64_IDENTIFIER = 16
 MTX64_IDENTIFIER_WORD_SIZE = 8
 MTX64_OFFSET_WORD_SIZE = 8
-
-type MtxString = list[int]
-"""A list of indexes that points to a character in the fpd character table."""
-
-type MtxOffsetSize = Literal[32, 64]
-"""The size of the section and string offsets. Either 32 or 64 bits."""
 
 
 @attrs.define

@@ -15,7 +15,7 @@ from legacy_puyo_tools.cli.confopts import (
     mtx_options,
     output_option,
 )
-from legacy_puyo_tools.formats.fmp import Fmp, FmpSize
+from legacy_puyo_tools.formats.fmp import Fmp, FmpFontSize
 from legacy_puyo_tools.formats.fpd import FPD_CSV_HEADER, Fpd
 
 
@@ -32,7 +32,7 @@ def app() -> None:
 def create_fmp(
     input_file: Path,
     output_file: Path | None,
-    size: FmpSize,
+    size: FmpFontSize,
     padding: int,
 ) -> None:
     """Create a fmp file from a image file, preferably from BMP or PNG."""

@@ -23,10 +23,13 @@ lifetime.
 - The encoding type for Unicode errors from USC-2 to UTF-16.
 - Type definitions for character graphics into their own type.
 - Graphics encode and decode methods into their own module.
+- Moved types back to `typing.py`.
 
 ### Removed
 
 - Unneeded arguments that is leftover from Python 3.11.
+- Types that hides the underlining dictionary type.
+- Constants that are not really needed based on context.
 
 ## 2025-10-10
 

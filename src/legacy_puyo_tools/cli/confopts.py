@@ -6,17 +6,12 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 import cloup
-from cloup.constraints import require_one
-
-from legacy_puyo_tools.formats.fmp import FMP_DEFAULT_FONT_SIZE, FMP_DEFAULT_PADDING
-
-_T = TypeVar("_T", bound=Callable[..., Any])
 
 
-def input_argument(help_text: str) -> Callable[[_T], _T]:
+def input_argument[T: Callable[..., Any]](help_text: str) -> Callable[[T], T]:
     """Return an argument that gets file from a path."""
     return cloup.argument(
         "input_file", help=help_text, type=cloup.Path(path_type=Path, dir_okay=False)
@@ -36,14 +31,14 @@ fmp_option = cloup.option_group(
     cloup.option(
         "--size",
         help="Size of the characters in the font.",
-        default=FMP_DEFAULT_FONT_SIZE,
+        default=14,
         type=cloup.Choice([8, 14], case_sensitive=False),
         show_default=True,
     ),
     cloup.option(
         "--padding",
         help="Size of the padding around the characters.",
-        default=FMP_DEFAULT_PADDING,
+        default=1,
         type=cloup.IntRange(0, 4),
         show_default=True,
     ),
@@ -52,16 +47,13 @@ fmp_option = cloup.option_group(
 mtx_options = cloup.option_group(
     "Character table options",
     cloup.option(
-        "--fpd",
-        help="Use a fpd file as the character table.",
+        "--font-format",
+        help="The font format to use to covert mtx.",
         type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
     ),
     cloup.option(
-        "--csv",
+        "--table-format",
         help="Use a CSV file as the character table.",
         type=cloup.Path(exists=True, dir_okay=False, path_type=Path),
-    ),
-    constraint=require_one.rephrased(
-        "exactly 1 character table required for mtx files",
     ),
 )

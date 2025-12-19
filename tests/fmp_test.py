@@ -17,7 +17,8 @@ from PIL import Image, ImageChops
 from legacy_puyo_tools.cli.convert import convert_fmp
 from legacy_puyo_tools.cli.create import create_fmp
 from legacy_puyo_tools.formats.base import FileFormatError
-from legacy_puyo_tools.formats.fmp import Fmp, FmpTableOrientation
+from legacy_puyo_tools.formats.fmp import Fmp
+from legacy_puyo_tools.typing import ImageOrientation
 
 
 @pytest.mark.parametrize(
@@ -32,7 +33,7 @@ def test_fmp_conversion(
     input_file: str,
     output_file: str | None,
     size: int,
-    orientation: FmpTableOrientation,
+    orientation: ImageOrientation,
 ) -> None:
     """Test converting a fmp file."""
     cli_runner = CliRunner()
