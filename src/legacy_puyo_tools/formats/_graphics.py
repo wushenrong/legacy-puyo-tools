@@ -31,7 +31,7 @@ def parse_4bpp_graphic(graphic_data: bytes, graphic_width: int) -> BitmapGraphic
 
         graphic.append(graphic_row)
 
-    return np.array(graphic, np.bool)
+    return np.array(graphic, dtype=bool)
 
 
 def write_4bpp_graphic(fp: BinaryIO, graphic: BitmapGraphic) -> None:
@@ -75,7 +75,7 @@ def parse_graphics_from_image[T: BitmapGraphic](
                     (col + 1) * graphic_width - padding,
                     (row + 1) * graphic_height - padding,
                 )),
-                np.bool,
+                dtype=bool,
             )
         )
         for row in range(hd)
@@ -103,14 +103,14 @@ def write_graphics_to_image(
     graphic_height = font_height + (padding * 2)
     graphic_width = font_width + (padding * 2)
 
-    buf = Image.new("1", (graphic_width, graphic_height))
-    img = Image.new("1", (graphic_width * width, graphic_height * height))
+    buffer = Image.new("1", (graphic_width, graphic_height))
+    image = Image.new("1", (graphic_width * width, graphic_height * height))
 
     for row in range(height):
         for col in range(width):
             # A way that tries to flatten multidimensional arrays without making
             # additional copies
-            buf.putdata(np.pad(font[(row * width) + col], padding).reshape(-1))
-            img.paste(buf, (col * graphic_width, row * graphic_height))
+            buffer.putdata(np.pad(font[(row * width) + col], padding).reshape(-1))
+            image.paste(buffer, (col * graphic_width, row * graphic_height))
 
-    return img
+    return image

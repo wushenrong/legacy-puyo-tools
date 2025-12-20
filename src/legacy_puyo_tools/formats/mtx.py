@@ -26,10 +26,10 @@ from typing import BinaryIO
 import attrs
 from lxml import etree
 
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats.base import (
     BaseCharacterTable,
     BaseFileFormat,
-    FileFormatError,
 )
 from legacy_puyo_tools.typing import MtxOffsetSize, MtxString
 
@@ -164,21 +164,21 @@ class Mtx(BaseFileFormat):
         for string in self.strings:
             dialog = etree.SubElement(sheet, "text")
 
-            with StringIO() as str_buf:
+            with StringIO() as string_buffer:
                 for character in string:
                     match character:
                         case 0xF813:
                             dialog.append(etree.Element("arrow"))
                         # TODO: Figure out what this control character does
                         case 0xF883:
-                            str_buf.write("0xF883")
+                            string_buffer.write("0xF883")
                         case 0xFFFD:
-                            str_buf.write("\n")
+                            string_buffer.write("\n")
                         case 0xFFFF:
                             break
                         case _:
-                            str_buf.write(font[character])
+                            string_buffer.write(font[character])
 
-                dialog.text = str_buf.getvalue()
+                dialog.text = string_buffer.getvalue()
 
         return etree.tostring(root, encoding="utf-8", xml_declaration=True)

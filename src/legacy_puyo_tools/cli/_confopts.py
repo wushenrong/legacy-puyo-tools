@@ -12,8 +12,12 @@ import cloup
 from cloup.constraints import Equal, If, all_or_none, mutually_exclusive
 
 
-def get_output_path(input_file: Path, output_file: Path | None, extension: str) -> Path:
-    return output_file or Path(input_file.name).with_suffix(extension)
+def get_output_path(
+    input_file: Path, output_file: Path | None, extension: str | None
+) -> Path:
+    return output_file or Path(input_file.name).with_suffix(
+        extension or input_file.suffix
+    )
 
 
 def input_argument[T: Callable[..., Any]](help_text: str) -> Callable[[T], T]:
@@ -29,6 +33,8 @@ output_option = cloup.option(
     help="Output file. Defaults to the input filename with an appropriate extension.",
     type=cloup.Path(dir_okay=False, writable=True, path_type=Path),
 )
+
+# Convert and create
 
 graphics_options = cloup.OptionGroup("Graphics Options")
 padding_option = graphics_options.option(

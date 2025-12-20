@@ -5,7 +5,7 @@
 import csv
 from typing import TextIO
 
-from legacy_puyo_tools.formats.base import FileFormatError
+from legacy_puyo_tools.exceptions import FileFormatError
 
 CSV_TABLE_HEADER = ["code_point", "width"]
 

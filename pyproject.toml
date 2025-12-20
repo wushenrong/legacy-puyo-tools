@@ -4,7 +4,7 @@
 
 [build-system]
 build-backend = "hatchling.build"
-requires = [ "hatchling" ]
+requires = ["hatchling"]
 
 [project]
 name = "legacy-puyo-tools"
@@ -12,10 +12,10 @@ version = "2025.10.10.1"
 
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
-keywords = [ "puyopuyo" ]
+keywords = ["puyopuyo"]
 license = "MIT"
-license-files = [ "LICENSE" ]
-authors = [ { name = "Samuel Wu", email = "twopizza9621536@gmail.com" } ]
+license-files = ["LICENSE"]
+authors = [{ name = "Samuel Wu", email = "twopizza9621536@gmail.com" }]
 requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -47,8 +47,10 @@ urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
+scripts.legacy-puyo-compress = "legacy_puyo_tools.cli.compress:app"
 scripts.legacy-puyo-convert = "legacy_puyo_tools.cli.convert:app"
 scripts.legacy-puyo-create = "legacy_puyo_tools.cli.create:app"
+scripts.legacy-puyo-decompress = "legacy_puyo_tools.cli.decompress:app"
 
 [dependency-groups]
 dev = [
@@ -63,7 +65,7 @@ dev = [
     { include-group = "test" },
     { include-group = "type" },
 ]
-test = [ "pytest>=8.4.1", "pytest-cov>=6.2.1", "pytest-datadir>=1.8" ]
+test = ["pytest>=8.4.1", "pytest-cov>=6.2.1", "pytest-datadir>=1.8"]
 type = [
     "pyright[nodejs]>=1.1.403",
     "types-lxml>=2025.3.30",
@@ -79,9 +81,9 @@ docs = [
     "sphinx-pyproject>=0.3",
     "sphinxext-opengraph[social-cards]>=0.10",
 ]
-lint = [ "pre-commit-uv>=4.1.4" ]
-pkg-meta = [ "check-wheel-contents>=0.6.1", "twine>=6.1", "uv>=0.8" ]
-pylint = [ "pylint>=3.3.7" ]
+lint = ["pre-commit-uv>=4.1.4"]
+pkg-meta = ["check-wheel-contents>=0.6.1", "twine>=6.1", "uv>=0.8"]
+pylint = ["pylint>=3.3.7"]
 
 [tool.ruff]
 preview = true
@@ -118,8 +120,8 @@ lint.select = [
     "YTT",    # flake8-2020
 ]
 
-lint.per-file-ignores."**/tests/*" = [ "S101" ] # We need asserts for pytest
-lint.typing-modules = [ "types-lxml" ]
+lint.per-file-ignores."**/tests/*" = ["S101"] # We need asserts for pytest
+lint.typing-modules = ["types-lxml"]
 
 lint.pydocstyle.convention = "google"
 
@@ -131,7 +133,7 @@ disable = [
     "missing-function-docstring",
     "missing-module-docstring",
 ]
-extension-pkg-allow-list = [ "lxml" ]
+extension-pkg-allow-list = ["lxml"]
 max-line-length = 88
 output-format = "colorized"
 
@@ -140,7 +142,7 @@ column_width = 80
 indent = 4
 
 [tool.pytest.ini_options]
-addopts = [ "--cov", "--import-mode=importlib" ]
+addopts = ["--cov", "--import-mode=importlib"]
 minversion = "8.4"
 testpaths = "tests"
 
@@ -162,7 +164,7 @@ exclude_also = [
 ]
 
 [tool.pyright]
-include = [ "src", "tests" ]
+include = ["src", "tests"]
 typeCheckingMode = "strict"
 
 [tool.sphinx-pyproject]
@@ -182,8 +184,8 @@ extensions = [
     "sphinxext.opengraph",
 ]
 
-exclude_patterns = [  ]
-templates_path = [ "_templates" ]
+exclude_patterns = []
+templates_path = ["_templates"]
 
 nitpicky = true
 
@@ -194,14 +196,14 @@ extlinks_detect_hardcoded_links = true
 todo_include_todos = true
 
 # MyST parser
-myst_enable_extensions = [ "colon_fence", "fieldlist" ]
+myst_enable_extensions = ["colon_fence", "fieldlist"]
 
 # Opengraph
 ogp_site_url = 'https://wushenrong.github.io/legacy_puyo_tools/'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-html_static_path = [ "_static" ]
+html_static_path = ["_static"]
 html_theme = "furo"
 html_theme_options.source_branch = "main"
 html_theme_options.source_directory = "docs/"

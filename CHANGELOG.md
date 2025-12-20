@@ -16,12 +16,13 @@ lifetime.
 
 - Support for 64 bit offsets for `mtx`.
 - Support for the `fnt` format.
+- LZ11 compression algorithm for `fnt`.
 
 ### Changed
 
 - Internal functions to raise exceptions if our expectations are somehow wrong.
 - The encoding type for Unicode errors from USC-2 to UTF-16.
-- Type definitions for character graphics into their own type.
+- Restructure types and exceptions, again.
 - Graphics encode and decode methods into their own module.
 - Moved types back to `typing.py`.
 

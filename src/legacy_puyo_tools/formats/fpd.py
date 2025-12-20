@@ -18,10 +18,11 @@ from typing import BinaryIO, TextIO
 import attrs
 from bidict import OrderedBidict
 
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
 from legacy_puyo_tools.formats.base import (
     BaseCharacterTable,
-    FileFormatError,
+    BaseFileFormat,
 )
 
 FPD_CHARACTER_ENTRY_FORMAT = "<HB"
@@ -87,7 +88,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd(BaseCharacterTable):
+class Fpd(BaseFileFormat, BaseCharacterTable):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each
@@ -110,14 +111,14 @@ class Fpd(BaseCharacterTable):
 
     def __str__(self) -> str:
         """Return all of the characters in the fpd character table as a string."""
-        with StringIO() as str_buf:
+        with StringIO() as string_buffer:
             for character in self.entries.inverse:
                 while isinstance(character, int):
                     character = self.entries[character]
 
-                str_buf.write(str(character))
+                string_buffer.write(str(character))
 
-            return str_buf.getvalue()
+            return string_buffer.getvalue()
 
     def get_index(self, character: str) -> int:
         """Return the index of a character from the fpd character table."""

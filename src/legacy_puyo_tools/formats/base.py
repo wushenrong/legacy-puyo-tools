@@ -11,10 +11,6 @@ from abc import abstractmethod
 from typing import BinaryIO, Protocol
 
 
-class FileFormatError(Exception):
-    """The file being decoded does not conform to the implemented file format."""
-
-
 class BaseFileFormat(Protocol):
     """A binary file format with encoding and decoding support."""
 
@@ -44,7 +40,9 @@ class BaseFileFormat(Protocol):
         raise NotImplementedError
 
 
-class BaseCharacterTable(BaseFileFormat, Protocol):
+class BaseCharacterTable(Protocol):
+    """A file format that implements character table."""
+
     def __getitem__(self, index: int) -> str:
         """Return a character from the character table by index."""
         raise NotImplementedError
