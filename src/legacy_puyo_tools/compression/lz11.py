@@ -13,6 +13,8 @@ from typing import BinaryIO
 
 from legacy_puyo_tools.exceptions import DecompressionError
 
+_BITS_IN_BYTES = 8
+
 DECOMPRESSION_SIZE_ENDIAN = "little"
 
 LZ11_MAGIC_NUMBER = b"\x11"
@@ -20,18 +22,39 @@ COMP_LZ11_MAGIC_NUMBER = b"COMP"
 
 
 def decompress_lz11(in_fp: BinaryIO, out_fp: BinaryIO) -> None:
-    if not in_fp.seekable():
+    """Decompress a LZ11 compressed file.
+
+    Args:
+        in_fp:
+            The file handler of the LZ11 compressed file.
+        out_fp:
+            The file handler of the outgoing uncompressed data stream.
+
+    Raises:
+        io.UnsupportedOperation:
+            Unable to perform seek or read operations on the file handlers.
+        DecompressionError:
+            The input file is not a LZ11 compressed file.
+        DecompressionError:
+            The decompressed file size is not the same as the expected file size.
+    """
+    if not in_fp.seekable() or not out_fp.readable():
         raise io.UnsupportedOperation(
-            "Unable to perform seek operations on the input file handler."
+            "Unable to perform seek or read operations on the file handlers."
         )
 
     if in_fp.read(1) != LZ11_MAGIC_NUMBER:
         raise DecompressionError("Not a LZ11 compressed data stream.", "LZ11")
 
-    decompressed_size = int.from_bytes(in_fp.read(3), DECOMPRESSION_SIZE_ENDIAN)
+    decompressed_size_indicator = int.from_bytes(
+        in_fp.read(3), DECOMPRESSION_SIZE_ENDIAN
+    )
 
-    if decompressed_size == 0:
-        decompressed_size = int.from_bytes(in_fp.read(4), DECOMPRESSION_SIZE_ENDIAN)
+    decompressed_size = (
+        decompressed_size_indicator
+        if decompressed_size_indicator != 0
+        else int.from_bytes(in_fp.read(4), DECOMPRESSION_SIZE_ENDIAN)
+    )
 
     def read_byte() -> int:
         return int.from_bytes(in_fp.read(1))
@@ -39,7 +62,7 @@ def decompress_lz11(in_fp: BinaryIO, out_fp: BinaryIO) -> None:
     while out_fp.tell() < decompressed_size:
         flag = read_byte()
 
-        for _ in range(8):
+        for _ in range(_BITS_IN_BYTES):
             # Not compressed
             if flag & (1 << 7) == 0:
                 out_fp.write(in_fp.read(1))
