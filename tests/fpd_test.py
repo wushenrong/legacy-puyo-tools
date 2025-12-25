@@ -20,14 +20,16 @@ from legacy_puyo_tools.formats.fpd import Fpd
 
 
 @pytest.mark.parametrize(("output_file"), [(None), ("custom.csv")])
-def test_fpd_conversion(lazy_datadir: Path, output_file: str | None) -> None:
+def test_fpd_conversion(
+    lazy_shared_datadir: Path, lazy_datadir: Path, output_file: str | None
+) -> None:
     """Test converting a fpd file."""
     cli_runner = CliRunner()
 
     fpd_file = "sample.fpd"
 
     expected_csv_path = Path(fpd_file).with_suffix(".csv")
-    expected_csv = (lazy_datadir / expected_csv_path).read_text(encoding="utf-8")
+    expected_csv = (lazy_shared_datadir / expected_csv_path).read_text(encoding="utf-8")
 
     with cli_runner.isolated_filesystem():
         input_arguments = [str(lazy_datadir / fpd_file)]
@@ -48,7 +50,9 @@ def test_fpd_conversion(lazy_datadir: Path, output_file: str | None) -> None:
 
 
 @pytest.mark.parametrize(("output_file"), [(None), ("custom.fpd")])
-def test_fpd_creation(lazy_datadir: Path, output_file: str) -> None:
+def test_fpd_creation(
+    lazy_shared_datadir: Path, lazy_datadir: Path, output_file: str
+) -> None:
     """Test creating a fpd file."""
     cli_runner = CliRunner()
 
@@ -58,7 +62,7 @@ def test_fpd_creation(lazy_datadir: Path, output_file: str) -> None:
     expected_fpd = (lazy_datadir / expected_fpd_path).read_bytes()
 
     with cli_runner.isolated_filesystem():
-        input_arguments = [str(lazy_datadir / csv_file)]
+        input_arguments = [str(lazy_shared_datadir / csv_file)]
 
         if output_file:
             output_path = Path(output_file)
@@ -94,18 +98,15 @@ def test_fpd_lookup(lazy_datadir: Path) -> None:
     # The 6th index in the sample fpd data should be '3'
     assert fpd_data[5] == "3"
 
-    # The character '佛' in the sample fpd data should be the 9th index
-    assert fpd_data.get_index("佛") == 9
-
     # The 13th index in the sample fpd data should be the "second" 'A'
     assert fpd_data[13] == "A"
 
 
-def test_fpd_exceptions(lazy_datadir: Path) -> None:
+def test_fpd_exceptions(lazy_shared_datadir: Path, lazy_datadir: Path) -> None:
     """Test rasing exceptions when the input files are in the invalid format."""
     invalid_fpd = lazy_datadir / "invalid.fpd"
-    invalid_csv = lazy_datadir / "invalid.csv"
-    surrogate_csv = lazy_datadir / "surrogate.csv"
+    invalid_csv = lazy_shared_datadir / "invalid.csv"
+    surrogate_csv = lazy_shared_datadir / "surrogate.csv"
     surrogate_fpd = lazy_datadir / "surrogate.fpd"
 
     with invalid_fpd.open("rb") as fpd_fp, pytest.raises(FileFormatError):

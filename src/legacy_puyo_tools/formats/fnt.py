@@ -11,7 +11,6 @@ Puyo Puyo!! 20th Anniversary.
 
 from __future__ import annotations
 
-import csv
 import io
 import struct
 from collections import OrderedDict
@@ -23,7 +22,10 @@ import numpy as np
 from PIL import Image
 
 from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
+from legacy_puyo_tools.formats._csv import (
+    read_csv_character_table,
+    write_csv_character_table,
+)
 from legacy_puyo_tools.formats._graphics import (
     PIXELS_PER_BYTE,
     parse_4bpp_graphic,
@@ -84,10 +86,13 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
     font_height: int
     font_width: int
     graphic_size: int
+    character_list: list[str] = attrs.field(
+        default=attrs.Factory(lambda self: list(self.font), takes_self=True)
+    )
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the fnt character table."""
-        return list(self.font)[index]
+        return self.character_list[index]
 
     def __str__(self) -> str:
         """Return all of the characters in the fnt character table as a string."""
@@ -199,11 +204,16 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
             )
 
         for code_point, character in self.font.items():
-            fp.write(
-                struct.pack(
-                    FNT_CHARACTER_ENTRY_FORMAT, ord(code_point), character.width
+            try:
+                fp.write(
+                    struct.pack(
+                        FNT_CHARACTER_ENTRY_FORMAT, ord(code_point), character.width
+                    )
                 )
-            )
+            except struct.error as e:
+                raise FileFormatError(
+                    f"Character '{code_point}' cannot be encoded to fnt."
+                ) from e
 
             if write_graphics:
                 write_4bpp_graphic(
@@ -233,32 +243,15 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
                 "The font width of the external font needs to be a multiples of 2."
             )
 
-        character_table: OrderedDict[str, FntCharacter] = OrderedDict()
-
-        for entry in get_csv_reader(fp):
-            code_point, width = entry.values()
-
-            character_table[code_point] = FntCharacter(None, int(width, base=16))
-
         return cls(
-            character_table,
+            read_csv_character_table(fp, lambda width: FntCharacter(None, width)),
             font_height,
             font_width,
             font_height * font_width // PIXELS_PER_BYTE,
         )
 
     def write_csv(self, fp: TextIO) -> None:
-        csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
-
-        csv_writer.writeheader()
-
-        csv_writer.writerows([
-            {
-                "code_point": code_point,
-                "width": hex(character.width),
-            }
-            for code_point, character in self.font.items()
-        ])
+        write_csv_character_table(fp, self.font)
 
     def add_graphics(
         self,
@@ -274,7 +267,13 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
             im, font_height, font_width, padding, FntCharacterGraphic
         )
 
-        for character, graphic in zip(characters, graphics, strict=True):
+        if len(characters) > len(graphics):
+            raise ValueError(
+                "The image does not enough character graphics to fill the character"
+                "table."
+            )
+
+        for character, graphic in zip(characters, graphics, strict=False):
             self.font[character].graphic = graphic
 
     def write_image(

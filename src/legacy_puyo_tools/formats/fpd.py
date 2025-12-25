@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2021 Nick Woronekin
 # SPDX-FileCopyrightText: 2025 Samuel Wu
 #
 # SPDX-License-Identifier: MIT
@@ -10,16 +11,18 @@ This module supports the encoding and decoding of the fpd file format used by Pu
 
 from __future__ import annotations
 
-import csv
 import struct
+from collections import OrderedDict
 from io import StringIO
 from typing import BinaryIO, TextIO
 
 import attrs
-from bidict import OrderedBidict
 
 from legacy_puyo_tools.exceptions import FileFormatError
-from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
+from legacy_puyo_tools.formats._csv import (
+    read_csv_character_table,
+    write_csv_character_table,
+)
 from legacy_puyo_tools.formats.base import (
     BaseCharacterTable,
     BaseFileFormat,
@@ -52,39 +55,9 @@ class FpdCharacter:
     UTF-16.
     """
 
-    code_point: str
-    """A string that stores a single character."""
     width: int = attrs.field(default=0x0, eq=False)
     """How wide should the character be, only used in the Nintendo DS versions of the
     games."""
-
-    def __str__(self) -> str:
-        """Return the underlying character as a string."""
-        return self.code_point
-
-    def encode(self) -> bytes:
-        """Encode the character to a fpd character entry.
-
-        Raises:
-            UnicodeEncodeError:
-                The character is not in the Basic Multilingual Plane, or a code point
-                from `U+0000` to `U+FFFF`.
-
-        Returns:
-            The character's Unicode code point in little-endian and its width.
-        """
-        try:
-            return struct.pack(
-                FPD_CHARACTER_ENTRY_FORMAT, ord(self.code_point), self.width
-            )
-        except struct.error as e:
-            raise UnicodeEncodeError(
-                "UTF-16",
-                self.code_point,
-                0,
-                1,
-                "Character is not in the BMP or a code point from U+0000 to U+FFFF",
-            ) from e
 
 
 @attrs.define
@@ -97,32 +70,25 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
     `0x06`, etc.
     """
 
-    entries: OrderedBidict[int, int | FpdCharacter]
-    """A ordered bidirectional dictionary of fpd character entries."""
+    entries: OrderedDict[str, FpdCharacter]
+    """A ordered dictionary of fpd character entries."""
+
+    character_list: list[str] = attrs.field(
+        default=attrs.Factory(lambda self: list(self.entries), takes_self=True)
+    )
+    """A list of characters based on their insertion order."""
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the fpd character table."""
-        character = self.entries[index]
-
-        while isinstance(character, int):
-            character = self.entries[character]
-
-        return str(character)
+        return self.character_list[index]
 
     def __str__(self) -> str:
         """Return all of the characters in the fpd character table as a string."""
         with StringIO() as string_buffer:
-            for character in self.entries.inverse:
-                while isinstance(character, int):
-                    character = self.entries[character]
-
-                string_buffer.write(str(character))
+            for character in self.entries:
+                string_buffer.write(character)
 
             return string_buffer.getvalue()
-
-    def get_index(self, character: str) -> int:
-        """Return the index of a character from the fpd character table."""
-        return self.entries.inverse[FpdCharacter(character)]
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Fpd:
@@ -140,7 +106,7 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
         Returns:
             A fpd character table.
         """
-        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
+        character_table: OrderedDict[str, FpdCharacter] = OrderedDict()
 
         try:
             fpd_characters = struct.iter_unpack(FPD_CHARACTER_ENTRY_FORMAT, fp.read())
@@ -150,16 +116,8 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
                 "conform to the fpd character format."
             ) from e
 
-        for i, (code_point, width) in enumerate(fpd_characters):
-            code_point = FpdCharacter(chr(code_point), width)
-
-            if (character_index := character_table.inverse.get(code_point, -1)) != -1:
-                while character_table.inverse.get(character_index, -1) != -1:
-                    character_index = character_table.inverse.get(character_index, -1)
-
-                character_table.put(i, character_index)
-            else:
-                character_table.put(i, code_point)
+        for code_point, width in fpd_characters:
+            character_table[chr(code_point)] = FpdCharacter(width)
 
         return cls(character_table)
 
@@ -176,15 +134,16 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
                 A character in the fpd character table cannot be encoded to fmp because
                 the character is not in the Basic Multilingual Plane.
         """
-        for character in self.entries.inverse:
-            while isinstance(character, int):
-                character = self.entries[character]
-
+        for code_point, character in self.entries.items():
             try:
-                fp.write(character.encode())
-            except UnicodeEncodeError as e:
+                fp.write(
+                    struct.pack(
+                        FPD_CHARACTER_ENTRY_FORMAT, ord(code_point), character.width
+                    )
+                )
+            except struct.error as e:
                 raise FileFormatError(
-                    f"Character '{character}' cannot be encoded to fpd"
+                    f"Character '{code_point}' cannot be encoded to fpd."
                 ) from e
 
     @classmethod
@@ -199,24 +158,7 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
         Returns:
             A fpd character table.
         """
-        character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
-
-        for i, entry in enumerate(get_csv_reader(fp)):
-            code_point, width = entry.values()
-
-            fpd_character = FpdCharacter(code_point, int(width, base=16))
-
-            if (
-                character_index := character_table.inverse.get(fpd_character, -1)
-            ) != -1:
-                while character_table.inverse.get(character_index, -1) != -1:
-                    character_index = character_table.inverse.get(character_index, -1)
-
-                character_table.put(i, character_index)
-            else:
-                character_table.put(i, fpd_character)
-
-        return cls(character_table)
+        return cls(read_csv_character_table(fp, FpdCharacter))
 
     def write_csv(self, fp: TextIO) -> None:
         """Write the fpd character table to a file-like object.
@@ -225,19 +167,4 @@ class Fpd(BaseFileFormat, BaseCharacterTable):
             fp:
                 The file-like object to write the character table as a CSV file.
         """
-        csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
-
-        csv_writer.writeheader()
-
-        for character in self.entries.inverse:
-            while isinstance(character, int):
-                character = self.entries[character]
-
-            csv_writer.writerow(
-                attrs.asdict(
-                    character,
-                    value_serializer=lambda _, __, value: (
-                        hex(value) if isinstance(value, int) else value
-                    ),
-                )
-            )
+        write_csv_character_table(fp, self.entries)

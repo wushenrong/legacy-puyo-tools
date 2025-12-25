@@ -108,14 +108,6 @@ offset by multiples of `0x03`. For example, the 1st character is at index
 `0x00`, the 2nd character is at index `0x03`, the 3rd character is at index
 `0x06`, etc.
 
-:::{warning} If there are multiple entries that maps to the same code point in
-the `fpd`, then all other entries will be eventually be mapped to the first
-entry in the ordered bidirectional dictionary.
-
-This will lead to the loss of accuracy if the character graphics in the `fmp`
-are different for the duplicate entries.
-:::
-
 The `fpd` is not used by the games internally except for the Nintendo DS version
 of the games.
 

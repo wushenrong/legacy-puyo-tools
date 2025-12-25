@@ -43,10 +43,12 @@ class BaseFileFormat(Protocol):
 class BaseCharacterTable(Protocol):
     """A file format that implements character table."""
 
+    @abstractmethod
     def __getitem__(self, index: int) -> str:
         """Return a character from the character table by index."""
         raise NotImplementedError
 
+    @abstractmethod
     def __str__(self) -> str:
         """Return all of the characters in the character table as a string."""
         raise NotImplementedError

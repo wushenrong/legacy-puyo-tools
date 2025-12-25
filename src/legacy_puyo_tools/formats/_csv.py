@@ -3,14 +3,18 @@
 # SPDX-License-Identifier: MIT
 
 import csv
-from typing import TextIO
+from collections import OrderedDict
+from collections.abc import Callable
+from typing import Any, TextIO
 
 from legacy_puyo_tools.exceptions import FileFormatError
 
 CSV_TABLE_HEADER = ["code_point", "width"]
 
 
-def get_csv_reader(fp: TextIO) -> csv.DictReader[str]:
+def read_csv_character_table[T](
+    fp: TextIO, cast: Callable[[Any], T]
+) -> OrderedDict[str, T]:
     csv_reader = csv.DictReader(fp)
 
     if csv_reader.fieldnames != CSV_TABLE_HEADER:
@@ -19,4 +23,25 @@ def get_csv_reader(fp: TextIO) -> csv.DictReader[str]:
             + ",".join(CSV_TABLE_HEADER)
         )
 
-    return csv_reader
+    character_table: OrderedDict[str, T] = OrderedDict()
+
+    for entry in csv_reader:
+        code_point, width = entry.values()
+        character_table[code_point] = cast(width)
+
+    return character_table
+
+
+def write_csv_character_table(
+    fp: TextIO, character_table: OrderedDict[str, Any]
+) -> None:
+    csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
+    csv_writer.writeheader()
+
+    csv_writer.writerows([
+        {
+            "code_point": code_point,
+            "width": hex(character.width),
+        }
+        for code_point, character in character_table.items()
+    ])

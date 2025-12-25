@@ -77,7 +77,10 @@ def test_fmp_conversion(
     ],
 )
 def test_fmp_creation(
-    lazy_datadir: Path, input_file: str, output_file: str | None, font_size: int
+    lazy_datadir: Path,
+    input_file: str,
+    output_file: str | None,
+    font_size: int,
 ) -> None:
     """Test creating a fmp file."""
     cli_runner = CliRunner()

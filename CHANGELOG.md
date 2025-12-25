@@ -22,9 +22,10 @@ lifetime.
 
 - Internal functions to raise exceptions if our expectations are somehow wrong.
 - The encoding type for Unicode errors from USC-2 to UTF-16.
-- Restructure types and exceptions, again.
 - Graphics encode and decode methods into their own module.
 - Moved types back to `typing.py`.
+- Moved exceptions back to `exceptions.py`.
+- How the `fpd` stores its entries to mirror PTE.
 
 ### Removed
 
