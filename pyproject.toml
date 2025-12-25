@@ -47,8 +47,10 @@ urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
 
+scripts.legacy-puyo-compress = "legacy_puyo_tools.cli.compress:app"
 scripts.legacy-puyo-convert = "legacy_puyo_tools.cli.convert:app"
 scripts.legacy-puyo-create = "legacy_puyo_tools.cli.create:app"
+scripts.legacy-puyo-decompress = "legacy_puyo_tools.cli.decompress:app"
 
 [dependency-groups]
 dev = [

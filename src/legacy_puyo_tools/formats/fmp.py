@@ -17,6 +17,7 @@ from typing import BinaryIO
 import attrs
 from PIL import Image
 
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats._graphics import (
     PIXELS_PER_BYTE,
     parse_4bpp_graphic,
@@ -24,7 +25,7 @@ from legacy_puyo_tools.formats._graphics import (
     write_4bpp_graphic,
     write_graphics_to_image,
 )
-from legacy_puyo_tools.formats.base import BaseFileFormat, FileFormatError
+from legacy_puyo_tools.formats.base import BaseFileFormat
 from legacy_puyo_tools.typing import FmpCharacterGraphic, FmpFontSize, ImageOrientation
 
 

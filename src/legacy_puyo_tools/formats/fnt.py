@@ -22,6 +22,7 @@ import attrs
 import numpy as np
 from PIL import Image
 
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
 from legacy_puyo_tools.formats._graphics import (
     PIXELS_PER_BYTE,
@@ -32,7 +33,7 @@ from legacy_puyo_tools.formats._graphics import (
 )
 from legacy_puyo_tools.formats.base import (
     BaseCharacterTable,
-    FileFormatError,
+    BaseFileFormat,
 )
 from legacy_puyo_tools.typing import (
     FntCharacterGraphic,
@@ -71,14 +72,6 @@ FNT_PSP_IDENTIFIER = b"MIG.00.1PSP"
 FNT_PSP_IDENTIFIER_LENGTH = 11
 
 
-def _get_fnt_graphics(
-    character: FntCharacter, graphic_size: int
-) -> FntCharacterGraphic:
-    return character.graphic or FntCharacterGraphic(
-        np.array([0] * graphic_size, np.bool)
-    )
-
-
 @attrs.define
 class FntCharacter:
     graphic: FntCharacterGraphic | None
@@ -86,16 +79,11 @@ class FntCharacter:
 
 
 @attrs.define
-class Fnt(BaseCharacterTable):
+class Fnt(BaseFileFormat, BaseCharacterTable):
     font: OrderedDict[str, FntCharacter]
     font_height: int
     font_width: int
-    graphic_size: int = attrs.field(
-        default=attrs.Factory(
-            lambda self: self.font_height * self.font_width // PIXELS_PER_BYTE,
-            takes_self=True,
-        )
-    )
+    graphic_size: int
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the fnt character table."""
@@ -103,11 +91,21 @@ class Fnt(BaseCharacterTable):
 
     def __str__(self) -> str:
         """Return all of the characters in the fnt character table as a string."""
-        with io.StringIO() as str_buf:
+        with io.StringIO() as string_buffer:
             for character in self.font:
-                str_buf.write(character)
+                string_buffer.write(character)
 
-            return str_buf.getvalue()
+            return string_buffer.getvalue()
+
+    def _get_fnt_graphics(self, character: FntCharacter) -> FntCharacterGraphic:
+        return (
+            character.graphic
+            if character.graphic is not None
+            else FntCharacterGraphic(np.zeros(self.graphic_size, dtype=bool))
+        )
+
+    def has_graphics(self) -> bool:
+        return any(character.graphic is not None for character in self.font.values())
 
     @classmethod
     def decode(cls, fp: BinaryIO) -> Fnt:
@@ -130,10 +128,10 @@ class Fnt(BaseCharacterTable):
         parse_graphics = False
 
         if fp.read(FNT_NDS_IDENTIFIER_LENGTH) != FNT_NDS_IDENTIFIER:
-            fnt_length = fp.seek(FNT_WII_IDENTIFIER_LENGTH * -1, SEEK_END)
+            fnt_length = fp.seek(-FNT_WII_IDENTIFIER_LENGTH, SEEK_END)
 
             if fp.read(FNT_WII_IDENTIFIER_LENGTH) not in FNT_WII_IDENTIFIER:
-                fnt_length = fp.seek(FNT_PSP_IDENTIFIER_LENGTH * -1, SEEK_END)
+                fnt_length = fp.seek(-FNT_PSP_IDENTIFIER_LENGTH, SEEK_END)
 
                 # The fnt might be created by Puyo Text Editor without an identifier
                 if fp.read(FNT_PSP_IDENTIFIER_LENGTH) != FNT_PSP_IDENTIFIER:
@@ -170,12 +168,14 @@ class Fnt(BaseCharacterTable):
 
             if parse_graphics:
                 graphic = FntCharacterGraphic(
-                    parse_4bpp_graphic(fp.read(graphic_size), font_width)
+                    parse_4bpp_graphic(
+                        fp.read(graphic_size), font_width // PIXELS_PER_BYTE
+                    )
                 )
 
             character_table[chr(code_point)] = FntCharacter(graphic, width)
 
-        return cls(character_table, font_height, font_width)
+        return cls(character_table, font_height, font_width, graphic_size)
 
     def encode(self, fp: BinaryIO, *, version: FntFormatVersion = "PTE") -> None:
         fp.write(
@@ -208,7 +208,7 @@ class Fnt(BaseCharacterTable):
             if write_graphics:
                 write_4bpp_graphic(
                     fp,
-                    _get_fnt_graphics(character, self.graphic_size).reshape(-1),
+                    self._get_fnt_graphics(character).reshape(-1),
                 )
 
         if version == "PSP":
@@ -216,11 +216,9 @@ class Fnt(BaseCharacterTable):
             return
 
         encoded_version = version.encode()
+
         if encoded_version in FNT_WII_IDENTIFIER:
             fp.write(encoded_version)
-
-    def has_graphics(self) -> bool:
-        return any(character.graphic for character in self.font.values())
 
     @classmethod
     def read_csv(
@@ -242,7 +240,12 @@ class Fnt(BaseCharacterTable):
 
             character_table[code_point] = FntCharacter(None, int(width, base=16))
 
-        return cls(character_table, font_height, font_width)
+        return cls(
+            character_table,
+            font_height,
+            font_width,
+            font_height * font_width // PIXELS_PER_BYTE,
+        )
 
     def write_csv(self, fp: TextIO) -> None:
         csv_writer = csv.DictWriter(fp, CSV_TABLE_HEADER)
@@ -266,6 +269,7 @@ class Fnt(BaseCharacterTable):
         padding: int = 1,
     ) -> None:
         characters = list(self.font)
+
         graphics = parse_graphics_from_image(
             im, font_height, font_width, padding, FntCharacterGraphic
         )
@@ -279,11 +283,10 @@ class Fnt(BaseCharacterTable):
         padding: int = 1,
         orientation: ImageOrientation = "portrait",
     ) -> Image.Image:
-        font = [
-            _get_fnt_graphics(character, self.graphic_size)
-            for character in self.font.values()
-        ]
-
         return write_graphics_to_image(
-            font, self.font_height, self.font_width, padding, orientation
+            [self._get_fnt_graphics(character) for character in self.font.values()],
+            self.font_height,
+            self.font_width,
+            padding,
+            orientation,
         )

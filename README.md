@@ -32,6 +32,8 @@ modify other Puyo Puyo games.
     - ⚠️ Partially Supported
     - ❌ Unsupported
 
+### File Formats
+
 <table>
     <thead>
         <tr>
@@ -52,10 +54,10 @@ modify other Puyo Puyo games.
         </tr>
         <tr>
             <th scope="row"><code>fnt</code></th>
+            <td>✅</td>
+            <td>✅</td>
             <td>❌</td>
-            <td>❌</td>
-            <td>❌</td>
-            <td>❌</td>
+            <td>✅</td>
         </tr>
         <tr>
             <th scope="row"><code>fpd</code></th>
@@ -73,3 +75,26 @@ modify other Puyo Puyo games.
         </tr>
     </tbody>
 </table>
+
+### Compression Algorithms
+
+<table>
+    <thead>
+        <tr>
+            <th scope="col">Algorithm</th>
+            <th scope="col">Compression</th>
+            <th scope="col">Decompression</th>
+            <th scope="col">Testing</th>
+            <th scope="col">Documentation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row"><code>LZ11</code>/<code>COMP</code></th>
+            <td>❌</td>
+            <td>✅</td>
+            <td>❌</td>
+            <td>❌</td>
+        </tr>
+    </tbody>
+<table>
