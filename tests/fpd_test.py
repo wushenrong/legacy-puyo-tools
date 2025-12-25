@@ -15,7 +15,7 @@ from click.testing import CliRunner
 
 from legacy_puyo_tools.cli.convert import convert_fpd
 from legacy_puyo_tools.cli.create import create_fpd
-from legacy_puyo_tools.formats.base import FileFormatError
+from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats.fpd import Fpd
 
 
