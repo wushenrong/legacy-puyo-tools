@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Samuel Wu
 #
 # SPDX-License-Identifier: MIT-0
-
 [build-system]
 build-backend = "hatchling.build"
 requires = [ "hatchling" ]
@@ -9,7 +8,6 @@ requires = [ "hatchling" ]
 [project]
 name = "legacy-puyo-tools"
 version = "2025.10.10.1"
-
 description = "A tool to edit text for older Puyo Puyo games."
 readme = "README.md"
 keywords = [ "puyopuyo" ]
@@ -46,7 +44,6 @@ urls.Changelog = "https://github.com/wushenrong/legacy-puyo-tools/blob/main/CHAN
 urls.Homepage = "https://wushenrong.github.io/legacy-puyo-tools/"
 urls.Issues = "https://github.com/wushenrong/legacy-puyo-tools/issues"
 urls.Source = "https://github.com/wushenrong/legacy-puyo-tools.git"
-
 scripts.legacy-puyo-compress = "legacy_puyo_tools.cli.compress:app"
 scripts.legacy-puyo-convert = "legacy_puyo_tools.cli.convert:app"
 scripts.legacy-puyo-create = "legacy_puyo_tools.cli.create:app"
@@ -71,7 +68,6 @@ type = [
     "types-lxml>=2025.3.30",
     { include-group = "test" },
 ]
-
 docs = [
     "furo>=2025.7.19",
     "myst-parser[linkify]>=4.0.1",
@@ -87,9 +83,7 @@ pylint = [ "pylint>=3.3.7" ]
 
 [tool.ruff]
 preview = true
-
 output-format = "concise"
-
 lint.select = [
     "ANN",    # type annotations
     "ARG",    # falke8 unused arguments
@@ -119,10 +113,8 @@ lint.select = [
     "W",      # Warning
     "YTT",    # flake8-2020
 ]
-
-lint.per-file-ignores."**/tests/*" = [ "S101" ] # We need asserts for pytest
+lint.per-file-ignores."**/tests/*" = [ "S101" ]  # We need asserts for pytest
 lint.typing-modules = [ "types-lxml" ]
-
 lint.pydocstyle.convention = "google"
 
 [tool.pylint]
@@ -141,35 +133,32 @@ output-format = "colorized"
 column_width = 80
 indent = 4
 
-[tool.pytest.ini_options]
-addopts = [ "--cov", "--import-mode=importlib" ]
-minversion = "8.4"
-testpaths = "tests"
+[tool.pyright]
+typeCheckingMode = "strict"
+include = [ "src", "tests" ]
 
-[tool.coverage.run]
-branch = true
+[tool.pytest]
+ini_options.minversion = "8.4"
+ini_options.testpaths = "tests"
+ini_options.addopts = [ "--cov", "--import-mode=importlib" ]
 
-[tool.coverage.report]
-exclude_also = [
+[tool.coverage]
+run.branch = true
+report.exclude_also = [
     '@(abc\.)?abstractmethod',
     'class .*\bProtocol\):',
-    'def __repr__',
-    'if 0:',
-    'if TYPE_CHECKING:',
-    'if __name__ == .__main__.:',
-    'if self.debug:',
-    'if settings.DEBUG',
-    'raise AssertionError',
-    'raise NotImplementedError',
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "if 0:",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "if TYPE_CHECKING:",
+    "raise AssertionError",
+    "raise NotImplementedError",
 ]
-
-[tool.pyright]
-include = [ "src", "tests" ]
-typeCheckingMode = "strict"
 
 [tool.sphinx-pyproject]
 copyright = "%Y Samuel Wu and Contributors"
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
@@ -183,24 +172,17 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinxext.opengraph",
 ]
-
-exclude_patterns = [  ]
+exclude_patterns = []
 templates_path = [ "_templates" ]
-
 nitpicky = true
-
 maximum_signature_line_length = 88
-
 # Extensions
 extlinks_detect_hardcoded_links = true
 todo_include_todos = true
-
 # MyST parser
 myst_enable_extensions = [ "colon_fence", "fieldlist" ]
-
 # Opengraph
-ogp_site_url = 'https://wushenrong.github.io/legacy_puyo_tools/'
-
+ogp_site_url = "https://wushenrong.github.io/legacy_puyo_tools/"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 html_static_path = [ "_static" ]
