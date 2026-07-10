@@ -116,6 +116,7 @@ lint.select = [
 lint.per-file-ignores."**/tests/*" = [ "S101" ]  # We need asserts for pytest
 lint.typing-modules = [ "types-lxml" ]
 lint.pydocstyle.convention = "google"
+src = [ "src", "tests" ]
 
 [tool.pylint]
 # All done by ruff with DOC and FIX

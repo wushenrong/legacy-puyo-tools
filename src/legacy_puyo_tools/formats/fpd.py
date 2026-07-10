@@ -21,8 +21,8 @@ from bidict import OrderedBidict
 from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats._csv import CSV_TABLE_HEADER, get_csv_reader
 from legacy_puyo_tools.formats.base import (
-    BaseCharacterTable,
-    BaseFileFormat,
+    CharacterTable,
+    FileFormat,
 )
 
 FPD_CHARACTER_ENTRY_FORMAT = "<HB"
@@ -65,13 +65,14 @@ class FpdCharacter:
     def encode(self) -> bytes:
         """Encode the character to a fpd character entry.
 
+        Returns:
+            The character's Unicode code point in little-endian and its width.
+
+
         Raises:
             UnicodeEncodeError:
                 The character is not in the Basic Multilingual Plane, or a code point
                 from `U+0000` to `U+FFFF`.
-
-        Returns:
-            The character's Unicode code point in little-endian and its width.
         """
         try:
             return struct.pack(
@@ -88,7 +89,7 @@ class FpdCharacter:
 
 
 @attrs.define
-class Fpd(BaseFileFormat, BaseCharacterTable):
+class Fpd(FileFormat, CharacterTable):
     """A fpd character table.
 
     The fpd stores a character table in which each entry is placed right next to each

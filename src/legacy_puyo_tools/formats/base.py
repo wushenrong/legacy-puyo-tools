@@ -11,12 +11,12 @@ from abc import abstractmethod
 from typing import BinaryIO, Protocol
 
 
-class BaseFileFormat(Protocol):
-    """A binary file format with encoding and decoding support."""
+class FileFormat(Protocol):
+    """A file format with encoding and decoding support."""
 
     @classmethod
     @abstractmethod
-    def decode(cls, fp: BinaryIO) -> BaseFileFormat:
+    def decode(cls, fp: BinaryIO) -> FileFormat:
         """Decode the implemented file format from a file-like object.
 
         Arguments:
@@ -40,8 +40,8 @@ class BaseFileFormat(Protocol):
         raise NotImplementedError
 
 
-class BaseCharacterTable(Protocol):
-    """A file format that implements character table."""
+class CharacterTable(Protocol):
+    """A character table."""
 
     def __getitem__(self, index: int) -> str:
         """Return a character from the character table by index."""

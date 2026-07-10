@@ -18,9 +18,9 @@ supports Puyo Puyo 7 and might support Puyo Puyo! 15th Anniversary.
 from __future__ import annotations
 
 import io
+import os
 from io import StringIO
 from itertools import pairwise
-from os import SEEK_END
 from typing import BinaryIO
 
 import attrs
@@ -28,8 +28,8 @@ from lxml import etree
 
 from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats.base import (
-    BaseCharacterTable,
-    BaseFileFormat,
+    CharacterTable,
+    FileFormat,
 )
 from legacy_puyo_tools.typing import MtxOffsetSize, MtxString
 
@@ -47,7 +47,7 @@ MTX64_OFFSET_WORD_SIZE = 8
 
 
 @attrs.define
-class Mtx(BaseFileFormat):
+class Mtx(FileFormat):
     strings: list[MtxString]
 
     @classmethod
@@ -59,7 +59,7 @@ class Mtx(BaseFileFormat):
 
         mtx_length = int.from_bytes(fp.read(MTX_LENGTH_WORD_SIZE), MTX_ENDIAN)
 
-        if fp.seek(0, SEEK_END) % mtx_length != 0:
+        if fp.seek(0, os.SEEK_END) % mtx_length != 0:
             raise FileFormatError(
                 f"The size of the mtx is incorrect.\nExpected: {mtx_length}\nActual: "
                 f"{fp.tell()}"
@@ -157,7 +157,7 @@ class Mtx(BaseFileFormat):
             for character in string:
                 write_bytes(character, MTX_CHARACTER_WORD_SIZE)
 
-    def write_xml(self, font: BaseCharacterTable) -> bytes:
+    def write_xml(self, font: CharacterTable) -> bytes:
         root = etree.Element("mtx")
         sheet = etree.SubElement(root, "sheet")
 

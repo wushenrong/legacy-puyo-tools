@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import struct
 from collections import OrderedDict
-from os import SEEK_END
 from typing import BinaryIO, TextIO
 
 import attrs
@@ -32,8 +32,8 @@ from legacy_puyo_tools.formats._graphics import (
     write_graphics_to_image,
 )
 from legacy_puyo_tools.formats.base import (
-    BaseCharacterTable,
-    BaseFileFormat,
+    CharacterTable,
+    FileFormat,
 )
 from legacy_puyo_tools.typing import (
     FntCharacterGraphic,
@@ -79,7 +79,7 @@ class FntCharacter:
 
 
 @attrs.define
-class Fnt(BaseFileFormat, BaseCharacterTable):
+class Fnt(FileFormat, CharacterTable):
     font: OrderedDict[str, FntCharacter]
     font_height: int
     font_width: int
@@ -128,14 +128,14 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
         parse_graphics = False
 
         if fp.read(FNT_NDS_IDENTIFIER_LENGTH) != FNT_NDS_IDENTIFIER:
-            fnt_length = fp.seek(-FNT_WII_IDENTIFIER_LENGTH, SEEK_END)
+            fnt_length = fp.seek(-FNT_WII_IDENTIFIER_LENGTH, os.SEEK_END)
 
             if fp.read(FNT_WII_IDENTIFIER_LENGTH) not in FNT_WII_IDENTIFIER:
-                fnt_length = fp.seek(-FNT_PSP_IDENTIFIER_LENGTH, SEEK_END)
+                fnt_length = fp.seek(-FNT_PSP_IDENTIFIER_LENGTH, os.SEEK_END)
 
                 # The fnt might be created by Puyo Text Editor without an identifier
                 if fp.read(FNT_PSP_IDENTIFIER_LENGTH) != FNT_PSP_IDENTIFIER:
-                    fnt_length = fp.seek(0, SEEK_END)
+                    fnt_length = fp.seek(0, os.SEEK_END)
 
             if fnt_length != FNT_HEADER_LENGTH + (
                 character_length * (FNT_CHARACTER_ENTRY_FORMAT_LENGTH)
@@ -148,7 +148,7 @@ class Fnt(BaseFileFormat, BaseCharacterTable):
         else:
             parse_graphics = True
 
-            if fp.seek(0, SEEK_END) != FNT_HEADER_LENGTH + FNT_NDS_HEADER_LENGTH + (
+            if fp.seek(0, os.SEEK_END) != FNT_HEADER_LENGTH + FNT_NDS_HEADER_LENGTH + (
                 character_length * (FNT_CHARACTER_ENTRY_FORMAT_LENGTH + graphic_size)
             ):
                 raise FileFormatError(
