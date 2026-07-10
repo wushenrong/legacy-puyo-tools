@@ -11,7 +11,7 @@ fpd file format to show characters in Puyo Puyo! 15th Anniversary and Puyo Puyo 
 from __future__ import annotations
 
 import io
-from os import SEEK_END
+import os
 from typing import BinaryIO
 
 import attrs
@@ -25,12 +25,12 @@ from legacy_puyo_tools.formats._graphics import (
     write_4bpp_graphic,
     write_graphics_to_image,
 )
-from legacy_puyo_tools.formats.base import BaseFileFormat
+from legacy_puyo_tools.formats.base import FileFormat
 from legacy_puyo_tools.typing import FmpCharacterGraphic, FmpFontSize, ImageOrientation
 
 
 @attrs.define
-class Fmp(BaseFileFormat):
+class Fmp(FileFormat):
     """A fmp character graphics table.
 
     The fmp stores a bitmap graphic table in which each graphic correspond to a
@@ -54,14 +54,14 @@ class Fmp(BaseFileFormat):
             font_size:
                 The size of the character graphics in pixels, defaults to `14`.
 
+        Returns:
+            A fmp character graphics table.
+
         Raises:
             io.UnsupportedOperation:
                 The file handler does not support seek operations.
             FileFormatError:
                 The size of the fmp is not correct for the given font size.
-
-        Returns:
-            A fmp character graphics table.
         """
         if not fp.seekable():
             raise io.UnsupportedOperation(
@@ -73,7 +73,7 @@ class Fmp(BaseFileFormat):
         # Accounting for the upper and lower half of the font
         graphic_size = graphic_width**2 * 2
 
-        if fp.seek(0, SEEK_END) % graphic_size != 0:
+        if fp.seek(0, os.SEEK_END) % graphic_size != 0:
             raise FileFormatError(
                 "The size of the fmp is incorrect for the given font size."
             )
