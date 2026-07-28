@@ -48,11 +48,9 @@ padding_option = graphics_options.option(
 table_options = cloup.option_group(
     "Character Table Options",
     cloup.option(
-        "--orientation",
-        help="The orientation of the character table.",
-        default="portrait",
-        type=cloup.Choice(["portrait", "landscape"], case_sensitive=False),
-        show_default=True,
+        "--columns",
+        help="The number of columns per row for the character graphics table.",
+        type=int,
     ),
 )
 

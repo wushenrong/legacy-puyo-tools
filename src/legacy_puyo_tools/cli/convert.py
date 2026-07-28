@@ -29,7 +29,6 @@ from legacy_puyo_tools.formats.mtx import Mtx
 from legacy_puyo_tools.typing import (
     FmpFontSize,
     FontFormat,
-    ImageOrientation,
     TableFormat,
 )
 
@@ -50,8 +49,8 @@ def convert_fmp(
     input_file: Path,
     output_file: Path | None,
     font_size: FmpFontSize,
+    columns: int,
     padding: int,
-    orientation: ImageOrientation,
 ) -> None:
     """Extract character graphics from a fmp file to an image.
 
@@ -59,7 +58,8 @@ def convert_fmp(
     """
     with input_file.open("rb") as in_fp:
         Fmp.decode(in_fp, font_size=font_size).write_image(
-            padding=padding, orientation=orientation
+            columns,
+            padding,
         ).save(get_output_path(input_file, output_file, ".png"))
 
 
@@ -80,8 +80,8 @@ def convert_fnt(
     input_file: Path,
     output_file: Path | None,
     extract_graphics: bool,
+    columns: int,
     padding: int,
-    orientation: ImageOrientation,
 ) -> None:
     """Extract characters from a fnt file to a CSV table.
 
@@ -100,7 +100,7 @@ def convert_fnt(
         return
 
     if fnt.has_graphics():
-        fnt.write_image(padding=padding, orientation=orientation).save(
+        fnt.write_image(columns, padding).save(
             get_output_path(input_file, output_file, ".png")
         )
     else:

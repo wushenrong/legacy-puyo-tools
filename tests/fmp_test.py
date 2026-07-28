@@ -18,14 +18,13 @@ from legacy_puyo_tools.cli.convert import convert_fmp
 from legacy_puyo_tools.cli.create import create_fmp
 from legacy_puyo_tools.exceptions import FileFormatError
 from legacy_puyo_tools.formats.fmp import Fmp
-from legacy_puyo_tools.typing import ImageOrientation
 
 
 @pytest.mark.parametrize(
-    ("input_file", "output_file", "font_size", "orientation"),
+    ("input_file", "output_file", "font_size", "columns"),
     [
-        ("ark.fmp", None, 14, "portrait"),
-        ("fusion.fmp", "custom_table.png", 8, "landscape"),
+        ("ark.fmp", None, 14, 5),
+        ("fusion.fmp", "custom_table.png", 8, 6),
     ],
 )
 def test_fmp_conversion(
@@ -33,7 +32,7 @@ def test_fmp_conversion(
     input_file: str,
     output_file: str | None,
     font_size: int,
-    orientation: ImageOrientation,
+    columns: int,
 ) -> None:
     """Test converting a fmp file."""
     cli_runner = CliRunner()
@@ -48,8 +47,8 @@ def test_fmp_conversion(
             str(lazy_datadir / input_file),
             "--font-size",
             str(font_size),
-            "--orientation",
-            orientation,
+            "--columns",
+            str(columns),
         ]
 
         if output_file:

@@ -9,9 +9,6 @@ from typing import Literal, NewType
 import numpy as np
 import numpy.typing as npt
 
-type ImageOrientation = Literal["portrait", "landscape"]
-"""How the image can be orientated."""
-
 type BitmapGraphic = npt.NDArray[np.bool_]
 """A 4 bits per pixel (4bpp), black and white, little-endian bitmap that stores the
 graphical data of a character. Pixels are stored row by row, in top-to-bottom and
