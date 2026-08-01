@@ -62,10 +62,7 @@ def parse_graphics_from_image[T: BitmapGraphic](
     wd, wr = divmod(im.width, graphic_width)
 
     if hr != 0 or wr != 0:
-        raise ValueError(
-            "The size of the character graphics or padding is incorrect for the given "
-            "image."
-        )
+        raise ValueError("The size of the character graphics or padding is incorrect.")
 
     return [
         cast(
