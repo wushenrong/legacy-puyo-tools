@@ -26,7 +26,7 @@ from legacy_puyo_tools.formats._graphics import (
     write_graphics_to_image,
 )
 from legacy_puyo_tools.formats.base import FileFormat
-from legacy_puyo_tools.typing import FmpCharacterGraphic, FmpFontSize, ImageOrientation
+from legacy_puyo_tools.typing import FmpCharacterGraphic, FmpFontSize
 
 
 @attrs.define
@@ -130,21 +130,20 @@ class Fmp(FileFormat):
 
     def write_image(
         self,
-        *,
-        padding: int = 1,
-        orientation: ImageOrientation = "portrait",
+        columns: int,
+        padding: int,
     ) -> Image.Image:
         """Write the fmp character graphics table to a Pillow Image.
 
         Arguments:
             padding:
-                The amount of padding around the characters in pixels, defaults to `1`.
-            orientation:
-                Orientation of the character table, defaults to `"portrait"`.
+                The amount of padding around the characters in pixels.
+            columns:
+                The number of columns per row.
 
         Returns:
             An image object that contains the fmp character graphics table.
         """
         return write_graphics_to_image(
-            self.font, self.font_size, self.font_size, padding, orientation
+            self.font, self.font_size, self.font_size, columns, padding
         )

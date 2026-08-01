@@ -133,13 +133,13 @@ class Fpd(FileFormat, CharacterTable):
             fp:
                 A file-like object in binary mode containing a fpd character table.
 
+        Returns:
+            A fpd character table.
+
         Raises:
             FileFormatError:
                 The given fpd character table contains entries that does not conform to
                 the fpd character format.
-
-        Returns:
-            A fpd character table.
         """
         character_table: OrderedBidict[int, int | FpdCharacter] = OrderedBidict()
 

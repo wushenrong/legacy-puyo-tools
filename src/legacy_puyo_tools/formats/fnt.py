@@ -38,7 +38,6 @@ from legacy_puyo_tools.formats.base import (
 from legacy_puyo_tools.typing import (
     FntCharacterGraphic,
     FntFormatVersion,
-    ImageOrientation,
 )
 
 FNT_HEADER_FORMAT = "<4sLLL"
@@ -120,8 +119,8 @@ class Fnt(FileFormat, CharacterTable):
 
         if magic_number != FNT_MAGIC_NUMBER:
             raise FileFormatError(
-                "The given magic number shows that the given data is not in the fnt "
-                f"format.\nExpected: {FNT_MAGIC_NUMBER}\nActual: {magic_number}"
+                "The given magic number shows that the given data is not a fnt.\n"
+                f"Expected: {FNT_MAGIC_NUMBER}\nActual: {magic_number}"
             )
 
         graphic_size = font_height * font_width // PIXELS_PER_BYTE
@@ -279,14 +278,13 @@ class Fnt(FileFormat, CharacterTable):
 
     def write_image(
         self,
-        *,
-        padding: int = 1,
-        orientation: ImageOrientation = "portrait",
+        columns: int,
+        padding: int,
     ) -> Image.Image:
         return write_graphics_to_image(
             [self._get_fnt_graphics(character) for character in self.font.values()],
             self.font_height,
             self.font_width,
+            columns,
             padding,
-            orientation,
         )

@@ -5,13 +5,13 @@
 """Functions to convert font graphics to and from the fmp and fnt formats."""
 
 from collections.abc import Callable, Sequence
+from math import ceil
 from typing import BinaryIO
 
 import numpy as np
 from PIL import Image
 
-from legacy_puyo_tools._math import find_medium_divisors
-from legacy_puyo_tools.typing import BitmapGraphic, ImageOrientation
+from legacy_puyo_tools.typing import BitmapGraphic
 
 BITS_PER_PIXEL = 4
 BITS_PER_BYTE = 8
@@ -62,9 +62,7 @@ def parse_graphics_from_image[T: BitmapGraphic](
     wd, wr = divmod(im.width, graphic_width)
 
     if hr != 0 or wr != 0:
-        raise ValueError(
-            "The size of the character or padding is incorrect for the given image."
-        )
+        raise ValueError("The size of the character graphics or padding is incorrect.")
 
     return [
         cast(
@@ -87,18 +85,10 @@ def write_graphics_to_image(
     font: Sequence[BitmapGraphic],
     font_height: int,
     font_width: int,
+    width: int,
     padding: int,
-    orientation: ImageOrientation,
 ) -> Image.Image:
-    # Find the optimal width and height of the character table by calculating the
-    # first factors whose ratio is equal to or close to 1
-    # So the character table is arranged into a square or rectangle.
-    width, height = find_medium_divisors(len(font))
-
-    if (orientation == "portrait" and width > height) or (
-        orientation == "landscape" and width < height
-    ):
-        width, height = height, width
+    height = ceil(len(font) / width)
 
     graphic_height = font_height + (padding * 2)
     graphic_width = font_width + (padding * 2)

@@ -8,21 +8,8 @@ import io
 
 import pytest
 
-from legacy_puyo_tools._math import find_medium_divisors
 from legacy_puyo_tools.formats.fmp import Fmp
 from legacy_puyo_tools.formats.mtx import Mtx
-
-
-def test_find_best_ratio_divisor_pair() -> None:
-    """Test finding the best ratio devisor pairs."""
-    assert find_medium_divisors(10) == (2, 5)
-    assert find_medium_divisors(7) == (1, 7)
-
-    with pytest.raises(ValueError, match=r"\d+ is not a natural number."):
-        find_medium_divisors(0)
-
-    with pytest.raises(ValueError, match=r"\d+ is not a natural number."):
-        find_medium_divisors(-3)
 
 
 def test_unseekable_streams() -> None:

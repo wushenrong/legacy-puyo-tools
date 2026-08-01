@@ -25,6 +25,7 @@ lifetime.
 - Restructure types and exceptions, again.
 - Graphics encode and decode methods into their own module.
 - Moved types back to `typing.py`.
+- Let the user specify the number of columns for character tables.
 
 ### Removed
 
