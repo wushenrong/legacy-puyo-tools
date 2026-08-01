@@ -113,7 +113,8 @@ def test_fmp_exceptions(lazy_datadir: Path) -> None:
 
     with (
         pytest.raises(
-            ValueError, match="The size of the character or padding is incorrect"
+            ValueError,
+            match=r"The size of the character graphics or padding is incorrect\.",
         ),
         Image.open(test_image) as im,
     ):
